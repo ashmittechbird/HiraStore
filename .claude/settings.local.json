@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:www.pngjewellers.com)",
+      "Bash(python .agents/skills/ui-ux-pro-max/scripts/search.py \"luxury silver gold jewelry ecommerce India premium\" --design-system -p \"HiraStore\" -f markdown)"
+    ]
+  }
+}
