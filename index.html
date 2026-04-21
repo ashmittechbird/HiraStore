@@ -3013,23 +3013,29 @@
       grid.innerHTML = items.map(function(p, i) {
         var delays = ['','reveal-delay-1','reveal-delay-2','reveal-delay-3'];
         var delay = delays[i % 4];
-        var price = p.price ? '₹' + Number(p.price).toLocaleString('en-IN') : (p.usd_price ? '$' + p.usd_price : '');
+        var priceNum = p.price_usd || p.price || 0;
+        var priceDisplay = priceNum ? '$' + Number(priceNum).toLocaleString('en-US') : '';
         var imgSrc = p.image ? 'catalog_images/' + p.image : '';
         var badge = p.badge ? '<span class="product-badge">' + p.badge + '</span>' : '';
-        return '<article class="product-card reveal ' + delay + '">' +
+        var pData = encodeURIComponent(JSON.stringify({
+          name: p.name, category: p.category, image: imgSrc,
+          price: priceNum, currency: '$', weight: p.weight,
+          material: '925 Sterling Silver', product_id: p.product_id, badge: p.badge || null
+        }));
+        return '<article class="product-card reveal ' + delay + '" data-product-enc="' + pData + '">' +
           '<div class="product-img-wrap">' +
             (imgSrc ? '<img src="' + imgSrc + '" alt="' + p.name + '" loading="lazy" onerror="this.parentElement.style.background=\'#f0ebe5\'" />' : '') +
             badge +
             '<button class="product-wish" aria-label="Add ' + p.name + ' to wishlist">' + WISH_SVG + '</button>' +
             '<div class="product-actions">' +
               '<button class="product-action-btn pa-primary">Add to Cart</button>' +
-              '<button class="product-action-btn pa-secondary">Quick View</button>' +
+              '<button class="product-action-btn pa-secondary feat-qv-btn">Quick View</button>' +
             '</div>' +
           '</div>' +
           '<div class="product-info">' +
             '<h3 class="product-name">' + p.name + '</h3>' +
             '<p class="product-meta">925 Sterling Silver' + (p.weight ? ' · ' + p.weight : '') + '</p>' +
-            '<div class="product-price"><span class="price-current">' + price + '</span></div>' +
+            '<div class="product-price"><span class="price-current">' + priceDisplay + '</span></div>' +
           '</div>' +
         '</article>';
       }).join('');
