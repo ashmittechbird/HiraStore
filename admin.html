@@ -520,7 +520,14 @@ td{padding:12px 14px;font-size:13px;vertical-align:middle}
   .main{margin-left:0}
   .stats-grid{grid-template-columns:1fr 1fr}
   .page-content{padding:20px}
+  .topbar{padding:0 16px;}
 }
+.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:89;}
+.sidebar-overlay.show{display:block;}
+.sb-toggle{display:none;width:40px;height:40px;align-items:center;justify-content:center;background:none;border:none;cursor:pointer;border-radius:8px;transition:background .2s;flex-shrink:0;}
+.sb-toggle:hover{background:rgba(255,255,255,0.1);}
+.sb-toggle svg{width:20px;height:20px;stroke:#fff;stroke-width:2;fill:none;}
+@media(max-width:768px){.sb-toggle{display:flex;}}
 
 :root{--ease-out:cubic-bezier(.22,1,.36,1)}
 </style>
@@ -561,6 +568,7 @@ td{padding:12px 14px;font-size:13px;vertical-align:middle}
 <!-- ══════════════════════════════════════
      APP
 ══════════════════════════════════════ -->
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
 <div id="app">
 
   <!-- SIDEBAR -->
@@ -603,6 +611,7 @@ td{padding:12px 14px;font-size:13px;vertical-align:middle}
   <main class="main">
     <header class="topbar">
       <div style="display:flex;align-items:center;gap:14px">
+        <button class="sb-toggle" id="sbToggle" aria-label="Toggle sidebar"><svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
         <div class="topbar-title" id="page-title">Dashboard</div>
       </div>
       <div class="topbar-right">
@@ -1405,5 +1414,14 @@ if(zone){
   if(CFG.key) document.getElementById('login-key').value=CFG.key;
 })();
 </script>
+  <script>
+  (function(){
+    var btn=document.getElementById('sbToggle'),sb=document.getElementById('sidebar'),ov=document.getElementById('sidebarOverlay');
+    function toggleSb(){sb.classList.toggle('open');ov.classList.toggle('show');}
+    function closeSb(){sb.classList.remove('open');ov.classList.remove('show');}
+    if(btn)btn.addEventListener('click',toggleSb);
+    if(ov)ov.addEventListener('click',closeSb);
+  })();
+  </script>
 </body>
 </html>
