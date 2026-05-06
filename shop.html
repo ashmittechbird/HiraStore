@@ -32,67 +32,6 @@
     a    { text-decoration: none; color: inherit; }
     button { cursor: pointer; border: none; background: none; font-family: inherit; }
 
-    /* ── NAVBAR ── */
-    .nav {
-      position: sticky; top: 0; z-index: 100;
-      background: rgba(255,255,255,0.95);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border-bottom: 1px solid var(--border);
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 0 48px; height: 70px;
-      transition: box-shadow 0.3s;
-    }
-    .nav.scrolled { box-shadow: 0 2px 24px rgba(0,89,105,0.12); }
-    .nav-logo img { height: 44px; width: auto; object-fit: contain; }
-    .nav-links { display: flex; gap: 32px; list-style: none; }
-    .nav-links a {
-      font-size: 13px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase;
-      color: var(--text-dark); position: relative; padding-bottom: 4px; transition: color 0.2s;
-    }
-    .nav-links a::after { content:''; position:absolute; bottom:0; left:0; width:0; height:1.5px; background:var(--gold); transition: width 0.3s var(--ease-out); }
-    .nav-links a:hover { color: var(--gold); }
-    .nav-links a:hover::after, .nav-links a.active::after { width: 100%; }
-    .nav-links a.active { color: var(--gold); }
-    .nav-actions { display: flex; align-items: center; gap: 8px; }
-    .nav-icon {
-      width: 40px; height: 40px; border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      transition: background 0.2s; position: relative; color: var(--text-dark);
-    }
-    .nav-icon:hover { background: var(--surface); color: var(--gold); }
-    .nav-icon svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; }
-    .cart-wrap { position: relative; }
-    .cart-badge {
-      position: absolute; top: 4px; right: 4px;
-      min-width: 18px; height: 18px; border-radius: 9px;
-      background: var(--gold); color: #fff;
-      font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center;
-      padding: 0 4px; pointer-events: none;
-    }
-    .cart-badge:empty, .cart-badge[data-count="0"] { display: none; }
-
-    /* Mega menu */
-    .nav-item-mega { position: relative; }
-    .mega-menu {
-      position: absolute; top: calc(100% + 10px); left: -40px;
-      background: #fff; border: 1px solid var(--border);
-      box-shadow: 0 12px 48px rgba(0,0,0,0.1);
-      padding: 28px; display: flex; gap: 40px;
-      opacity: 0; visibility: hidden; pointer-events: none;
-      transform: translateY(8px);
-      transition: opacity 0.25s, transform 0.25s var(--ease-out), visibility 0.25s;
-      min-width: 500px; z-index: 200;
-    }
-    .nav-item-mega:hover .mega-menu { opacity:1; visibility:visible; pointer-events:auto; transform:translateY(0); }
-    .mega-col h4 { font-size:11px; text-transform:uppercase; letter-spacing:0.12em; color:var(--text-light); margin-bottom:14px; }
-    .mega-col ul { list-style:none; display:flex; flex-direction:column; gap:10px; }
-    .mega-col ul li a { font-size:14px; color:var(--text-dark); transition:color 0.2s; }
-    .mega-col ul li a:hover { color:var(--gold); }
-    .mega-promo { width:180px; position:relative; overflow:hidden; }
-    .mega-promo img { width:100%; height:100%; object-fit:cover; }
-    .mega-promo span { position:absolute; bottom:12px; left:12px; background:rgba(0,0,0,0.6); color:#fff; font-size:11px; padding:4px 10px; }
-
     /* ── CURSOR SPARKLE ── */
     #cursorSparkle { position:fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:9999; }
 
@@ -336,139 +275,134 @@
       .price-current { font-size:15px; }
     }
 
-    /* HAMBURGER + MOBILE NAV */
-    .hamburger { display:none; width:44px; height:44px; align-items:center; justify-content:center; border-radius:50%; background:none; cursor:pointer; transition:background 0.2s; flex-shrink:0; }
-    .hamburger:hover { background: var(--surface); }
-    .hamburger svg { width:22px; height:22px; stroke:var(--text-dark); stroke-width:2; fill:none; }
-    @media (max-width:768px) { .hamburger { display:flex; } }
-    .mobile-nav { position:fixed; inset:0; z-index:300; pointer-events:none; }
-    .mobile-nav.open { pointer-events:auto; }
-    .mobile-nav-overlay { position:absolute; inset:0; background:rgba(0,0,0,0.52); opacity:0; transition:opacity 0.3s; }
-    .mobile-nav.open .mobile-nav-overlay { opacity:1; }
-    .mobile-nav-drawer { position:absolute; top:0; right:0; bottom:0; width:min(300px,82vw); background:#fff; transform:translateX(100%); transition:transform 0.36s cubic-bezier(0.22,1,0.36,1); display:flex; flex-direction:column; overflow-y:auto; }
-    .mobile-nav.open .mobile-nav-drawer { transform:translateX(0); }
-    .mobile-nav-header { display:flex; align-items:center; justify-content:space-between; padding:18px 20px; border-bottom:1px solid var(--border); }
-    .mobile-nav-header img { height:36px; width:auto; }
-    .mobile-nav-close { width:44px; height:44px; display:flex; align-items:center; justify-content:center; border-radius:50%; background:none; cursor:pointer; }
-    .mobile-nav-close svg { width:20px; height:20px; stroke:var(--text-dark); stroke-width:2.5; fill:none; }
-    .mobile-nav-links { list-style:none; flex:1; padding:8px 0; }
-    .mobile-nav-links > li > a { display:block; padding:14px 20px; font-size:14px; font-weight:600; letter-spacing:0.05em; text-transform:uppercase; color:var(--text-dark); border-bottom:1px solid var(--border); transition:color 0.2s,background 0.2s; }
-    .mobile-nav-links > li > a:hover { color:var(--gold); background:var(--surface); }
-    .mobile-nav-sub { list-style:none; background:var(--surface); padding:4px 0 8px 0; }
-    .mobile-nav-sub li a { display:block; padding:9px 20px 9px 36px; font-size:13px; color:var(--text-light); border-bottom:1px solid rgba(0,0,0,0.04); transition:color 0.2s; }
-    .mobile-nav-sub li a:hover { color:var(--gold); }
-    .mobile-nav-footer { padding:20px; border-top:1px solid var(--border); }
-    .mobile-nav-cta { display:block; text-align:center; padding:13px; font-size:13px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; background:var(--gold); color:#fff; border-radius:2px; transition:background 0.2s; }
-  </style>
+    
+    /* --- SYNCED NAVBAR STYLES --- */
+    :root {
+      --nav-text-main: #2c2c2c;
+      --nav-accent-gold: #c8a97e;
+      --nav-border: #eaeaea;
+      --nav-surface: #faf9f7;
+    }
+/* Announcement Bar */
+    .announcement { background: var(--nav-surface); color: var(--nav-text-main); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 600; padding: 10px 0; text-align: center; border-bottom: 1px solid var(--nav-border); overflow: hidden; position: relative; }
+    .marquee-inner { display: inline-flex; animation: marquee 20s linear infinite; white-space: nowrap; }
+    .marquee-inner span { padding: 0 40px; }
+    @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+
+    /* Navbar */
+    .nav { position: sticky; top: 0; z-index: 100; background: rgba(255, 255, 255, 0.98); backdrop-filter: blur(10px); border-bottom: 1px solid transparent; display: flex; align-items: center; justify-content: space-between; padding: 0 40px; height: 72px; transition: border-color 0.3s; }
+    .nav.scrolled { border-color: var(--nav-border); }
+    .nav-left, .nav-right { flex: 1; display: flex; align-items: center; }
+    .nav-right { justify-content: flex-end; gap: 20px; }
+    .nav-center { flex: 0 0 auto; }
+    .nav-logo img { height: 48px; width: auto; filter: contrast(1.2); }
+    .nav-links { display: flex; gap: 32px; list-style: none; }
+    .nav-links a { font-size: 12px; font-weight: 500; color: var(--nav-text-main); text-transform: uppercase; letter-spacing: 0.05em; transition: color 0.3s; position: relative; }
+    .nav-links a::after { content: ''; position: absolute; bottom: -4px; left: 0; width: 0; height: 1px; background: var(--nav-text-main); transition: width 0.3s var(--ease-out); }
+    .nav-links a:hover::after { width: 100%; }
+    .nav-icon { display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; color: var(--nav-text-main); transition: transform 0.2s var(--ease-out); position: relative; }
+    .nav-icon:hover { transform: scale(1.1); color: var(--nav-accent-gold); }
+    .nav-icon svg { width: 20px; height: 20px; stroke-width: 1.5; fill: none; stroke: currentColor; }
+    .cart-wrap { position: relative; }
+    .cart-badge { position: absolute; top: 6px; right: 4px; background: var(--nav-accent-gold); color: #fff; font-size: 9px; font-weight: 600; width: 14px; height: 14px; display: flex; align-items: center; justify-content: center; border-radius: 50%; }
+
+    
+/* Mobile Nav */
+    .hamburger { display: none; width: 40px; height: 40px; align-items: center; justify-content: center; }
+    .hamburger svg { width: 24px; height: 24px; stroke: var(--nav-text-main); stroke-width: 1.5; fill: none; }
+    
+    .mobile-nav { position: fixed; inset: 0; z-index: 300; pointer-events: none; }
+    .mobile-nav.open { pointer-events: auto; }
+    .mobile-nav-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.4); opacity: 0; transition: opacity 0.3s; }
+    .mobile-nav.open .mobile-nav-overlay { opacity: 1; }
+    .mobile-nav-drawer { position: absolute; top: 0; left: 0; bottom: 0; width: 300px; background: #fff; transform: translateX(-100%); transition: transform 0.4s var(--ease-out); display: flex; flex-direction: column; }
+    .mobile-nav.open .mobile-nav-drawer { transform: translateX(0); }
+    .mobile-nav-header { padding: 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--nav-border); }
+    .mobile-nav-close { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; }
+    .mobile-nav-close svg { width: 20px; height: 20px; stroke: var(--nav-text-main); stroke-width: 1.5; fill: none; }
+    .mobile-nav-links { list-style: none; padding: 20px 0; }
+    .mobile-nav-links li a { display: block; padding: 12px 24px; font-size: 14px; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 500; border-bottom: 1px solid var(--nav-surface); }
+
+    /* Search */
+    .search-overlay { position: fixed; inset: 0; background: rgba(255,255,255,0.98); z-index: 500; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+    .search-overlay.open { opacity: 1; pointer-events: auto; }
+    .search-close { position: absolute; top: 30px; right: 40px; font-size: 40px; line-height: 1; color: var(--nav-text-main); transition: transform 0.3s; }
+    .search-close:hover { transform: rotate(90deg); }
+    .search-form { display: flex; border-bottom: 2px solid var(--nav-text-main); width: 80%; max-width: 600px; padding-bottom: 10px; }
+    .search-overlay-input { flex: 1; border: none; outline: none; font-family: var(--font-head); font-size: 32px; background: transparent; }
+    .search-submit { font-size: 24px; }
+
+
+    /* ---------------------------- */
+</style>
 </head>
 <body>
   <canvas id="cursorSparkle" aria-hidden="true"></canvas>
   <div class="scroll-progress" id="scrollProgress" aria-hidden="true"></div>
 
-  <!-- ── NAVBAR ── -->
-  <nav class="nav" id="navbar" role="navigation" aria-label="Main navigation">
-    <a href="index.html" class="nav-logo" aria-label="The Hira Store – Home">
-      <img src="https://wearparts.norework.in/wp-content/uploads/2023/09/Hira-1.png" alt="Hira Store" />
+  <!-- Announcement Bar -->
+  <div class="announcement">
+    <div class="marquee-inner">
+      <span>Free Shipping on orders over $15</span>
+      <span>1 Year Warranty</span>
+      <span>100% Hallmarked Silver</span>
+      <span>Free Shipping on orders over $15</span>
+      <span>1 Year Warranty</span>
+      <span>100% Hallmarked Silver</span>
+    </div>
+  </div>
+
+  <!-- Navbar -->
+  <nav class="nav" id="navbar">
+    <div class="nav-left">
+      <button class="hamburger" id="hamburgerBtn" aria-label="Menu">
+        <svg viewBox="0 0 24 24"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <ul class="nav-links">
+        <li><a href="shop.html">Shop All</a></li>
+        <li><a href="shop.html?cat=Necklaces">Necklaces</a></li>
+        <li><a href="shop.html?cat=Earrings">Earrings</a></li>
+        <li><a href="shop.html?cat=Rings">Rings</a></li>
+      </ul>
+    </div>
+    
+    <a href="index.html" class="nav-center nav-logo">
+      <img src="https://wearparts.norework.in/wp-content/uploads/2023/09/Hira-1.png" alt="The Hira Store" />
     </a>
-
-    <ul class="nav-links" role="list">
-      <li class="nav-item-mega">
-        <a href="#">Jewelry</a>
-        <div class="mega-menu">
-          <div class="mega-col">
-            <h4 class="mega-title">Shop by Category</h4>
-            <ul>
-              <li><a href="shop.html?cat=Rings">Rings</a></li>
-              <li><a href="shop.html?cat=Necklaces">Necklaces</a></li>
-              <li><a href="shop.html?cat=Earrings">Earrings</a></li>
-              <li><a href="shop.html?cat=Bracelets">Bracelets</a></li>
-              <li><a href="shop.html?cat=Pendants">Pendants</a></li>
-            </ul>
-          </div>
-          <div class="mega-col">
-            <h4 class="mega-title">Shop by Metal</h4>
-            <ul>
-              <li><a href="shop.html">Yellow Gold</a></li>
-              <li><a href="shop.html">Rose Gold</a></li>
-              <li><a href="shop.html">White Gold</a></li>
-              <li><a href="shop.html">Platinum</a></li>
-              <li><a href="shop.html">Sterling Silver</a></li>
-            </ul>
-          </div>
-          <div class="mega-promo">
-            <img src="https://images.unsplash.com/photo-1599643478514-46b150c9dc86?w=600&q=80" alt="Bridal Collection" />
-            <span>Bridal Edit 2025</span>
-          </div>
-        </div>
-      </li>
-      <li><a href="shop.html" class="active">Shop All</a></li>
-      <li><a href="shop.html">Collections</a></li>
-      <li><a href="shop.html">Gifting</a></li>
-    </ul>
-
-    <div class="nav-actions">
-      <button class="hamburger" id="hamburgerBtn" aria-label="Open menu" aria-expanded="false"><svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
-      <button class="nav-icon" aria-label="Search" id="navSearchBtn">
+    
+    <div class="nav-right">
+      <button class="nav-icon" id="searchBtn" aria-label="Search">
         <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="22" y2="22"/></svg>
       </button>
+      <a href="login.html" class="nav-icon" id="accountNavBtn" aria-label="Account">
+        <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      </a>
       <div class="cart-wrap">
-        <a href="cart.html" class="nav-icon" aria-label="Shopping cart">
+        <a href="cart.html" class="nav-icon" aria-label="Cart">
           <svg viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
         </a>
-        <span class="cart-badge" id="cartBadge" aria-hidden="true"></span>
-      </div>
-      <div class="account-wrap" style="position:relative">
-        <button class="nav-icon" aria-label="My Account" id="accountBtn">
-          <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-        </button>
-        <div id="accountDropdown" style="position:absolute;top:calc(100% + 14px);right:0;background:#fff;border:1px solid #e8e0d8;box-shadow:0 16px 48px rgba(0,0,0,0.14);width:248px;opacity:0;pointer-events:none;transform:translateY(10px) scale(0.97);transform-origin:top right;transition:opacity 0.24s,transform 0.24s;z-index:200;">
-          <div style="display:flex;align-items:center;gap:13px;padding:18px 20px;background:#faf8f5;border-bottom:1px solid #e8e0d8;">
-            <div style="width:40px;height:40px;border-radius:50%;background:#005969;color:#fff;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:800;flex-shrink:0;">H</div>
-            <div>
-              <p style="font-size:13px;font-weight:700;color:#2c2c2c;">Welcome!</p>
-              <p style="font-size:11px;color:#888;margin-top:3px;">Sign in for better experience</p>
-            </div>
-          </div>
-          <div style="padding:8px 0;">
-            <a href="#" style="display:flex;align-items:center;gap:10px;padding:11px 20px;font-size:13px;font-weight:500;color:#2c2c2c;text-decoration:none;transition:background 0.15s,color 0.15s;" onmouseover="this.style.background='#faf8f5';this.style.color='#005969'" onmouseout="this.style.background='';this.style.color='#2c2c2c'">Sign In</a>
-            <a href="#" style="display:flex;align-items:center;gap:10px;padding:11px 20px;font-size:13px;font-weight:500;color:#2c2c2c;text-decoration:none;" onmouseover="this.style.background='#faf8f5';this.style.color='#005969'" onmouseout="this.style.background='';this.style.color='#2c2c2c'">Create Account</a>
-            <div style="height:1px;background:#e8e0d8;margin:6px 0;"></div>
-            <a href="cart.html" style="display:flex;align-items:center;gap:10px;padding:11px 20px;font-size:13px;font-weight:500;color:#2c2c2c;text-decoration:none;" onmouseover="this.style.background='#faf8f5';this.style.color='#005969'" onmouseout="this.style.background='';this.style.color='#2c2c2c'">My Orders</a>
-            <a href="#" style="display:flex;align-items:center;gap:10px;padding:11px 20px;font-size:13px;font-weight:500;color:#2c2c2c;text-decoration:none;" onmouseover="this.style.background='#faf8f5';this.style.color='#005969'" onmouseout="this.style.background='';this.style.color='#2c2c2c'">Wishlist</a>
-          </div>
-        </div>
+        <span class="cart-badge" id="cartBadge"></span>
       </div>
     </div>
   </nav>
 
-  <!-- MOBILE NAV DRAWER -->
-  <div class="mobile-nav" id="mobileNav" role="dialog" aria-label="Mobile navigation">
+  <!-- Mobile Nav Drawer -->
+  <div class="mobile-nav" id="mobileNav">
     <div class="mobile-nav-overlay" id="mobileNavOverlay"></div>
     <div class="mobile-nav-drawer">
       <div class="mobile-nav-header">
-        <img src="https://wearparts.norework.in/wp-content/uploads/2023/09/Hira-1.png" alt="Hira Store" />
-        <button class="mobile-nav-close" id="mobileNavClose" aria-label="Close menu">
+        <img src="https://wearparts.norework.in/wp-content/uploads/2023/09/Hira-1.png" alt="Hira" style="height:24px" />
+        <button class="mobile-nav-close" id="mobileNavClose">
           <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
       </div>
       <ul class="mobile-nav-links">
-        <li><a href="index.html">Home</a></li>
-        <li>
-          <a href="#">Jewelry</a>
-          <ul class="mobile-nav-sub">
-            <li><a href="shop.html?cat=Rings">Rings</a></li>
-            <li><a href="shop.html?cat=Necklaces">Necklaces</a></li>
-            <li><a href="shop.html?cat=Earrings">Earrings</a></li>
-            <li><a href="shop.html?cat=Bracelets">Bracelets</a></li>
-            <li><a href="shop.html?cat=Pendants">Pendants</a></li>
-          </ul>
-        </li>
         <li><a href="shop.html">Shop All</a></li>
-        <li><a href="cart.html">Cart</a></li>
+        <li><a href="shop.html?cat=Necklaces">Necklaces</a></li>
+        <li><a href="shop.html?cat=Earrings">Earrings</a></li>
+        <li><a href="shop.html?cat=Rings">Rings</a></li>
+        <li><a href="shop.html?cat=Bracelets">Bracelets</a></li>
       </ul>
-      <div class="mobile-nav-footer">
-        <a href="shop.html" class="mobile-nav-cta">Browse All Jewelry</a>
-      </div>
     </div>
   </div>
 
@@ -658,6 +592,13 @@
     /* ══════════════════════════════════════════════
        CART BADGE
     ══════════════════════════════════════════════ */
+    // Account nav link
+    (function() {
+      const btn = document.getElementById('accountNavBtn');
+      if (!btn) return;
+      btn.href = localStorage.getItem('hs_session_token') ? 'account.html' : 'login.html';
+    })();
+
     function updateCartBadge() {
       try {
         const cart = JSON.parse(localStorage.getItem('hirastore_cart') || '[]');
@@ -785,7 +726,7 @@
           </button>
           <div class="product-actions">
             <button class="product-action-btn pa-primary" data-id="${p.product_id}">Add to Cart</button>
-            <button class="product-action-btn pa-secondary">Quick View</button>
+            <button class="product-action-btn pa-secondary" data-qv="${p.product_id}">Quick View</button>
           </div>
         </div>
         <div class="product-info">
@@ -840,6 +781,18 @@
           btn.textContent = 'Added ✓';
           btn.classList.add('cart-added');
           setTimeout(() => { btn.textContent = orig; btn.classList.remove('cart-added'); delete btn.dataset.adding; }, 1600);
+        });
+      });
+
+      // Quick View
+      container.querySelectorAll('.product-action-btn.pa-secondary').forEach(btn => {
+        if (btn._bound) return;
+        btn._bound = true;
+        btn.addEventListener('click', e => {
+          e.stopPropagation();
+          const pid = btn.dataset.qv;
+          const p = allProducts.find(x => x.product_id === pid);
+          if (p) openQuickView(p);
         });
       });
 
@@ -1246,5 +1199,80 @@
     document.addEventListener('keydown',function(e){if(e.key==='Escape')close();});
   })();
   </script>
+
+  <!-- Quick View Modal -->
+  <div id="qvOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,26,32,.55);z-index:800;align-items:center;justify-content:center;padding:24px">
+    <div id="qvBox" style="background:#fff;border-radius:14px;max-width:760px;width:100%;max-height:90vh;overflow:auto;box-shadow:0 24px 64px rgba(0,0,0,.18);position:relative;display:grid;grid-template-columns:1fr 1fr">
+      <button onclick="closeQuickView()" style="position:absolute;top:14px;right:14px;background:rgba(0,26,32,.07);border:none;width:34px;height:34px;border-radius:50%;cursor:pointer;font-size:18px;color:#334d52;z-index:2;display:flex;align-items:center;justify-content:center">&#x2715;</button>
+      <!-- image -->
+      <div id="qvImg" style="background:#f0f8f9;border-radius:14px 0 0 14px;min-height:340px;display:flex;align-items:center;justify-content:center;overflow:hidden"></div>
+      <!-- info -->
+      <div style="padding:36px 32px;display:flex;flex-direction:column;gap:14px">
+        <div id="qvCategory" style="font-size:11px;font-weight:500;color:#6b8b91;text-transform:uppercase;letter-spacing:.09em"></div>
+        <h2 id="qvName" style="font-family:'Playfair Display',serif;font-size:1.45rem;color:#005969;font-weight:400;line-height:1.3"></h2>
+        <div id="qvPrice" style="font-family:'Cormorant Garamond',serif;font-size:1.8rem;color:#005969;font-weight:500"></div>
+        <div id="qvMeta" style="font-size:13px;color:#6b8b91"></div>
+        <div style="display:flex;gap:4px;color:#c8a45a;font-size:15px">★★★★★</div>
+        <div style="flex:1"></div>
+        <button id="qvAddBtn" style="width:100%;padding:13px;background:#005969;color:#fff;border:none;border-radius:6px;font-size:15px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;transition:background .2s" onmouseover="this.style.background='#003d4a'" onmouseout="this.style.background='#005969'">Add to Cart</button>
+        <a href="cart.html" style="display:block;text-align:center;font-size:13px;color:#005969;text-decoration:none;padding:8px">View Cart →</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  function openQuickView(p) {
+    const price = p.price > 0 ? p.currency + p.price.toLocaleString('en-US') : 'Price on request';
+    document.getElementById('qvCategory').textContent = p.category || '';
+    document.getElementById('qvName').textContent = p.name;
+    document.getElementById('qvPrice').textContent = price;
+    document.getElementById('qvMeta').textContent = [p.weight, p.product_id].filter(Boolean).join(' · ');
+
+    const imgEl = document.getElementById('qvImg');
+    imgEl.innerHTML = p.image
+      ? `<img src="${p.image}" alt="${p.name}" style="width:100%;height:100%;object-fit:cover;border-radius:14px 0 0 14px">`
+      : `<div style="color:#c8e0e4;font-size:13px">No image</div>`;
+
+    const addBtn = document.getElementById('qvAddBtn');
+    addBtn.textContent = 'Add to Cart';
+    addBtn.onclick = function() {
+      let cart = JSON.parse(localStorage.getItem('hirastore_cart') || '[]');
+      const existing = cart.find(c => c.id === p.product_id);
+      if (existing) { existing.qty = Math.min(existing.qty + 1, 10); }
+      else {
+        cart.push({ id: p.product_id, name: p.name, category: p.category,
+          weight: p.weight, price: p.price, price_usd: p.price, currency: p.currency,
+          image: p.image, qty: 1 });
+      }
+      localStorage.setItem('hirastore_cart', JSON.stringify(cart));
+      if (typeof updateCartBadge === 'function') updateCartBadge();
+      addBtn.textContent = 'Added ✓';
+      setTimeout(() => { addBtn.textContent = 'Add to Cart'; }, 1600);
+    };
+
+    const overlay = document.getElementById('qvOverlay');
+    overlay.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeQuickView() {
+    document.getElementById('qvOverlay').style.display = 'none';
+    document.body.style.overflow = '';
+  }
+
+  document.getElementById('qvOverlay').addEventListener('click', function(e) {
+    if (e.target === this) closeQuickView();
+  });
+  document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeQuickView(); });
+  </script>
+
+  <!-- Search Overlay -->
+  <div id="searchOverlay" class="search-overlay">
+    <button class="search-close" id="searchClose">&times;</button>
+    <form class="search-form" id="searchForm">
+      <input type="search" id="searchOverlayInput" class="search-overlay-input" placeholder="Search jewelry..." autocomplete="off" />
+      <button type="submit" class="search-submit"><svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" fill="none" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="22" y2="22"/></svg></button>
+    </form>
+  </div>
 </body>
 </html>

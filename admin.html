@@ -593,6 +593,15 @@ td{padding:12px 14px;font-size:13px;vertical-align:middle}
         Orders
         <span class="sb-badge" id="pending-badge" style="display:none">0</span>
       </div>
+      <div class="sb-section">CRM</div>
+      <div class="sb-item" data-page="customers" onclick="navTo('customers',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+        Customers
+      </div>
+      <div class="sb-item" data-page="offers" onclick="navTo('offers',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><circle cx="7" cy="7" r="1.5" fill="currentColor"/></svg>
+        Offers
+      </div>
       <div class="sb-section">System</div>
       <div class="sb-item" data-page="settings" onclick="navTo('settings',this)">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
@@ -783,6 +792,73 @@ td{padding:12px 14px;font-size:13px;vertical-align:middle}
         </div>
       </div>
 
+      <!-- ══ CUSTOMERS PAGE ══ -->
+      <div class="page" id="page-customers">
+        <div class="toolbar">
+          <div class="search-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input class="search-input" type="text" placeholder="Search customers…" oninput="filterCustomers(this.value)" id="cust-search"/>
+          </div>
+          <button class="btn btn-gold btn-sm" onclick="loadCustomers()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+            Refresh
+          </button>
+        </div>
+        <div class="card">
+          <div class="card-hd"><h2>All Customers</h2></div>
+          <div id="customers-container"><div class="loading-overlay"><div class="spin"></div><p>Loading customers…</p></div></div>
+        </div>
+      </div>
+
+      <!-- ══ OFFERS PAGE ══ -->
+      <div class="page" id="page-offers">
+        <div class="toolbar" style="justify-content:space-between">
+          <div style="font-size:13px;color:var(--text2)">Manage coupon codes in ERPNext → Accounts → Coupon Code</div>
+          <button class="btn btn-gold btn-sm" onclick="loadOffers()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+            Refresh
+          </button>
+        </div>
+        <div class="card" style="margin-bottom:20px">
+          <div class="card-hd"><h2>Create Coupon Code</h2></div>
+          <div class="card-body">
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:16px">
+              <div class="form-group">
+                <label class="form-label">Coupon Code <span class="req">*</span></label>
+                <input class="form-input" id="o-code" type="text" placeholder="SAVE20" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase()"/>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Discount % <span class="req">*</span></label>
+                <input class="form-input" id="o-pct" type="number" min="1" max="100" placeholder="20"/>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Min. Order ($)</label>
+                <input class="form-input" id="o-min" type="number" min="0" step="0.01" placeholder="0"/>
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+              <div class="form-group">
+                <label class="form-label">Valid From</label>
+                <input class="form-input" id="o-from" type="date"/>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Valid Until <span class="req">*</span></label>
+                <input class="form-input" id="o-upto" type="date"/>
+              </div>
+            </div>
+            <div class="form-group" style="margin-bottom:16px">
+              <label class="form-label">Description</label>
+              <input class="form-input" id="o-desc" type="text" placeholder="e.g. 20% off all orders"/>
+            </div>
+            <button class="btn btn-gold" onclick="createCoupon()">Create Coupon Code</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-hd"><h2>Active Coupon Codes</h2></div>
+          <div id="offers-container"><div class="loading-overlay"><div class="spin"></div><p>Loading offers…</p></div></div>
+        </div>
+      </div>
+
     </div><!-- /page-content -->
   </main>
 </div><!-- /app -->
@@ -954,6 +1030,8 @@ function bootApp(){
   loadDashboard();
   loadProducts();
   loadOrders();
+  loadCustomers();
+  loadOffers();
 }
 
 function setConnStatus(ok){
@@ -967,7 +1045,7 @@ function navTo(page,el){
   if(el) el.classList.add('active');
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
-  const titles={dashboard:'Dashboard',products:'Products',orders:'Orders',settings:'Settings'};
+  const titles={dashboard:'Dashboard',products:'Products',orders:'Orders',customers:'Customers',offers:'Offers & Coupons',settings:'Settings'};
   document.getElementById('page-title').textContent=titles[page]||page;
 }
 
@@ -1249,7 +1327,7 @@ function confirmDelete(id,name){
 async function loadOrders(){
   document.getElementById('orders-table-wrap').innerHTML='<div class="loading-overlay"><div class="spin"></div><p>Loading orders…</p></div>';
   try{
-    const fields=JSON.stringify(["name","customer","transaction_date","grand_total","status","delivery_date"]);
+    const fields=JSON.stringify(["name","customer","transaction_date","grand_total","status","delivery_date","contact_phone","shipping_address_name"]);
     const res=await frappe('GET',`/api/resource/Sales Order?fields=${encodeURIComponent(fields)}&limit=500&order_by=transaction_date desc`);
     allOrders=res.data||[];
     renderOrders(allOrders);
@@ -1280,19 +1358,27 @@ function renderOrders(orders){
     return;
   }
   document.getElementById('orders-table-wrap').innerHTML=`<table>
-    <thead><tr><th>Order ID</th><th>Customer</th><th>Date</th><th>Amount</th><th>Status</th><th>Action</th></tr></thead>
-    <tbody>${orders.map(o=>`<tr>
-      <td class="td-name">${o.name}</td>
-      <td>${o.customer||'—'}</td>
-      <td style="color:var(--text3);font-size:12px">${formatDate(o.transaction_date)}</td>
-      <td style="font-family:var(--font-d);font-size:15px">$${(o.grand_total||0).toFixed(2)}</td>
-      <td>${statusBadge(o.status)}</td>
-      <td>
-        <select class="status-select" onchange="updateOrderStatus('${o.name}',this.value)">
-          ${['Draft','To Deliver and Bill','To Bill','To Deliver','Completed','Cancelled'].map(s=>`<option value="${s}"${o.status===s?' selected':''}>${s}</option>`).join('')}
-        </select>
-      </td>
-    </tr>`).join('')}</tbody>
+    <thead><tr><th>Order ID</th><th>Customer</th><th>Contact</th><th>Date</th><th>Amount</th><th>Status</th><th>Update</th></tr></thead>
+    <tbody>${orders.map(o=>{
+      const phone=o.contact_phone||'—';
+      const addr=o.shipping_address_name||'';
+      return `<tr>
+        <td class="td-name" style="font-size:12px">${o.name}</td>
+        <td>
+          <div style="font-weight:500;font-size:13px">${o.customer||'—'}</div>
+          ${addr?`<div style="font-size:11px;color:var(--text3);max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${addr}">${addr}</div>`:''}
+        </td>
+        <td style="font-size:12px;color:var(--text2)">${phone}</td>
+        <td style="color:var(--text3);font-size:12px">${formatDate(o.transaction_date)}</td>
+        <td style="font-family:var(--font-d);font-size:15px">$${(o.grand_total||0).toFixed(2)}</td>
+        <td>${statusBadge(o.status)}</td>
+        <td>
+          <select class="status-select" onchange="updateOrderStatus('${o.name}',this.value)">
+            ${['Draft','To Deliver and Bill','To Bill','To Deliver','Completed','Cancelled'].map(s=>`<option value="${s}"${o.status===s?' selected':''}>${s}</option>`).join('')}
+          </select>
+        </td>
+      </tr>`;
+    }).join('')}</tbody>
   </table>`;
 }
 
@@ -1307,6 +1393,139 @@ async function updateOrderStatus(id,status){
     toast('Failed to update: '+e.message,'error');
     loadOrders();
   }
+}
+
+/* ─── CUSTOMERS ─── */
+let allCustomers=[];
+async function loadCustomers(){
+  const el=document.getElementById('customers-container');
+  if(!el)return;
+  el.innerHTML='<div class="loading-overlay"><div class="spin"></div><p>Loading customers…</p></div>';
+  try{
+    const fields=JSON.stringify(["name","customer_name","customer_type","email_id","mobile_no","territory","creation"]);
+    const res=await frappe('GET',`/api/resource/Customer?fields=${encodeURIComponent(fields)}&limit=200&order_by=creation desc`);
+    allCustomers=res.data||[];
+    renderCustomers(allCustomers);
+    // Update dashboard stat
+    const statEl=document.getElementById('stat-customers');
+    if(statEl)statEl.textContent=allCustomers.length;
+  }catch(e){
+    el.innerHTML=`<div class="empty"><div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div><h3>Failed to load customers</h3><p>${e.message}</p></div>`;
+  }
+}
+
+function filterCustomers(q){
+  q=(q||'').toLowerCase();
+  const filtered=allCustomers.filter(c=>
+    (c.customer_name||'').toLowerCase().includes(q)||
+    (c.email_id||'').toLowerCase().includes(q)||
+    (c.mobile_no||'').toLowerCase().includes(q)
+  );
+  renderCustomers(filtered);
+}
+
+function renderCustomers(customers){
+  const el=document.getElementById('customers-container');
+  if(!customers.length){
+    el.innerHTML='<div class="empty"><div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div><h3>No customers found</h3><p>Customers are created automatically when orders are placed.</p></div>';
+    return;
+  }
+  el.innerHTML=`<div class="tbl-wrap"><table>
+    <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Type</th><th>Joined</th></tr></thead>
+    <tbody>${customers.map(c=>`<tr>
+      <td class="td-name">${c.customer_name||c.name}</td>
+      <td style="font-size:12px;color:var(--text2)">${c.email_id||'—'}</td>
+      <td style="font-size:12px;color:var(--text2)">${c.mobile_no||'—'}</td>
+      <td><span style="font-size:11px;background:var(--blue-bg);color:var(--blue);padding:2px 8px;border-radius:99px">${c.customer_type||'Individual'}</span></td>
+      <td style="font-size:12px;color:var(--text3)">${c.creation?new Date(c.creation).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}):'—'}</td>
+    </tr>`).join('')}</tbody>
+  </table></div>`;
+}
+
+/* ─── OFFERS ─── */
+let allOffers=[];
+async function loadOffers(){
+  const el=document.getElementById('offers-container');
+  if(!el)return;
+  el.innerHTML='<div class="loading-overlay"><div class="spin"></div><p>Loading offers…</p></div>';
+  try{
+    const today=new Date().toISOString().split('T')[0];
+    const fields=JSON.stringify(["name","coupon_code","coupon_type","discount_percentage","minimum_amount","valid_from","valid_upto","description"]);
+    const res=await frappe('GET',`/api/resource/Coupon Code?fields=${encodeURIComponent(fields)}&limit=50&order_by=creation desc`);
+    allOffers=res.data||[];
+    renderOffers(allOffers);
+  }catch(e){
+    el.innerHTML=`<div class="empty"><div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><circle cx="7" cy="7" r="1.5" fill="currentColor"/></svg></div><h3>No coupon codes</h3><p>${e.message}</p></div>`;
+  }
+}
+
+function renderOffers(offers){
+  const el=document.getElementById('offers-container');
+  if(!offers.length){
+    el.innerHTML='<div class="empty"><div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><circle cx="7" cy="7" r="1.5" fill="currentColor"/></svg></div><h3>No coupon codes yet</h3><p>Create your first coupon above.</p></div>';
+    return;
+  }
+  const today=new Date().toISOString().split('T')[0];
+  el.innerHTML=`<div class="tbl-wrap"><table>
+    <thead><tr><th>Code</th><th>Discount</th><th>Min. Order</th><th>Valid Until</th><th>Status</th><th>Actions</th></tr></thead>
+    <tbody>${offers.map(o=>{
+      const expired=o.valid_upto&&o.valid_upto<today;
+      return`<tr>
+        <td><span style="font-family:monospace;font-size:14px;font-weight:700;color:var(--gold);background:var(--gold-xl);padding:3px 10px;border-radius:6px">${o.coupon_code}</span></td>
+        <td style="font-weight:600">${o.discount_percentage?o.discount_percentage+'%':'—'}</td>
+        <td>${o.minimum_amount?'$'+o.minimum_amount:'Any'}</td>
+        <td style="font-size:12px;color:var(--text2)">${o.valid_upto||'—'}</td>
+        <td><span style="font-size:11px;padding:2px 8px;border-radius:99px;${expired?'background:var(--red-bg);color:var(--red)':'background:var(--green-bg);color:var(--green)'}">${expired?'Expired':'Active'}</span></td>
+        <td><div class="prod-actions">
+          <button class="del-btn" onclick="deleteCoupon('${o.name}')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
+            Delete
+          </button>
+        </div></td>
+      </tr>`;
+    }).join('')}</tbody>
+  </table></div>`;
+}
+
+async function createCoupon(){
+  const code=document.getElementById('o-code').value.trim();
+  const pct =document.getElementById('o-pct').value;
+  const min =document.getElementById('o-min').value;
+  const from=document.getElementById('o-from').value;
+  const upto=document.getElementById('o-upto').value;
+  const desc=document.getElementById('o-desc').value.trim();
+
+  if(!code||!pct||!upto){toast('Code, discount % and valid until are required','error');return;}
+
+  try{
+    await frappe('POST','/api/resource/Coupon Code',{
+      coupon_code:          code,
+      coupon_type:          'Percentage',
+      discount_percentage:  parseFloat(pct),
+      minimum_amount:       min?parseFloat(min):0,
+      valid_from:           from||new Date().toISOString().split('T')[0],
+      valid_upto:           upto,
+      description:          desc||`${pct}% discount`,
+      is_use_count_required:0,
+    });
+    toast('Coupon code created: '+code,'success');
+    document.getElementById('o-code').value='';
+    document.getElementById('o-pct').value='';
+    document.getElementById('o-min').value='';
+    document.getElementById('o-from').value='';
+    document.getElementById('o-upto').value='';
+    document.getElementById('o-desc').value='';
+    loadOffers();
+  }catch(e){toast('Failed: '+e.message,'error');}
+}
+
+async function deleteCoupon(name){
+  if(!confirm('Delete coupon "'+name+'"?'))return;
+  try{
+    await frappe('DELETE','/api/resource/Coupon Code/'+encodeURIComponent(name));
+    toast('Coupon deleted','success');
+    loadOffers();
+  }catch(e){toast('Failed: '+e.message,'error');}
 }
 
 /* ─── SETTINGS ─── */

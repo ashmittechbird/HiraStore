@@ -1,0 +1,18 @@
+{
+  "version": 2,
+  "cleanUrls": true,
+  "rewrites": [
+    {
+      "source": "/api/square-payment",
+      "destination": "/api/square-payment.js"
+    },
+    {
+      "source": "/erp/(.*)",
+      "destination": "http://127.0.0.1:8001/$1"
+    },
+    {
+      "source": "/(cart|checkout|payment|order-success|shop|about|contact|login|signup|admin|products|categories)",
+      "destination": "/$1.html"
+    }
+  ]
+}

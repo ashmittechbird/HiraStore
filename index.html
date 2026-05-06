@@ -3,2336 +3,848 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>The Hira Store | Silver Jewelry made for you</title>
-  <meta name="description" content="We know jewelry shopping can be intimidating, which is why we provide a friendly, no-pressure atmosphere. Find your perfect piece at Hira Jewellery." />
+  <title>The Hira Store | Everyday Fine Jewelry</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700;800&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet" />
-  <script type="importmap">
-  {
-    "imports": {
-      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
-      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
-    }
-  }
-  </script>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;1,400&family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet" />
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
+    /* ui-ux-pro-max compliant minimalist luxury */
     :root {
-      --gold:       #005969;
-      --gold-dark:  #003d4a;
-      --gold-light: #007a8c;
-      --bg:         #ffffff;
-      --text:       #555555;
-      --text-dark:  #2c2c2c;
-      --text-light: #888888;
-      --border:     #e8e0d8;
-      --surface:    #faf8f5;
-      --font-body:  'Poppins', sans-serif;
-      --font-head:  'Nunito', sans-serif;
-      --ease-out:   cubic-bezier(0.22, 1, 0.36, 1);
+      --bg: #ffffff;
+      --surface: #faf9f7; /* Very light warm grey/beige */
+      --surface-hover: #f0ebe1;
+      --text-main: #2c2c2c;
+      --text-light: #737373;
+      --accent-gold: #c8a97e;
+      --accent-dark: #1a1a1a;
+      --border: #eaeaea;
+      --font-body: 'DM Sans', sans-serif;
+      --font-head: 'Playfair Display', serif;
+      --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+      --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
     }
-
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html { scroll-behavior: smooth; }
-
-    body {
-      font-family: var(--font-body);
-      color: var(--text);
-      background: var(--bg);
-      font-size: 15px;
-      line-height: 1.65;
-      overflow-x: hidden;
-    }
-
-    img { display: block; max-width: 100%; }
-    a   { text-decoration: none; color: inherit; }
+    body { font-family: var(--font-body); color: var(--text-main); background: var(--bg); font-size: 14px; line-height: 1.6; overflow-x: hidden; -webkit-font-smoothing: antialiased; }
+    img { display: block; max-width: 100%; height: auto; }
+    a { text-decoration: none; color: inherit; }
     button { cursor: pointer; border: none; background: none; font-family: inherit; }
 
+    /* Announcement Bar */
+    .announcement { background: var(--surface); color: var(--text-main); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 600; padding: 10px 0; text-align: center; border-bottom: 1px solid var(--border); overflow: hidden; position: relative; }
+    .marquee-inner { display: inline-flex; animation: marquee 20s linear infinite; white-space: nowrap; }
+    .marquee-inner span { padding: 0 40px; }
+    @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
 
-    /* â”€â”€â”€ NAVBAR â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
-    .nav {
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      background: rgba(255, 255, 255, 0.95);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 48px;
-      height: 70px;
-      transition: box-shadow 0.3s;
-    }
-    .nav.scrolled { box-shadow: 0 2px 24px rgba(0,89,105,0.12); }
-
-    .nav-logo img {
-      height: 44px;
-      width: auto;
-      object-fit: contain;
-    }
-
-    .nav-links {
-      display: flex;
-      gap: 32px;
-      list-style: none;
-    }
-    .nav-links a {
-      font-size: 13px;
-      font-weight: 500;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      color: var(--text-dark);
-      position: relative;
-      padding-bottom: 4px;
-      transition: color 0.2s;
-    }
-    .nav-links a::after {
-      content: '';
-      position: absolute;
-      bottom: 0; left: 0;
-      width: 0; height: 1.5px;
-      background: var(--gold);
-      transition: width 0.3s var(--ease-out);
-    }
-    .nav-links a:hover { color: var(--gold); }
+    /* Navbar */
+    .nav { position: sticky; top: 0; z-index: 100; background: rgba(255, 255, 255, 0.98); backdrop-filter: blur(10px); border-bottom: 1px solid transparent; display: flex; align-items: center; justify-content: space-between; padding: 0 40px; height: 72px; transition: border-color 0.3s; }
+    .nav.scrolled { border-color: var(--border); }
+    .nav-left, .nav-right { flex: 1; display: flex; align-items: center; }
+    .nav-right { justify-content: flex-end; gap: 20px; }
+    .nav-center { flex: 0 0 auto; }
+    .nav-logo img { height: 48px; width: auto; filter: contrast(1.2); }
+    .nav-links { display: flex; gap: 32px; list-style: none; }
+    .nav-links a { font-size: 12px; font-weight: 500; color: var(--text-main); text-transform: uppercase; letter-spacing: 0.05em; transition: color 0.3s; position: relative; }
+    .nav-links a::after { content: ''; position: absolute; bottom: -4px; left: 0; width: 0; height: 1px; background: var(--text-main); transition: width 0.3s var(--ease-out); }
     .nav-links a:hover::after { width: 100%; }
-
-    .nav-actions {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
-    .nav-icon {
-      width: 44px; height: 44px;
-      display: flex; align-items: center; justify-content: center;
-      border-radius: 50%;
-      color: var(--text-dark);
-      transition: background 0.2s, color 0.2s;
-    }
-    .nav-icon:hover { background: var(--surface); color: var(--gold); }
-    .nav-icon svg { width: 20px; height: 20px; stroke-width: 1.8; fill: none; stroke: currentColor; }
-
+    .nav-icon { display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; color: var(--text-main); transition: transform 0.2s var(--ease-out); position: relative; }
+    .nav-icon:hover { transform: scale(1.1); color: var(--accent-gold); }
+    .nav-icon svg { width: 20px; height: 20px; stroke-width: 1.5; fill: none; stroke: currentColor; }
     .cart-wrap { position: relative; }
-    .cart-badge {
-      position: absolute;
-      top: 7px; right: 7px;
-      width: 16px; height: 16px;
-      background: var(--gold);
-      color: #fff;
-      font-size: 9px;
-      font-weight: 700;
-      border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      pointer-events: none;
-    }
+    .cart-badge { position: absolute; top: 6px; right: 4px; background: var(--accent-gold); color: #fff; font-size: 9px; font-weight: 600; width: 14px; height: 14px; display: flex; align-items: center; justify-content: center; border-radius: 50%; }
 
-    /* â”€â”€â”€ HERO SLIDER  */
-    .hero {
-      position: relative;
-      width: 100%;
-      height: 100vh;
-      min-height: 420px;
-      overflow: hidden;
-      background: #1a1510;
-    }
+    /* Hero Section */
+    .hero { height: 85vh; min-height: 500px; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; text-align: center; background: #e3dfd8; }
+    .hero-slider { position: absolute; inset: 0; width: 100%; height: 100%; }
+    .hero-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 1.5s ease-in-out; }
+    .hero-img.active { opacity: 1; animation: zoomOut 15s ease-out forwards; z-index: 1; }
+    @keyframes zoomOut { from { transform: scale(1.1); } to { transform: scale(1); } }
+    .hero-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.5), rgba(0,0,0,0.1)); z-index: 2; }
+    .hero-content { position: relative; z-index: 10; color: #fff; max-width: 600px; padding: 0 20px; }
+    .hero-eyebrow { font-size: 11px; letter-spacing: 0.25em; text-transform: uppercase; margin-bottom: 20px; font-weight: 600; opacity: 0; animation: fadeUp 1s 0.3s var(--ease-out) forwards; color: #f0ebe1; }
+    .hero-title { font-family: var(--font-head); font-size: clamp(40px, 5vw, 64px); font-weight: 400; line-height: 1.15; margin-bottom: 30px; opacity: 0; animation: fadeUp 1s 0.5s var(--ease-out) forwards; }
+    .hero-btn { display: inline-flex; align-items: center; gap: 10px; background: #fff; color: var(--text-main); padding: 16px 40px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.15em; transition: background 0.3s, transform 0.3s var(--ease-out); opacity: 0; animation: fadeUp 1s 0.7s var(--ease-out) forwards; border-radius: 2px; }
+    .hero-btn:hover { background: var(--surface-hover); transform: translateY(-3px); }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
-    .slide {
-      position: absolute;
-      inset: 0;
-      opacity: 0;
-      transition: opacity 1.4s ease-in-out;
-      will-change: opacity;
-    }
-    .slide.active { opacity: 1; }
+    /* Trust Bar */
+    .trust-bar { display: flex; justify-content: center; gap: 80px; padding: 24px 40px; background: #fff; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+    .trust-item { display: flex; align-items: center; gap: 12px; color: var(--text-main); }
+    .trust-item svg { width: 20px; height: 20px; stroke: var(--text-main); stroke-width: 1.5; fill: none; }
+    .trust-text { font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 600; }
 
-    .slide-bg {
-      position: absolute;
-      inset: -8%;
-      background-size: cover;
-      background-position: center;
-      will-change: transform;
-    }
-    .slide.active .slide-bg {
-      animation: kenburns 8s ease-out forwards;
-    }
+    /* Sections Shared */
+    .section { padding: 80px 40px; max-width: 1300px; margin: 0 auto; }
+    .section-alt { background: #effcff; padding: 80px 40px; }
+    .section-inner { max-width: 1300px; margin: 0 auto; }
+    .section-header { text-align: center; margin-bottom: 56px; }
+    .section-title { font-family: var(--font-head); font-size: clamp(28px, 4vw, 36px); font-weight: 400; color: var(--text-main); margin-bottom: 16px; }
+    .section-desc { font-size: 14px; color: var(--text-light); max-width: 500px; margin: 0 auto; }
 
-    @keyframes kenburns {
-      from { transform: scale(1.1) translateX(0px); }
-      to   { transform: scale(1)   translateX(0px); }
-    }
+    /* Shop by Category */
+    .cat-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 40px 20px; }
+    .cat-card { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 16px; group; }
+    .cat-img-wrap { width: 100%; aspect-ratio: 1; border-radius: 50%; overflow: hidden; background: var(--surface); transition: transform 0.4s var(--ease-spring); }
+    .cat-img-wrap img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s var(--ease-out); }
+    .cat-card:hover .cat-img-wrap { transform: scale(1.03); }
+    .cat-card:hover .cat-img-wrap img { transform: scale(1.1); }
+    .cat-name { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-main); }
 
-    .slide-overlay {
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(
-        105deg,
-        rgba(0,0,0,0.65) 0%,
-        rgba(0,0,0,0.30) 50%,
-        rgba(0,0,0,0.05) 100%
-      );
-    }
+    /* Products Grid (matches previous JS hooks) */
+    .products-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 40px 24px; }
+    .product-card { position: relative; display: flex; flex-direction: column; group; }
+    .product-img-wrap { position: relative; aspect-ratio: 4/5; overflow: hidden; background: var(--surface); margin-bottom: 20px; border-radius: 0; }
+    .product-img-wrap img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.7s var(--ease-out); }
+    .product-card:hover .product-img-wrap img { transform: scale(1.06); }
+    
+    .product-badge { position: absolute; top: 12px; left: 12px; background: #fff; color: var(--text-main); font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; padding: 4px 10px; border-radius: 0; }
+    .product-wish { position: absolute; top: 12px; right: 12px; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.9); border-radius: 50%; opacity: 0; transform: translateY(-5px); transition: all 0.3s var(--ease-out); }
+    .product-card:hover .product-wish { opacity: 1; transform: translateY(0); }
+    .product-wish svg { width: 16px; height: 16px; fill: none; stroke: var(--text-main); stroke-width: 1.5; transition: fill 0.2s; }
+    .product-wish.wished svg { fill: #e04040; stroke: #e04040; }
+    .product-wish.popping { animation: pop 0.4s var(--ease-spring); }
+    @keyframes pop { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.3); } }
 
-    .slide-content {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      padding: 0 96px;
-      color: #fff;
-    }
-    .slide-content .slide-eyebrow,
-    .slide-content .slide-title,
-    .slide-content .slide-sub,
-    .slide-content .slide-ctas {
-      opacity: 0;
-      transform: translateY(24px);
-    }
-
-    .slide-eyebrow {
-      font-size: 11px;
-      letter-spacing: 0.24em;
-      text-transform: uppercase;
-      color: var(--gold-light);
-      font-weight: 600;
-      margin-bottom: 14px;
-    }
-
-    .slide-title {
-      font-family: var(--font-head);
-      font-size: clamp(36px, 5vw, 70px);
-      font-weight: 800;
-      line-height: 1.1;
-      max-width: 580px;
-      margin-bottom: 18px;
-      text-shadow: 0 2px 20px rgba(0,0,0,0.2);
-    }
-
-    .slide-sub {
-      font-size: 15px;
-      font-weight: 300;
-      max-width: 420px;
-      opacity: 0.88;
-      margin-bottom: 36px;
-      line-height: 1.75;
-    }
-
-    .slide-ctas { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; }
-
-    .btn-primary {
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
-      background: var(--gold);
-      color: #fff;
-      padding: 14px 32px;
-      font-size: 12px;
-      font-weight: 600;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      transition: background 0.25s, transform 0.25s var(--ease-out), box-shadow 0.25s;
-    }
-    .btn-primary:hover {
-      background: var(--gold-dark);
-      transform: translateY(-2px);
-      box-shadow: 0 8px 28px rgba(0,89,105,0.45);
-    }
-    .btn-primary svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; }
-
-    .btn-ghost {
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
-      border: 1.5px solid rgba(255,255,255,0.65);
-      color: #fff;
-      padding: 13px 30px;
-      font-size: 12px;
-      font-weight: 600;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      transition: border-color 0.25s, background 0.25s;
-    }
-    .btn-ghost:hover { background: rgba(255,255,255,0.14); border-color: #fff; }
-
-    /* Dots */
-    .slider-dots {
-      position: absolute;
-      bottom: 30px;
-      left: 50%;
-      transform: translateX(-50%);
-      display: flex;
-      gap: 10px;
-      z-index: 10;
-    }
-    .dot {
-      width: 8px; height: 8px;
-      border-radius: 50%;
-      background: rgba(255,255,255,0.4);
-      padding: 0;
-      transition: background 0.3s, transform 0.3s;
-    }
-    .dot.active { background: var(--gold); transform: scale(1.5); }
-
-    /* Arrows */
-    .slider-arrow {
-      position: absolute;
-      top: 50%;
-      transform: translateY(-50%);
-      z-index: 10;
-      width: 50px; height: 50px;
-      border: 1.5px solid rgba(255,255,255,0.45);
-      background: rgba(0,0,0,0.18);
-      backdrop-filter: blur(6px);
-      -webkit-backdrop-filter: blur(6px);
-      color: #fff;
-      border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      transition: background 0.25s, border-color 0.25s, transform 0.25s var(--ease-out);
-    }
-    .slider-arrow:hover { background: var(--gold); border-color: var(--gold); transform: translateY(-50%) scale(1.05); }
-    .slider-arrow svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; }
-    .arrow-prev { left: 32px; }
-    .arrow-next { right: 32px; }
-
-    /* Progress bar */
-    .progress-bar {
-      position: absolute;
-      bottom: 0; left: 0;
-      height: 3px;
-      background: var(--gold);
-      width: 0%;
-      z-index: 10;
-    }
-    .progress-bar.running {
-      width: 100%;
-      transition: width 4s linear;
-    }
-
-    /* â”€â”€â”€ SECTION COMMONS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
-    .section { padding: 60px 48px; }
-    .section-alt { background: var(--surface); }
-
-    .section-header { text-align: center; margin-bottom: 52px; }
-    .section-eyebrow {
-      font-size: 11px;
-      letter-spacing: 0.22em;
-      text-transform: uppercase;
-      color: var(--gold);
-      font-weight: 600;
-      margin-bottom: 12px;
-    }
-    .section-title {
-      font-family: var(--font-head);
-      font-size: clamp(26px, 3vw, 38px);
-      font-weight: 800;
-      color: var(--text-dark);
-      line-height: 1.2;
-    }
-    .section-subtitle {
-      margin-top: 12px;
-      font-size: 14px;
-      color: var(--text-light);
-      max-width: 500px;
-      margin-left: auto;
-      margin-right: auto;
-    }
-    .divider {
-      width: 40px; height: 2.5px;
-      background: var(--gold);
-      margin: 18px auto 0;
-      border-radius: 2px;
-    }
-
-    /* â”€â”€â”€ CATEGORIES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
-    .categories-grid {
-      display: grid;
-      grid-template-columns: repeat(6, 1fr);
-      gap: 24px;
-      max-width: 1100px;
-      margin: 0 auto;
-    }
-
-    .category-card {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 14px;
-      cursor: pointer;
-    }
-
-    .category-img-wrap {
-      width: 120px; height: 120px;
-      border-radius: 50%;
-      overflow: hidden;
-      border: 2.5px solid transparent;
-      background: var(--border);
-      transition: border-color 0.3s, transform 0.35s var(--ease-out), box-shadow 0.35s;
-    }
-    .category-card:hover .category-img-wrap {
-      border-color: var(--gold);
-      transform: translateY(-6px);
-      box-shadow: 0 16px 36px rgba(0,89,105,0.22);
-    }
-    .category-img-wrap img {
-      width: 100%; height: 100%;
-      object-fit: cover;
-      transition: transform 0.5s var(--ease-out);
-    }
-    .category-card:hover .category-img-wrap img { transform: scale(1.09); }
-
-    .category-name {
-      font-size: 12px;
-      font-weight: 600;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--text-dark);
-      transition: color 0.2s;
-    }
-    .category-card:hover .category-name { color: var(--gold); }
-
-    /* â”€â”€â”€ PRODUCTS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
-    .products-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 28px;
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-
-    .product-card { cursor: pointer; }
-
-    .product-img-wrap {
-      position: relative;
-      overflow: hidden;
-      aspect-ratio: 3 / 4;
-      background: var(--surface);
-    }
-    .product-img-wrap img {
-      width: 100%; height: 100%;
-      object-fit: cover;
-      transition: transform 0.6s var(--ease-out);
-    }
-    .product-card:hover .product-img-wrap img { transform: scale(1.07); }
-
-    .product-badge {
-      position: absolute;
-      top: 14px; left: 14px;
-      background: var(--gold);
-      color: #fff;
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      padding: 4px 10px;
-    }
-
-    .product-wish {
-      position: absolute;
-      top: 12px; right: 12px;
-      width: 36px; height: 36px;
-      background: rgba(255, 255, 255, 0.9);
-      border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      opacity: 0;
-      transition: opacity 0.25s, transform 0.25s var(--ease-out);
-    }
-    .product-card:hover .product-wish { opacity: 1; }
-    .product-wish:hover { transform: scale(1.12); }
-    .product-wish svg { width: 18px; height: 18px; fill: none; stroke: var(--gold); stroke-width: 1.8; }
-    .product-wish:hover svg { fill: var(--gold); }
-
-    .product-actions {
-      position: absolute;
-      bottom: 0; left: 0; right: 0;
-      background: rgba(255, 255, 255, 0.96);
-      padding: 14px;
-      transform: translateY(100%);
-      transition: transform 0.35s var(--ease-out);
-      display: flex;
-      gap: 10px;
-    }
+    .product-actions { position: absolute; bottom: 0; left: 0; width: 100%; display: flex; transform: translateY(100%); transition: transform 0.4s var(--ease-out); }
     .product-card:hover .product-actions { transform: translateY(0); }
+    .product-action-btn { flex: 1; padding: 14px 10px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; transition: background 0.3s; border-radius: 0; }
+    .product-action-btn.pa-primary { background: var(--text-main); color: #fff; }
+    .product-action-btn.pa-primary:hover { background: var(--accent-gold); }
+    .product-action-btn.pa-secondary { background: rgba(255,255,255,0.95); color: var(--text-main); }
+    .product-action-btn.pa-secondary:hover { background: #fff; color: var(--accent-gold); }
 
-    .product-action-btn {
-      flex: 1;
-      padding: 10px;
-      font-size: 11px;
-      font-weight: 600;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      text-align: center;
-      transition: background 0.2s, color 0.2s, border-color 0.2s;
-    }
-    .product-action-btn.pa-primary { background: var(--gold); color: #fff; }
-    .product-action-btn.pa-primary:hover { background: var(--gold-dark); }
-    .product-action-btn.pa-secondary { border: 1.5px solid var(--border); color: var(--text-dark); }
-    .product-action-btn.pa-secondary:hover { border-color: var(--gold); color: var(--gold); }
+    .product-info { display: flex; flex-direction: column; gap: 6px; text-align: center; }
+    .product-name { font-family: var(--font-head); font-size: 16px; font-weight: 500; color: var(--text-main); }
+    .product-meta { font-size: 11px; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.05em; }
+    .product-price { font-size: 14px; font-weight: 600; color: var(--text-main); margin-top: 4px; }
 
-    .product-info { padding: 18px 4px 4px; }
+    /* Promo Banners */
+    .promo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
+    .promo-card { position: relative; aspect-ratio: 4/5; overflow: hidden; display: flex; align-items: flex-end; padding: 40px; background: #eee; }
+    .promo-card img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform 0.8s var(--ease-out); }
+    .promo-card:hover img { transform: scale(1.05); }
+    .promo-card::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.6), transparent 60%); }
+    .promo-content { position: relative; z-index: 10; color: #fff; }
+    .promo-title { font-family: var(--font-head); font-size: 32px; margin-bottom: 16px; font-weight: 400; }
+    .promo-link { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; display: inline-flex; align-items: center; gap: 8px; border-bottom: 1px solid #fff; padding-bottom: 4px; transition: color 0.3s, border-color 0.3s; }
+    .promo-card:hover .promo-link { color: var(--accent-gold); border-color: var(--accent-gold); }
 
-    .product-name {
-      font-family: var(--font-head);
-      font-size: 16px;
-      font-weight: 700;
-      color: var(--text-dark);
-      margin-bottom: 5px;
-    }
-    .product-meta { font-size: 12px; color: var(--text-light); margin-bottom: 10px; }
 
-    .product-price { display: flex; align-items: center; gap: 10px; }
-    .price-current { font-size: 17px; font-weight: 600; color: var(--text-dark); }
-    .price-original { font-size: 13px; color: var(--text-light); text-decoration: line-through; }
-    .price-off { font-size: 11px; font-weight: 700; color: #2eaa6e; }
+    /* Instagram / UGC */
+    .ig-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+    .ig-item { position: relative; aspect-ratio: 1; overflow: hidden; }
+    .ig-item img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s var(--ease-out); }
+    .ig-item:hover img { transform: scale(1.05); }
+    .ig-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s; color: #fff; }
+    .ig-item:hover .ig-overlay { opacity: 1; }
+    .ig-overlay svg { width: 32px; height: 32px; fill: none; stroke: currentColor; stroke-width: 1.5; }
 
-    .product-rating { display: flex; align-items: center; gap: 5px; margin-top: 8px; }
-    .stars { color: #f5a623; font-size: 12px; letter-spacing: 1px; }
-    .rating-count { font-size: 11px; color: var(--text-light); }
+    /* Testimonials Polaroid Carousel */
+    .testimonials-section { padding: 80px 0 60px; background: #fff9f9; overflow: hidden; }
+    .testimonials-section .section-header { padding: 0 40px; }
+    .testimonials-carousel-wrap { position: relative; padding-top: 44px; }
+    .testimonials-string-line { position: absolute; top: 18px; left: 0; right: 0; height: 2px; background: repeating-linear-gradient(90deg, #c9a96e 0, #c9a96e 8px, transparent 8px, transparent 16px); z-index: 2; pointer-events: none; }
+    .testimonials-track-outer { overflow: hidden; cursor: grab; }
+    .testimonials-track-outer:active { cursor: grabbing; }
+    .testimonials-track { display: flex; gap: 36px; padding: 10px 60px 40px; width: max-content; animation: testimonials-scroll 28s linear infinite; }
+    .testimonials-track:hover { animation-play-state: paused; }
+    @keyframes testimonials-scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+    .polaroid-card { position: relative; background: #fff0f0; padding: 14px 14px 22px; width: 240px; box-shadow: 3px 4px 18px rgba(0,0,0,0.13); transform: rotate(var(--rot, 0deg)); transition: transform 0.3s ease, box-shadow 0.3s ease; flex-shrink: 0; z-index: 1; }
+    .polaroid-card:hover { transform: rotate(0deg) scale(1.05); box-shadow: 6px 10px 30px rgba(0,0,0,0.2); z-index: 10; }
+    .polaroid-clip { position: absolute; top: -14px; left: 50%; transform: translateX(-50%); width: 22px; height: 28px; background: #888; border-radius: 3px 3px 0 0; }
+    .polaroid-clip::after { content: ''; position: absolute; top: 6px; left: 50%; transform: translateX(-50%); width: 8px; height: 14px; background: #555; border-radius: 2px; }
+    .polaroid-inner { width: 100%; aspect-ratio: 4/3; overflow: hidden; }
+    .polaroid-inner img { width: 100%; height: 100%; object-fit: cover; }
+    .polaroid-caption { padding-top: 12px; }
+    .polaroid-name { font-family: var(--font-heading); font-size: 13px; font-weight: 700; color: #333; margin-bottom: 6px; }
+    .polaroid-text { font-size: 11.5px; color: #555; line-height: 1.6; margin: 0; }
 
-    /* â”€â”€â”€ PROMO BANNER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
-    .promo {
-      position: relative;
-      height: 440px;
-      overflow: hidden;
-      display: flex;
-      align-items: center;
-    }
-    .promo-bg {
-      position: absolute;
-      inset: -10%;
-      background-image: url('https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=1800&q=80');
-      background-size: cover;
-      background-position: center 30%;
-      will-change: transform;
-    }
-    .promo-overlay {
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(
-        to left,
-        rgba(8,5,2,0.78) 0%,
-        rgba(8,5,2,0.38) 55%,
-        rgba(8,5,2,0.08) 100%
-      );
-    }
-    .promo-content {
-      position: relative;
-      margin-left: auto;
-      padding: 0 96px 0 0;
-      max-width: 540px;
-      color: #fff;
-      text-align: right;
-    }
-    .promo-eyebrow {
-      font-size: 11px;
-      letter-spacing: 0.24em;
-      text-transform: uppercase;
-      color: var(--gold-light);
-      font-weight: 600;
-      margin-bottom: 14px;
-    }
-    .promo-title {
-      font-family: var(--font-head);
-      font-size: clamp(28px, 4vw, 50px);
-      font-weight: 800;
-      line-height: 1.12;
-      margin-bottom: 16px;
-    }
-    .promo-text {
-      font-size: 14px;
-      opacity: 0.85;
-      line-height: 1.78;
-      margin-bottom: 32px;
-    }
-
-    /* â”€â”€â”€ TRUST BADGES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
-    .trust { border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
-    .trust-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      max-width: 1100px;
-      margin: 0 auto;
-    }
-    .trust-item {
-      display: flex;
-      align-items: center;
-      gap: 18px;
-      padding: 36px 24px;
-      border-right: 1px solid var(--border);
-      transition: background 0.25s;
-    }
-    .trust-item:last-child { border-right: none; }
-    .trust-item:hover { background: var(--surface); }
-
-    .trust-icon {
-      width: 52px; height: 52px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, #005969, #005969);
-      display: flex; align-items: center; justify-content: center;
-      flex-shrink: 0;
-    }
-    .trust-icon svg { width: 24px; height: 24px; fill: none; stroke: #fff; stroke-width: 1.8; }
-    .trust-label { font-size: 13px; font-weight: 600; color: var(--gold-dark); letter-spacing: 0.02em; }
-    .trust-desc { font-size: 12px; color: var(--text-light); margin-top: 3px; }
-
-    /* â”€â”€â”€ TESTIMONIALS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
-    .testimonials-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 28px;
-      max-width: 1100px;
-      margin: 0 auto;
-    }
-    .testimonial-card {
-      background: var(--bg);
-      border: 1px solid var(--border);
-      padding: 32px;
-      transition: box-shadow 0.3s, transform 0.3s var(--ease-out);
-    }
-    .testimonial-card:hover {
-      box-shadow: 0 12px 40px rgba(0,0,0,0.08);
-      transform: translateY(-4px);
-    }
-    .testimonial-quote { font-size: 56px; color: var(--gold-light); font-family: Georgia, serif; line-height: 1; margin-bottom: 14px; }
-    .testimonial-text { font-size: 14px; color: var(--text); line-height: 1.78; margin-bottom: 24px; font-style: italic; }
-    .testimonial-author { display: flex; align-items: center; gap: 14px; }
-    .author-avatar { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; border: 2px solid var(--gold-light); }
-    .author-name { font-size: 13px; font-weight: 600; color: var(--text-dark); }
-    .author-meta { font-size: 11px; color: var(--text-light); margin-top: 2px; }
-
-    /* â”€â”€â”€ NEWSLETTER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
-    .newsletter {
-      background:#005969;
-      padding: 56px 48px;
-      text-align: center;
-    }
-    .newsletter-eyebrow { font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--gold-light); font-weight: 600; margin-bottom: 12px; }
-    .newsletter-title { font-family: var(--font-head); font-size: clamp(24px, 3vw, 36px); font-weight: 800; color: #fff; margin-bottom: 10px; }
-    .newsletter-sub { font-size: 14px; color: rgba(255,255,255,0.52); margin-bottom: 32px; }
-
-    .newsletter-form {
-      display: flex;
-      max-width: 460px;
-      margin: 0 auto;
-    }
-    .newsletter-form input {
-      flex: 1;
-      padding: 14px 20px;
-      font-family: var(--font-body);
-      font-size: 13px;
-      border: 1px solid rgba(255,255,255,0.15);
-      background: rgba(255,255,255,0.07);
-      color: #fff;
-      outline: none;
-      transition: border-color 0.2s;
-    }
-    .newsletter-form input::placeholder { color: rgba(255,255,255,0.35); }
-    .newsletter-form input:focus { border-color: var(--gold); }
-    .newsletter-form button {
-      background: var(--gold);
-      color: #fff;
-      padding: 14px 22px;
-      font-size: 12px;
-      font-weight: 600;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      transition: background 0.2s;
-      white-space: nowrap;
-    }
-    .newsletter-form button:hover { background: var(--gold-dark); }
-
-    /* â”€â”€â”€ FOOTER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
-    footer { background: #080A0B; color: rgba(255,255,255,0.78); padding: 64px 48px 32px; border-top: 1px solid rgba(255,255,255,0.08); }
-
-    .footer-grid {
-      display: grid;
-      grid-template-columns: 2fr 1fr 1fr 1fr;
-      gap: 48px;
-      max-width: 1200px;
-      margin: 0 auto 48px;
-    }
-    .footer-brand img { height: 40px; width: auto; object-fit: contain; margin-bottom: 20px; filter: brightness(0) invert(1) opacity(0.85); }
-    .footer-tagline { font-size: 13px; line-height: 1.78; margin-bottom: 24px; max-width: 280px; color: rgba(255,255,255,0.65); }
-
-    .footer-social { display: flex; gap: 10px; }
-    .footer-social .social-btn { border-color: rgba(255,255,255,0.22); color: rgba(255,255,255,0.75); }
-    .social-btn {
-      width: 36px; height: 36px;
-      border-radius: 50%;
-      border: 1px solid rgba(255,255,255,0.15);
-      display: flex; align-items: center; justify-content: center;
-      color: var(--text-light);
-      transition: border-color 0.2s, color 0.2s, background 0.2s;
-    }
-    .social-btn:hover { border-color: var(--gold); color: var(--gold); background: rgba(0,89,105,0.1); }
-    .social-btn svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.8; }
-
-    .footer-col h4 { color: #ffffff; font-size: 12px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 20px; }
+    /* Footer */
+    footer { background: #effcff; color: var(--text-main); padding: 80px 40px 40px; border-top: 1px solid var(--border); }
+    .footer-grid { display: grid; grid-template-columns: 1.5fr 1fr 1fr 1.5fr; gap: 60px; max-width: 1300px; margin: 0 auto; }
+    .footer-brand img { height: 62px; margin-bottom: 24px; filter: contrast(1.2); }
+    .footer-text { font-size: 13px; color: var(--text-light); line-height: 1.6; margin-bottom: 24px; max-width: 300px; }
+    .footer-social { display: flex; gap: 16px; }
+    .footer-social a { color: var(--text-main); transition: color 0.3s; }
+    .footer-social a:hover { color: var(--accent-gold); }
+    .footer-social svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.5; }
+    
+    .footer-col h4 { font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 600; margin-bottom: 20px; color: var(--text-main); }
     .footer-col ul { list-style: none; }
-    .footer-col ul li { margin-bottom: 10px; }
-    .footer-col ul li a { font-size: 13px; color: rgba(255,255,255,0.65); transition: color 0.2s; }
-    .footer-col ul li a:hover { color: #ffffff; }
+    .footer-col ul li { margin-bottom: 12px; }
+    .footer-col ul li a { font-size: 13px; color: var(--text-light); transition: color 0.3s; }
+    .footer-col ul li a:hover { color: var(--accent-gold); }
+    
+    .newsletter-form { display: flex; border-bottom: 1px solid var(--text-main); padding-bottom: 8px; margin-top: 16px; }
+    .newsletter-form input { flex: 1; border: none; background: transparent; font-size: 13px; font-family: var(--font-body); outline: none; }
+    .newsletter-form button { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-main); }
 
-    .footer-bottom {
-      border-top: 1px solid rgba(255,255,255,0.08);
-      padding-top: 28px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      max-width: 1200px;
-      margin: 0 auto;
-      font-size: 12px;
-      color: rgba(255,255,255,0.55);
-    }
-    .footer-payments { display: flex; gap: 8px; align-items: center; }
-    .payment-badge {
-      background: rgba(255,255,255,0.08);
-      border: 1px solid rgba(255,255,255,0.18);
-      padding: 5px 10px;
-      font-size: 10px;
-      font-weight: 600;
-      letter-spacing: 0.06em;
-      border-radius: 3px;
-      color: rgba(255,255,255,0.80);
-    }
+    .footer-bottom { border-top: 1px solid var(--border); padding-top: 24px; margin-top: 60px; text-align: center; font-size: 12px; color: var(--text-light); max-width: 1300px; margin-left: auto; margin-right: auto; display: flex; justify-content: space-between; align-items: center;}
 
-    /* â”€â”€â”€ UTILITIES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
-    .center-cta { text-align: center; margin-top: 48px; }
-
-    .btn-outline {
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
-      border: 1.5px solid var(--gold);
-      color: var(--gold);
-      padding: 13px 32px;
-      font-size: 12px;
-      font-weight: 600;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      transition: background 0.25s, color 0.25s, transform 0.25s var(--ease-out);
-    }
-    .btn-outline:hover { background: var(--gold); color: #fff; transform: translateY(-2px); }
-    .btn-outline svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; }
-
-    /* Scroll reveal */
-    .reveal {
-      opacity: 0;
-      transform: translateY(30px);
-      transition: opacity 0.7s var(--ease-out), transform 0.7s var(--ease-out);
-    }
+    /* Utilities */
+    .reveal { opacity: 0; transform: translateY(30px); transition: all 0.8s var(--ease-out); }
     .reveal.visible { opacity: 1; transform: translateY(0); }
     .reveal-delay-1 { transition-delay: 0.1s; }
     .reveal-delay-2 { transition-delay: 0.2s; }
     .reveal-delay-3 { transition-delay: 0.3s; }
     .reveal-delay-4 { transition-delay: 0.4s; }
+    .btn-outline-center { display: inline-flex; align-items: center; justify-content: center; border: 1px solid var(--text-main); color: var(--text-main); padding: 14px 40px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.15em; transition: all 0.3s; margin-top: 48px; }
+    .btn-outline-center:hover { background: var(--text-main); color: #fff; }
+    .center { text-align: center; }
 
-    /* Back to top */
-    .back-top {
-      position: fixed;
-      bottom: 32px; right: 32px;
-      width: 44px; height: 44px;
-      background: var(--gold);
-      color: #fff;
-      border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      z-index: 90;
-      opacity: 0;
-      pointer-events: none;
-      transform: translateY(12px);
-      transition: opacity 0.3s, transform 0.3s var(--ease-out);
-      box-shadow: 0 4px 20px rgba(0,89,105,0.4);
+    /* Special Offer Banner — redesigned */
+    .special-banner {
+      display: grid; grid-template-columns: 55% 45%;
+      background: #160508; color: #fff;
+      margin-bottom: 60px; overflow: hidden;
+      min-height: 520px; position: relative;
     }
-    .back-top.visible { opacity: 1; pointer-events: auto; transform: translateY(0); }
-    .back-top svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2.5; }
-
-    /* â”€â”€â”€ CURSOR SPARKLE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
-    #cursorSparkle {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      pointer-events: none;
-      z-index: 9999;
+    .special-banner-img {
+      position: relative; overflow: hidden;
     }
-
-    /* â”€â”€â”€ 3D JEWEL SECTION â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
-    .jewel3d-section {
+    .special-banner-img img {
+      position: absolute; inset: 0; width: 100%; height: 100%;
+      object-fit: cover; transition: transform 1.2s var(--ease-out);
+    }
+    .special-banner:hover .special-banner-img img { transform: scale(1.04); }
+    .special-banner-img::after {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(to right, transparent 55%, #160508 100%);
+    }
+    .special-banner-content {
+      display: flex; flex-direction: column; align-items: flex-start;
+      justify-content: center; padding: 72px 56px 72px 40px;
       position: relative;
-      background: #080604;
-      overflow: hidden;
     }
-
-    .jewel3d-glow {
-      position: absolute;
-      width: 700px; height: 700px;
-      background: radial-gradient(circle, rgba(0,89,105,0.14) 0%, transparent 68%);
-      border-radius: 50%;
-      top: 50%; left: 50%;
-      transform: translate(-50%, -50%);
-      pointer-events: none;
-      animation: jewel-glow-pulse 5s ease-in-out infinite;
+    .special-banner-content::before {
+      content: ''; position: absolute; top: 0; left: 0;
+      width: 1px; height: 100%; background: rgba(200,169,126,0.25);
     }
-    @keyframes jewel-glow-pulse {
-      0%,100% { opacity: 0.7; transform: translate(-50%,-50%) scale(1);    }
-      50%     { opacity: 1;   transform: translate(-50%,-50%) scale(1.18); }
+    .sb-eyebrow {
+      display: flex; align-items: center; gap: 12px;
+      font-size: 10px; letter-spacing: 0.3em; text-transform: uppercase;
+      font-weight: 600; color: var(--accent-gold); margin-bottom: 28px;
     }
-
-    .jewel3d-inner {
-      position: relative;
-      width: 100%;
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 80px 48px;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 64px;
-      align-items: center;
+    .sb-eyebrow::before {
+      content: ''; display: block; width: 28px; height: 1px;
+      background: var(--accent-gold); flex-shrink: 0;
     }
-
-    .jewel3d-text { color: #fff; }
-
-    .jewel3d-title {
+    .sb-title {
+      font-family: var(--font-head); font-style: italic;
+      font-size: clamp(36px, 4vw, 56px); font-weight: 400;
+      line-height: 1.1; margin-bottom: 8px;
+    }
+    .sb-subtitle {
       font-family: var(--font-head);
-      font-size: clamp(30px, 3.5vw, 50px);
-      font-weight: 800;
-      line-height: 1.12;
-      color: #fff;
-      margin-bottom: 18px;
+      font-size: clamp(15px, 1.8vw, 20px); font-weight: 400;
+      color: rgba(255,255,255,0.55); margin-bottom: 36px; font-style: normal;
     }
-
-    .jewel3d-sub {
-      font-size: 14px;
-      color: rgba(255,255,255,0.52);
-      line-height: 1.82;
-      margin-bottom: 32px;
-      max-width: 390px;
+    .sb-rule {
+      width: 48px; height: 1px; background: var(--accent-gold); margin-bottom: 28px;
     }
-
-    .jewel3d-features {
-      display: flex;
-      gap: 20px;
-      flex-wrap: wrap;
-      margin-bottom: 36px;
+    .sb-desc {
+      font-size: 13px; line-height: 1.75; color: rgba(255,255,255,0.5);
+      margin-bottom: 40px; max-width: 280px;
     }
-    .jewel3d-feature {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 11px;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      color: rgba(255,255,255,0.55);
-      font-weight: 600;
-    }
-    .jewel3d-dot {
-      width: 6px; height: 6px;
-      border-radius: 50%;
-      background: var(--gold);
-      flex-shrink: 0;
-    }
-
-    .jewel3d-canvas-wrap {
-      position: relative;
-      width: 100%;
-      max-width: 500px;
-      margin: 0 auto;
-      aspect-ratio: 1 / 1;
-      cursor: grab;
-      filter: drop-shadow(0 0 40px rgba(0,89,105,0.2));
-    }
-    .jewel3d-canvas-wrap:active { cursor: grabbing; }
-
-    .jewel3d-canvas-wrap::before {
-      content: '';
-      position: absolute;
-      inset: -10px;
-      border-radius: 50%;
-      border: 1px solid rgba(0,89,105,0.2);
-      pointer-events: none;
-      z-index: 2;
-    }
-    .jewel3d-canvas-wrap::after {
-      content: '';
-      position: absolute;
-      inset: -24px;
-      border-radius: 50%;
-      border: 1px solid rgba(0,89,105,0.08);
-      pointer-events: none;
-      z-index: 2;
-    }
-
-    #jewel3dCanvas {
-      width: 100%;
-      height: 100%;
-      display: block;
-      border-radius: 50%;
-    }
-
-    .jewel3d-hint {
-      position: absolute;
-      bottom: -38px;
-      left: 50%;
-      transform: translateX(-50%);
-      font-size: 10px;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      color: rgba(255,255,255,0.3);
-      font-weight: 500;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      white-space: nowrap;
-    }
-    .jewel3d-hint span {
-      display: block;
-      width: 22px; height: 1px;
-      background: rgba(255,255,255,0.14);
-    }
-
-    /* Product card shimmer */
-    .product-img-wrap::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: radial-gradient(
-        circle at var(--shim-x, 50%) var(--shim-y, 50%),
-        rgba(255,255,255,0.16) 0%,
-        transparent 58%
-      );
-      opacity: 0;
-      transition: opacity 0.3s;
-      pointer-events: none;
-      z-index: 1;
-    }
-    .product-img-wrap.shimmer-active::after { opacity: 1; }
-
-    @media (max-width: 1100px) {
-      .jewel3d-inner { padding: 60px 24px; gap: 40px; }
-    }
-    @media (max-width: 768px) {
-      .jewel3d-inner {
-        grid-template-columns: 1fr;
-        padding: 48px 24px 60px;
-        text-align: center;
-      }
-      .jewel3d-sub   { margin-left: auto; margin-right: auto; }
-      .jewel3d-features { justify-content: center; }
-      .jewel3d-canvas-wrap { max-width: 280px; order: -1; }
-      .jewel3d-glow  { width: 360px; height: 360px; }
-    }
-
-    /* Screen reader only */
-    .sr-only {
-      position: absolute;
-      width: 1px; height: 1px;
-      padding: 0; margin: -1px;
-      overflow: hidden;
-      clip: rect(0,0,0,0);
-      border: 0;
-    }
-
-    /* â”€â”€â”€ RESPONSIVE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
-    @media (max-width: 1100px) {
-      .nav { padding: 0 24px; }
-      .nav-links { gap: 20px; }
-      .section { padding: 64px 24px; }
-      .categories-grid { grid-template-columns: repeat(3, 1fr); }
-      .products-grid { grid-template-columns: repeat(2, 1fr); }
-      .testimonials-grid { grid-template-columns: repeat(2, 1fr); }
-      .footer-grid { grid-template-columns: 1fr 1fr; gap: 32px; }
-      .slide-content { padding: 0 48px; }
-      .promo-content { padding: 0 48px; }
-    }
-
-    @media (max-width: 768px) {
-      .nav-links { display: none; }
-      .hero { height: 80vh; min-height: 500px; }
-      .slide-content { padding: 0 28px; }
-      .slide-title { font-size: clamp(28px, 8vw, 48px); }
-      .categories-grid { grid-template-columns: repeat(3, 1fr); gap: 16px; }
-      .category-img-wrap { width: 88px; height: 88px; }
-      .products-grid { grid-template-columns: repeat(2, 1fr); gap: 14px; }
-      .promo { height: 360px; }
-      .promo-content { padding: 0 24px; margin: 0; text-align: left; }
-      .promo-overlay { background: linear-gradient(to right, rgba(8,5,2,0.72) 0%, rgba(8,5,2,0.35) 60%); }
-      .trust-grid { grid-template-columns: repeat(2, 1fr); }
-      .trust-item { border-right: none; border-bottom: 1px solid var(--border); }
-      .trust-item:nth-child(2n) { border-right: none; }
-      .testimonials-grid { grid-template-columns: 1fr; }
-      .footer-grid { grid-template-columns: 1fr; gap: 28px; }
-      .footer-bottom { flex-direction: column; gap: 16px; text-align: center; }
-      .newsletter-form { flex-direction: column; }
-      .arrow-prev { left: 14px; }
-      .arrow-next { right: 14px; }
-    }
-
-    @media (max-width: 480px) {
-      .categories-grid { grid-template-columns: repeat(3, 1fr); gap: 10px; }
-      .category-img-wrap { width: 76px; height: 76px; }
-      .products-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
-      .section { padding: 40px 16px; }
-      .nav { padding: 0 16px !important; }
-      .materials-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
-      .ugc-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
-      .slide-content { padding: 0 20px; }
-      .slide-ctas { flex-direction: column; align-items: flex-start; gap: 12px; }
-      .promo-content { padding: 0 20px; }
-      .promo-title { font-size: clamp(22px, 7vw, 36px); }
-      .newsletter-form input { min-width: 0; }
-      .trust-grid { grid-template-columns: 1fr; }
-      .trust-item { border-right: none; border-bottom: 1px solid var(--border); }
-    }
-
-    /* HAMBURGER + MOBILE NAV */
-    .hamburger {
-      display: none; width: 44px; height: 44px;
-      align-items: center; justify-content: center;
-      border-radius: 50%; background: none;
-      cursor: pointer; transition: background 0.2s; margin-left: 4px;
-      flex-shrink: 0;
-    }
-    .hamburger:hover { background: var(--surface); }
-    .hamburger svg { width: 22px; height: 22px; stroke: var(--text-dark); stroke-width: 2; fill: none; }
-    @media (max-width: 768px) { .hamburger { display: flex; } }
-
-    .mobile-nav {
-      position: fixed; inset: 0; z-index: 300;
-      pointer-events: none;
-    }
-    .mobile-nav.open { pointer-events: auto; }
-    .mobile-nav-overlay {
-      position: absolute; inset: 0;
-      background: rgba(0,0,0,0.52);
-      opacity: 0; transition: opacity 0.3s ease;
-    }
-    .mobile-nav.open .mobile-nav-overlay { opacity: 1; }
-    .mobile-nav-drawer {
-      position: absolute; top: 0; right: 0; bottom: 0;
-      width: min(300px, 82vw);
-      background: #fff;
-      transform: translateX(100%);
-      transition: transform 0.36s cubic-bezier(0.22, 1, 0.36, 1);
-      display: flex; flex-direction: column;
-      overflow-y: auto; -webkit-overflow-scrolling: touch;
-    }
-    .mobile-nav.open .mobile-nav-drawer { transform: translateX(0); }
-    .mobile-nav-header {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 18px 20px; border-bottom: 1px solid var(--border); flex-shrink: 0;
-    }
-    .mobile-nav-header img { height: 36px; width: auto; }
-    .mobile-nav-close {
-      width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;
-      border-radius: 50%; background: none; transition: background 0.2s; cursor: pointer;
-    }
-    .mobile-nav-close:hover { background: var(--surface); }
-    .mobile-nav-close svg { width: 20px; height: 20px; stroke: var(--text-dark); stroke-width: 2.5; fill: none; }
-    .mobile-nav-links { list-style: none; flex: 1; padding: 8px 0; }
-    .mobile-nav-links > li > a {
-      display: block; padding: 14px 20px;
-      font-size: 14px; font-weight: 600; letter-spacing: 0.05em;
-      text-transform: uppercase; color: var(--text-dark);
-      border-bottom: 1px solid var(--border);
-      transition: color 0.2s, background 0.2s;
-    }
-    .mobile-nav-links > li > a:hover { color: var(--gold); background: var(--surface); }
-    .mobile-nav-sub { list-style: none; background: var(--surface); padding: 4px 0 8px 0; }
-    .mobile-nav-sub li a {
-      display: block; padding: 9px 20px 9px 36px;
-      font-size: 13px; color: var(--text-light); font-weight: 500;
-      border-bottom: 1px solid rgba(0,0,0,0.04);
-      transition: color 0.2s;
-    }
-    .mobile-nav-sub li a:hover { color: var(--gold); }
-    .mobile-nav-footer { padding: 20px; border-top: 1px solid var(--border); }
-    .mobile-nav-cta {
-      display: block; text-align: center; padding: 13px;
-      font-size: 13px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
-      background: var(--gold); color: #fff; border-radius: 2px;
-      transition: background 0.2s;
-    }
-    .mobile-nav-cta:hover { background: var(--gold-dark); color: #fff; }
-    /* â”€â”€â”€ MEGA MENU â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
-    .nav-item-mega { position: relative; height: 100%; display: flex; align-items: center; }
-    .mega-menu {
-      position: absolute; top: 100%; left: 50%; transform: translateX(-50%) translateY(10px) scaleY(0.95);
-      background: rgba(255,255,255,0.98); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-      border: 1px solid var(--border); box-shadow: 0 12px 40px rgba(0,0,0,0.08);
-      padding: 32px; width: 640px; display: flex; gap: 32px;
-      opacity: 0; visibility: hidden; pointer-events: none;
-      transition: all 0.3s var(--ease-out); transform-origin: top; z-index: 101; cursor: default;
-    }
-    .nav-item-mega:hover .mega-menu {
-      opacity: 1; visibility: visible; pointer-events: auto; transform: translateX(-50%) translateY(0) scaleY(1);
-    }
-    .mega-col { flex: 1; }
-    .mega-title { font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--gold); font-weight: 700; margin-bottom: 16px; }
-    .mega-menu ul { list-style: none; display: flex; flex-direction: column; gap: 10px; padding: 0; }
-    .mega-menu ul li a { font-size: 13px; color: var(--text-dark); text-transform: none; letter-spacing: normal; font-weight: 500; display: inline-block; padding: 0; }
-    .mega-menu ul li a::after { display: none; }
-    .mega-menu ul li a:hover { color: var(--gold); transform: translateX(3px); }
-    .mega-promo { flex: 1.5; position: relative; overflow: hidden; display: flex; align-items: flex-end; padding: 24px; min-height: 200px;}
-    .mega-promo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: -1; transition: transform 0.5s; }
-    .nav-item-mega:hover .mega-promo img { transform: scale(1.05); }
-    .mega-promo::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.7), transparent); z-index: -1; }
-    .mega-promo span { color: #fff; font-family: var(--font-head); font-weight: 700; font-size: 18px; letter-spacing: 0.05em; z-index: 1; text-shadow: 0 2px 10px rgba(0,0,0,0.2); }
-
-    /* â”€â”€â”€ SHOP BY MATERIAL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
-    .materials-grid {
-      display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; max-width: 1200px; margin: 0 auto;
-    }
-    .material-card {
-      position: relative; overflow: hidden; aspect-ratio: 4/5; cursor: pointer;
-    }
-    .material-card img {
-      width: 100%; height: 100%; object-fit: cover; transition: transform 0.7s var(--ease-out);
-    }
-    .material-card:hover img { transform: scale(1.08); }
-    .material-card::after {
-      content: ''; position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.5), transparent 60%); pointer-events: none; transition: opacity 0.3s;
-    }
-    .material-card:hover::after { opacity: 0.8; }
-    .material-name {
-      position: absolute; bottom: 24px; left: 24px; color: #fff; font-family: var(--font-head); font-size: 20px; font-weight: 700; z-index: 1;
-      display: flex; align-items: center; gap: 8px;
-    }
-    .material-name::after {
-      content: 'â†’'; opacity: 0; transform: translateX(-10px); transition: all 0.3s var(--ease-out);
-    }
-    .material-card:hover .material-name::after { opacity: 1; transform: translateX(0); }
-
-    /* â”€â”€â”€ TRENDSPOTTING CAROUSEL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
-    .trend-wrap {
-      display: flex; gap: 24px; overflow-x: auto; padding: 24px 48px; scroll-snap-type: x mandatory; scrollbar-width: none;
-      -webkit-overflow-scrolling: touch;
-    }
-    .trend-wrap::-webkit-scrollbar { display: none; }
-    .trend-item {
-      scroll-snap-align: start; flex: 0 0 320px; border: 1px solid var(--border); padding: 20px; background: var(--bg);
-      transition: box-shadow 0.3s, transform 0.3s; cursor: pointer; display: flex; flex-direction: column;
-    }
-    .trend-item:hover { transform: translateY(-4px); box-shadow: 0 12px 30px rgba(0,0,0,0.06); border-color: var(--gold-light); }
-    .trend-img { width: 100%; aspect-ratio: 1; object-fit: cover; margin-bottom: 20px; }
-    .trend-eyebrow { font-size: 10px; text-transform: uppercase; letter-spacing: 0.15em; color: var(--gold); font-weight: 700; margin-bottom: 8px; }
-    .trend-title { font-family: var(--font-head); font-size: 18px; font-weight: 700; color: var(--text-dark); margin-bottom: 6px; }
-    .trend-desc { font-size: 13px; color: var(--text-light); line-height: 1.6; }
-
-    /* â”€â”€â”€ CUSTOMER STORIES (HIRA & ME) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
-    .ugc-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; max-width: 1200px; margin: 0 auto; }
-    .ugc-item { position: relative; overflow: hidden; aspect-ratio: 1; cursor: pointer; }
-    .ugc-item img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s var(--ease-out); }
-    .ugc-item:hover img { transform: scale(1.05); }
-    .ugc-item::after { content: ''; position: absolute; inset: 0; background: rgba(0,0,0,0.4); opacity: 0; transition: opacity 0.3s; }
-    .ugc-item:hover::after { opacity: 1; }
-    .ugc-handle { position: absolute; top: 16px; left: 16px; color: #fff; font-size: 12px; font-weight: 600; z-index: 2; opacity: 0; transform: translateY(-10px); transition: all 0.3s 0.1s; display: flex; align-items: center; gap: 6px;}
-    .ugc-handle::before { content: ''; display: inline-block; width: 14px; height: 14px; background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>') no-repeat center; }
-    .ugc-shop-btn { position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%) translateY(20px); background: #fff; color: var(--text-dark); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; padding: 10px 20px; z-index: 2; opacity: 0; transition: all 0.3s 0.1s; border: none; cursor: pointer; white-space: nowrap; }
-    .ugc-shop-btn:hover { background: var(--gold); color: #fff; }
-    .ugc-item:hover .ugc-handle { opacity: 1; transform: translateY(0); }
-    .ugc-item:hover .ugc-shop-btn { opacity: 1; transform: translateX(-50%) translateY(0); }
-
-    @media (max-width: 900px) {
-      .materials-grid, .ugc-grid { grid-template-columns: repeat(2, 1fr); }
-      .mega-menu { display: none !important; /* disabled on mobile for simplicity */ }
-      .trend-wrap { padding: 16px 24px; }
-    }
-
-    /* ─── ANIMATION POLISH ───────────────────────────────────────── */
-
-    /* GPU hint for tilt-animated cards */
-    .product-card { will-change: transform; }
-
-    /* Active / press states — makes every tap feel instant */
-    .btn-primary:active  { transform: translateY(0) scale(0.96) !important; box-shadow: 0 3px 10px rgba(0,89,105,0.3) !important; }
-    .btn-outline:active  { transform: translateY(0) scale(0.96) !important; }
-    .btn-ghost:active    { transform: scale(0.97) !important; background: rgba(255,255,255,0.22) !important; }
-    .product-action-btn:active { transform: scale(0.95); }
-    .nav-icon:active     { transform: scale(0.88) !important; }
-    .slider-arrow:active { transform: translateY(-50%) scale(0.9) !important; }
-    .back-top:active     { transform: scale(0.88) !important; }
-    .dot:active          { transform: scale(1.2); }
-
-    /* Wishlist: spring-pop entrance + toggle */
-    .product-wish {
-      transform: scale(0.5);
-      transition: opacity 0.2s, transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
-    }
-    .product-card:hover .product-wish { opacity: 1; transform: scale(1); }
-    .product-wish.wished svg { fill: #e04040; stroke: #e04040; }
-    @keyframes wish-pop {
-      0%   { transform: scale(1); }
-      35%  { transform: scale(1.55); }
-      65%  { transform: scale(0.82); }
-      100% { transform: scale(1); }
-    }
-    .product-wish.popping { animation: wish-pop 0.42s cubic-bezier(0.34, 1.56, 0.64, 1); }
-
-    /* Add-to-cart success state */
-    .product-action-btn.pa-primary.cart-added { background: #27ae73 !important; transition: background 0.18s !important; }
-
-    /* Cart badge spring */
-    @keyframes badge-spring {
-      0%,100% { transform: scale(1); }
-      40%     { transform: scale(1.65); }
-      70%     { transform: scale(0.82); }
-    }
-    .cart-badge.spring { animation: badge-spring 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
-
-    /* Trust icon bounce on hover */
-    @keyframes trust-bounce {
-      0%   { transform: scale(1); }
-      40%  { transform: scale(1.22); }
-      70%  { transform: scale(0.9); }
-      100% { transform: scale(1); }
-    }
-    .trust-item:hover .trust-icon { animation: trust-bounce 0.48s ease; }
-
-    /* Back-to-top: arrow lifts on hover */
-    .back-top svg { transition: transform 0.25s var(--ease-out); }
-    .back-top:hover svg { transform: translateY(-3px); }
-
-    /* Nav links: staggered entrance */
-    @keyframes nav-in {
-      from { opacity: 0; transform: translateY(-7px); }
-      to   { opacity: 1; transform: none; }
-    }
-    .nav-links li { opacity: 0; animation: nav-in 0.42s var(--ease-out) forwards; }
-    .nav-links li:nth-child(1) { animation-delay: 0.08s; }
-    .nav-links li:nth-child(2) { animation-delay: 0.15s; }
-    .nav-links li:nth-child(3) { animation-delay: 0.22s; }
-    .nav-links li:nth-child(4) { animation-delay: 0.29s; }
-    .nav-links li:nth-child(5) { animation-delay: 0.36s; }
-
-    /* Scroll progress bar */
-    .scroll-progress {
-      position: fixed; top: 0; left: 0;
-      height: 2.5px;
-      background: linear-gradient(90deg, var(--gold-dark), var(--gold-light));
-      z-index: 999; width: 0%;
-      pointer-events: none;
-      border-radius: 0 2px 2px 0;
-    }
-
-    /* Section divider: expand on scroll reveal */
-    .section-header .divider { width: 0; transition: width 0.7s var(--ease-out) 0.35s; }
-    .section-header.visible .divider { width: 40px; }
-
-    /* Product card: name colour tint on hover */
-    .product-name { transition: color 0.25s; }
-    .product-card:hover .product-name { color: var(--gold-dark); }
-
-    /* Product card hover: deeper luxury shadow */
-    .product-card { transition: box-shadow 0.35s var(--ease-out); }
-    .product-card:hover { box-shadow: 0 24px 56px rgba(0,0,0,0.14), 0 0 0 1px rgba(0,89,105,0.18); }
-
-    /* Improve slide content: stagger eyebrow / title / sub / cta */
-    .slide.active .slide-eyebrow {
-      animation: slide-word-in 0.7s 0.4s var(--ease-out) both;
-    }
-    .slide.active .slide-title {
-      animation: slide-word-in 0.8s 0.55s var(--ease-out) both;
-    }
-    .slide.active .slide-sub {
-      animation: slide-word-in 0.75s 0.7s var(--ease-out) both;
-    }
-    .slide.active .slide-ctas {
-      animation: slide-word-in 0.7s 0.85s var(--ease-out) both;
-    }
-    @keyframes slide-word-in {
-      from { opacity: 0; transform: translateY(22px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-
-    /* Testimonial cards: smoother lift + gold accent */
-    .testimonial-card:hover { box-shadow: 0 20px 50px rgba(0,0,0,0.10); border-color: rgba(0,89,105,0.28); }
-    .testimonial-card { transition: box-shadow 0.35s var(--ease-out), transform 0.35s var(--ease-out), border-color 0.3s; }
-
-    /* Trend item: subtle scale on hover */
-    .trend-item:hover { transform: translateY(-5px) scale(1.012); }
-
-    /* Material card: label slide with underline */
-    .material-name { transition: transform 0.3s var(--ease-out); }
-    .material-card:hover .material-name { transform: translateX(4px); }
-
-    /* ─── MATERIAL & CATEGORY CARDS AS LINKS ─────────────────────── */
-    a.category-card, a.material-card { display: block; }
-    a.category-card { display: flex; }
-
-    /* ─── SKELETON LOADER ──────────────────────────────────────────── */
-    .product-skeleton {
-      aspect-ratio: 3/4;
-      background: linear-gradient(90deg, #f5f0eb 25%, #ede5d8 50%, #f5f0eb 75%);
-      background-size: 200% 100%;
-      animation: skeleton-shimmer 1.5s ease-in-out infinite;
+    .sb-desc strong { color: rgba(255,255,255,0.85); font-weight: 600; }
+    .sb-btn {
+      display: inline-flex; align-items: center; gap: 12px;
+      background: var(--accent-gold); color: #fff;
+      padding: 16px 40px; font-size: 11px; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.15em;
+      transition: background 0.3s, transform 0.3s var(--ease-out);
       border-radius: 0;
     }
-    @keyframes skeleton-shimmer {
-      from { background-position: 200% 0; }
-      to   { background-position: -200% 0; }
+    .sb-btn:hover { background: #b8946a; transform: translateY(-2px); }
+    .sb-btn svg { width: 14px; height: 14px; stroke: #fff; stroke-width: 2; fill: none; transition: transform 0.3s var(--ease-out); }
+    .sb-btn:hover svg { transform: translateX(4px); }
+    .sb-value-tag {
+      position: absolute; top: 32px; right: 32px;
+      border: 1px solid rgba(200,169,126,0.4); padding: 12px 20px;
+      text-align: center;
+    }
+    .sb-value-tag-num {
+      font-family: var(--font-head); font-style: italic;
+      font-size: 28px; font-weight: 400; color: var(--accent-gold);
+      line-height: 1; display: block;
+    }
+    .sb-value-tag-label {
+      font-size: 9px; text-transform: uppercase; letter-spacing: 0.2em;
+      font-weight: 600; color: rgba(255,255,255,0.4); display: block; margin-top: 4px;
+    }
+    @media (max-width: 900px) {
+      .special-banner { grid-template-columns: 1fr; }
+      .special-banner-img { min-height: 320px; }
+      .special-banner-img::after { background: linear-gradient(to bottom, transparent 50%, #160508 100%); }
+      .special-banner-content { padding: 48px 24px; align-items: center; text-align: center; }
+      .special-banner-content::before { display: none; }
+      .sb-eyebrow { justify-content: center; }
+      .sb-desc { max-width: 100%; }
+      .sb-value-tag { top: 20px; right: 20px; }
     }
 
-    /* ─── QUICK VIEW MODAL ─────────────────────────────────────────── */
-    .qv-overlay {
-      position: fixed; inset: 0;
-      background: rgba(8,6,3,0.76);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      z-index: 1000;
-      display: flex; align-items: center; justify-content: center;
-      padding: 16px;
-      opacity: 0; pointer-events: none;
-      transition: opacity 0.3s ease;
+    /* Heritage Split Section */
+    .heritage-section { display: grid; grid-template-columns: 1fr 1fr; align-items: center; background: var(--surface); overflow: hidden; margin-bottom: 60px; }
+    .heritage-img-wrap { position: relative; height: 100%; min-height: 500px; overflow: hidden; }
+    .heritage-img-wrap img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; animation: slowZoom 15s infinite alternate linear; }
+    @keyframes slowZoom { from { transform: scale(1); } to { transform: scale(1.05); } }
+    .heritage-content { padding: 80px 10%; text-align: left; }
+    .heritage-content .section-title { margin-bottom: 24px; font-size: 32px; font-family: var(--font-head); text-transform: none; letter-spacing: normal; }
+    .heritage-content .section-desc { margin-bottom: 32px; font-size: 15px; max-width: 400px; color: var(--text-light); line-height: 1.8; }
+    @media (max-width: 900px) {
+      .heritage-section { grid-template-columns: 1fr; }
+      .heritage-img-wrap { min-height: 400px; }
+      .heritage-content { padding: 60px 24px; text-align: center; }
+      .heritage-content .section-desc { margin: 0 auto 32px auto; }
     }
+
+
+
+    /* Quick View & Search Overlay (Styles from existing) */
+    .qv-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 16px; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
     .qv-overlay.open { opacity: 1; pointer-events: auto; }
+    .qv-modal { background: #fff; max-width: 900px; width: 100%; max-height: 90vh; overflow-y: auto; position: relative; transform: translateY(20px); transition: transform 0.4s var(--ease-out); display: flex; }
+    .qv-overlay.open .qv-modal { transform: translateY(0); }
+    .qv-close { position: absolute; top: 16px; right: 16px; width: 32px; height: 32px; border-radius: 50%; background: rgba(255,255,255,0.9); display: flex; align-items: center; justify-content: center; z-index: 10; transition: background 0.2s; }
+    .qv-close:hover { background: var(--border); }
+    .qv-close svg { width: 16px; height: 16px; stroke: var(--text-main); stroke-width: 2; fill: none; }
+    .qv-body { display: grid; grid-template-columns: 1fr 1fr; width: 100%; }
+    .qv-img-main { aspect-ratio: 4/5; background: var(--surface); position: relative; }
+    .qv-img-main img { width: 100%; height: 100%; object-fit: cover; }
+    .qv-info-col { padding: 40px; display: flex; flex-direction: column; justify-content: center;}
+    .qv-cat-tag { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-light); margin-bottom: 12px; }
+    .qv-name { font-family: var(--font-head); font-size: 28px; font-weight: 400; color: var(--text-main); margin-bottom: 8px; line-height: 1.2; }
+    .qv-price-block { margin: 16px 0; font-size: 20px; font-weight: 600; }
+    .qv-btns { display: flex; flex-direction: column; gap: 12px; margin-top: 24px; margin-bottom: 24px; }
+    .qv-btn-cart { background: var(--text-main); color: #fff; padding: 16px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; transition: background 0.3s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .qv-btn-cart:hover { background: var(--accent-gold); }
+    .qv-btn-buy { border: 1px solid var(--text-main); color: var(--text-main); padding: 16px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; transition: background 0.3s; display: flex; align-items: center; justify-content: center; }
+    .qv-btn-buy:hover { background: var(--surface); }
+    .qv-full-link { font-size: 12px; color: var(--text-light); text-decoration: underline; text-underline-offset: 4px; text-align: center; }
 
-    .qv-modal {
-      background: #fff;
-      max-width: 940px; width: 100%;
-      max-height: 92vh; overflow-y: auto;
-      position: relative;
-      transform: scale(0.9) translateY(28px);
-      transition: transform 0.4s cubic-bezier(0.22,1,0.36,1);
-      box-shadow: 0 40px 100px rgba(0,0,0,0.3), 0 0 0 1px rgba(0,89,105,0.14);
-      scrollbar-width: thin;
-    }
-    .qv-overlay.open .qv-modal { transform: scale(1) translateY(0); }
+    /* Mobile Nav */
+    .hamburger { display: none; width: 40px; height: 40px; align-items: center; justify-content: center; }
+    .hamburger svg { width: 24px; height: 24px; stroke: var(--text-main); stroke-width: 1.5; fill: none; }
+    
+    .mobile-nav { position: fixed; inset: 0; z-index: 300; pointer-events: none; }
+    .mobile-nav.open { pointer-events: auto; }
+    .mobile-nav-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.4); opacity: 0; transition: opacity 0.3s; }
+    .mobile-nav.open .mobile-nav-overlay { opacity: 1; }
+    .mobile-nav-drawer { position: absolute; top: 0; left: 0; bottom: 0; width: 300px; background: #fff; transform: translateX(-100%); transition: transform 0.4s var(--ease-out); display: flex; flex-direction: column; }
+    .mobile-nav.open .mobile-nav-drawer { transform: translateX(0); }
+    .mobile-nav-header { padding: 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
+    .mobile-nav-close { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; }
+    .mobile-nav-close svg { width: 20px; height: 20px; stroke: var(--text-main); stroke-width: 1.5; fill: none; }
+    .mobile-nav-links { list-style: none; padding: 20px 0; }
+    .mobile-nav-links li a { display: block; padding: 12px 24px; font-size: 14px; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 500; border-bottom: 1px solid var(--surface); }
 
-    .qv-close {
-      position: absolute; top: 14px; right: 14px;
-      width: 40px; height: 40px; border-radius: 50%;
-      background: rgba(250,248,245,0.95);
-      backdrop-filter: blur(4px);
-      display: flex; align-items: center; justify-content: center;
-      z-index: 10;
-      transition: background 0.2s, transform 0.3s var(--ease-out);
-    }
-    .qv-close:hover { background: var(--border); transform: rotate(90deg); }
-    .qv-close svg { width: 16px; height: 16px; stroke: var(--text-dark); stroke-width: 2.5; fill: none; }
-
-    .qv-body { display: grid; grid-template-columns: 1.05fr 1fr; }
-
-    .qv-image-col { background: var(--surface); position: relative; }
-    .qv-img-main { position: relative; aspect-ratio: 3/4; overflow: hidden; background: var(--surface); }
-    .qv-img-main img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.65s var(--ease-out); display: block; }
-    .qv-img-main:hover img { transform: scale(1.05); }
-    .qv-zoom-hint {
-      position: absolute; bottom: 12px; right: 12px;
-      background: rgba(255,255,255,0.92); backdrop-filter: blur(4px);
-      padding: 5px 12px; font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase;
-      color: var(--text-dark); font-weight: 600; pointer-events: none; opacity: 0.8;
-    }
-
-    .qv-info-col { padding: 36px 32px 28px; display: flex; flex-direction: column; }
-
-    .qv-cat-tag {
-      font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase;
-      color: var(--gold); font-weight: 700; margin-bottom: 10px; display: block;
-    }
-    .qv-name {
-      font-family: var(--font-head); font-size: clamp(18px,2.2vw,26px);
-      font-weight: 800; color: var(--text-dark); line-height: 1.25; margin-bottom: 12px;
-    }
-    .qv-rating-row { display: flex; align-items: center; gap: 8px; margin-bottom: 0; }
-    .qv-rating-row .stars { color: #f5a623; font-size: 13px; letter-spacing: 1px; }
-    .qv-rating-row .count { font-size: 11px; color: var(--text-light); }
-
-    .qv-price-block {
-      padding: 16px 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
-      margin: 16px 0; display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
-    }
-    .qv-price-now { font-family: var(--font-head); font-size: 28px; font-weight: 800; color: var(--text-dark); }
-    .qv-price-was { font-size: 15px; color: var(--text-light); text-decoration: line-through; }
-    .qv-price-save {
-      font-size: 11px; font-weight: 700; color: #22a06b;
-      background: rgba(34,160,107,0.1); padding: 3px 10px; border-radius: 20px;
-    }
-
-    .qv-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
-    .qv-tag {
-      font-size: 12px; color: var(--text-dark); font-weight: 500;
-      background: var(--surface); border: 1px solid var(--border);
-      padding: 5px 14px; border-radius: 20px;
-    }
-
-    .qv-trust {
-      display: flex; gap: 0; margin-bottom: 20px;
-      flex-wrap: wrap; row-gap: 8px;
-    }
-    .qv-trust-item {
-      display: flex; align-items: center; gap: 5px;
-      font-size: 10px; color: var(--text-light); font-weight: 500; letter-spacing: 0.03em;
-      padding-right: 14px; margin-right: 14px;
-      border-right: 1px solid var(--border);
-    }
-    .qv-trust-item:last-child { border-right: none; margin-right: 0; padding-right: 0; }
-    .qv-trust-item svg { width: 14px; height: 14px; stroke: var(--gold); fill: none; stroke-width: 2; flex-shrink: 0; }
-
-    .qv-btns { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
-
-    .qv-btn-cart {
-      display: flex; align-items: center; justify-content: center; gap: 10px;
-      background: var(--text-dark); color: #fff;
-      padding: 16px 28px; font-size: 12px; font-weight: 600;
-      letter-spacing: 0.12em; text-transform: uppercase;
-      transition: background 0.25s, transform 0.25s var(--ease-out), box-shadow 0.25s;
-    }
-    .qv-btn-cart:hover { background: var(--gold); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,89,105,0.4); }
-    .qv-btn-cart.cart-added { background: #22a06b !important; }
-    .qv-btn-cart svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 2; }
-    .qv-btn-cart:active { transform: translateY(0) scale(0.97) !important; }
-
-    .qv-btn-buy {
-      display: flex; align-items: center; justify-content: center;
-      border: 1.5px solid var(--gold); color: var(--gold);
-      padding: 15px 28px; font-size: 12px; font-weight: 600;
-      letter-spacing: 0.12em; text-transform: uppercase;
-      transition: background 0.25s, color 0.25s, transform 0.25s var(--ease-out);
-    }
-    .qv-btn-buy:hover { background: var(--gold); color: #fff; transform: translateY(-2px); }
-    .qv-btn-buy:active { transform: translateY(0) scale(0.97) !important; }
-
-    .qv-full-link { font-size: 12px; color: var(--text-light); text-align: center; display: block; margin-bottom: 12px; }
-    .qv-full-link:hover { color: var(--gold); text-decoration: underline; }
-    .qv-sku { font-size: 10px; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.1em; margin-top: auto; padding-top: 10px; }
-
-    @media (max-width: 700px) {
-      .qv-body { grid-template-columns: 1fr; }
-      .qv-img-main { aspect-ratio: 4/3; }
-      .qv-info-col { padding: 22px 18px 20px; }
-      .qv-price-now { font-size: 24px; }
-      .qv-name { font-size: 20px; }
-    }
-      /* ─── SEARCH OVERLAY ─────────────────────────────────────────── */
-    .search-overlay {
-      position: fixed; inset: 0;
-      background: rgba(8,5,2,0.96);
-      backdrop-filter: blur(18px);
-      -webkit-backdrop-filter: blur(18px);
-      z-index: 500;
-      display: flex; align-items: center; justify-content: center;
-      opacity: 0; pointer-events: none;
-      transition: opacity 0.32s ease;
-    }
+    /* Search */
+    .search-overlay { position: fixed; inset: 0; background: rgba(255,255,255,0.98); z-index: 500; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
     .search-overlay.open { opacity: 1; pointer-events: auto; }
-    .search-close {
-      position: absolute; top: 28px; right: 36px;
-      background: none; border: none; color: rgba(255,255,255,0.45);
-      font-size: 30px; line-height: 1; cursor: pointer;
-      transition: color 0.2s, transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
-    }
-    .search-close:hover { color: #005969; transform: rotate(90deg); }
-    .search-overlay-inner { text-align: center; width: 100%; max-width: 700px; padding: 0 28px; }
-    .search-hint {
-      font-size: 10px; letter-spacing: 0.26em; text-transform: uppercase;
-      color: rgba(255,255,255,0.35); margin-bottom: 32px; font-weight: 600;
-    }
-    .search-form {
-      display: flex; align-items: center; gap: 12px;
-      border-bottom: 1.5px solid rgba(255,255,255,0.15);
-      padding-bottom: 10px; margin-bottom: 36px;
-      transition: border-color 0.25s;
-    }
-    .search-form:focus-within { border-color: #005969; }
-    .search-overlay-input {
-      flex: 1; background: none; border: none; outline: none;
-      color: #fff; font-size: clamp(22px, 4vw, 38px);
-      font-family: 'Nunito', sans-serif; font-weight: 700;
-      letter-spacing: -0.01em; caret-color: #005969;
-    }
-    .search-overlay-input::placeholder { color: rgba(255,255,255,0.18); }
-    .search-submit {
-      background: none; border: none; cursor: pointer; flex-shrink: 0;
-      color: rgba(255,255,255,0.4); transition: color 0.2s; padding: 8px;
-      display: flex; align-items: center;
-    }
-    .search-submit:hover { color: #005969; }
-    .search-submit svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 1.8; }
-    .search-suggestions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
-    .search-suggestions a {
-      font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
-      color: rgba(255,255,255,0.38); border: 1px solid rgba(255,255,255,0.12);
-      padding: 7px 18px; transition: all 0.2s; font-weight: 600;
-    }
-    .search-suggestions a:hover { color: #fff; border-color: #005969; background: rgba(0,89,105,0.12); }
+    .search-close { position: absolute; top: 30px; right: 40px; font-size: 40px; line-height: 1; color: var(--text-main); transition: transform 0.3s; }
+    .search-close:hover { transform: rotate(90deg); }
+    .search-form { display: flex; border-bottom: 2px solid var(--text-main); width: 80%; max-width: 600px; padding-bottom: 10px; }
+    .search-overlay-input { flex: 1; border: none; outline: none; font-family: var(--font-head); font-size: 32px; background: transparent; }
+    .search-submit { font-size: 24px; }
 
-    /* ─── ACCOUNT DROPDOWN ───────────────────────────────────────── */
-    .account-wrap { position: relative; }
-    .account-dropdown {
-      position: absolute; top: calc(100% + 14px); right: 0;
-      background: #fff; border: 1px solid #e8e0d8;
-      box-shadow: 0 16px 48px rgba(0,0,0,0.14), 0 0 0 1px rgba(0,89,105,0.08);
-      width: 248px;
-      opacity: 0; pointer-events: none;
-      transform: translateY(10px) scale(0.97);
-      transform-origin: top right;
-      transition: opacity 0.24s cubic-bezier(0.22, 1, 0.36, 1), transform 0.24s cubic-bezier(0.22, 1, 0.36, 1);
-      z-index: 200;
+    /* Philosophy Section */
+    .philosophy-section {
+      padding: 120px 20px;
+      text-align: center;
+      background: #fff;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
     }
-    .account-dropdown.open { opacity: 1; pointer-events: auto; transform: translateY(0) scale(1); }
-    .account-header {
-      display: flex; align-items: center; gap: 13px;
-      padding: 18px 20px; background: #faf8f5;
-      border-bottom: 1px solid #e8e0d8;
+    .philosophy-watermark {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-family: var(--font-head);
+      font-size: clamp(100px, 20vw, 300px);
+      color:rgb(0 81 100 / 18%);
+      z-index: 1;
+      pointer-events: none;
+      white-space: nowrap;
     }
-    .account-avatar {
-      width: 40px; height: 40px; border-radius: 50%;
-      background: #005969; color: #fff; flex-shrink: 0;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 17px; font-weight: 800; font-family: 'Nunito', sans-serif;
+    .philosophy-content {
+      position: relative;
+      z-index: 2;
+      max-width: 800px;
     }
-    .account-name { font-size: 13px; font-weight: 700; color: #2c2c2c; line-height: 1.3; }
-    .account-sub { font-size: 11px; color: #888888; margin-top: 3px; line-height: 1.3; }
-    .account-links { padding: 8px 0; }
-    .account-link {
-      display: flex; align-items: center; gap: 10px;
-      padding: 11px 20px; font-size: 13px; font-weight: 500;
-      color: #2c2c2c; transition: background 0.15s, color 0.15s;
-      text-decoration: none;
+    .philosophy-quote {
+      font-family: var(--font-head);
+      font-size: clamp(24px, 4vw, 36px);
+      font-style: italic;
+      line-height: 1.5;
+      color: var(--text-main);
+      margin-bottom: 40px;
     }
-    .account-link svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.8; flex-shrink: 0; opacity: 0.6; }
-    .account-link:hover { background: #faf8f5; color: #005969; }
-    .account-link:hover svg { opacity: 1; }
-    .account-divider { height: 1px; background: #e8e0d8; margin: 6px 0; }
-    
-    
-    
-</style>
+    .philosophy-divider {
+      width: 60px;
+      height: 1px;
+      background: var(--accent-gold);
+      margin: 0 auto 20px auto;
+    }
+    .philosophy-label {
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--text-light);
+      font-weight: 600;
+    }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+      .cat-grid { grid-template-columns: repeat(3, 1fr); }
+      .products-grid { grid-template-columns: repeat(3, 1fr); }
+      .promo-grid { grid-template-columns: 1fr; }
+      .footer-grid { grid-template-columns: 1fr 1fr; gap: 40px; }
+
+    }
+    @media (max-width: 768px) {
+      .nav { padding: 0 20px; }
+      .nav-links { display: none; }
+      .hamburger { display: flex; }
+      .nav-right { gap: 10px; }
+      .cat-grid { grid-template-columns: repeat(2, 1fr); gap: 16px; }
+      .products-grid { grid-template-columns: repeat(2, 1fr); gap: 16px; }
+      .trust-bar { flex-direction: column; align-items: flex-start; gap: 24px; }
+      .section { padding: 60px 20px; }
+      .section-alt { padding: 60px 20px; }
+      .hero-title { font-size: 36px; }
+      .footer-grid { grid-template-columns: 1fr; }
+      .footer-bottom { flex-direction: column; gap: 16px; }
+      .qv-body { grid-template-columns: 1fr; }
+      .ig-grid { grid-template-columns: repeat(2, 1fr); }
+      .polaroid-card { width: 200px; }
+      .testimonials-track { gap: 24px; padding: 10px 30px 40px; }
+    }
+  </style>
 </head>
 <body>
-  <canvas id="cursorSparkle" aria-hidden="true"></canvas>
-  <div class="scroll-progress" id="scrollProgress" aria-hidden="true"></div>
-  <nav class="nav" id="navbar" role="navigation" aria-label="Main navigation">
-    <a href="#" class="nav-logo" aria-label="The Hira Store – Home">
-      <img src="https://wearparts.norework.in/wp-content/uploads/2023/09/Hira-1.png" alt="Hira Store" />
-    </a>
 
-    <ul class="nav-links" role="list">
-      <li class="nav-item-mega">
-        <a href="#">Jewelry</a>
-        <div class="mega-menu">
-          <div class="mega-col">
-            <h4 class="mega-title">Shop by Category</h4>
-            <ul>
-              <li><a href="shop.html?cat=Rings">Rings</a></li>
-              <li><a href="shop.html?cat=Necklaces">Necklaces</a></li>
-              <li><a href="shop.html?cat=Earrings">Earrings</a></li>
-              <li><a href="shop.html?cat=Bracelets">Bracelets</a></li>
-              <li><a href="shop.html?cat=Accessories">Mangalsutras</a></li>
-            </ul>
-          </div>
-          <div class="mega-col">
-            <h4 class="mega-title">Shop by Metal</h4>
-            <ul>
-              <li><a href="#">Yellow Gold</a></li>
-              <li><a href="#">Rose Gold</a></li>
-              <li><a href="#">White Gold</a></li>
-              <li><a href="#">Platinum</a></li>
-              <li><a href="#">Sterling Silver</a></li>
-            </ul>
-          </div>
-          <div class="mega-promo">
-            <img src="https://images.unsplash.com/photo-1599643478514-46b150c9dc86?w=600&q=80" alt="Bridal Collection" />
-            <span>Bridal Edit 2025</span>
-          </div>
-        </div>
-      </li>
-      <li><a href="shop.html">Shop All</a></li>
-      <li><a href="#">Solitaires</a></li>
-      <li><a href="#">Coins</a></li>
-      <li><a href="#">Gifting</a></li>
-    </ul>
+  <!-- Announcement Bar -->
+  <div class="announcement">
+    <div class="marquee-inner">
+      <span>Free Shipping on orders over $15</span>
+      <span>1 Year Warranty</span>
+      <span>100% Hallmarked Silver</span>
+      <span>Free Shipping on orders over $15</span>
+      <span>1 Year Warranty</span>
+      <span>100% Hallmarked Silver</span>
+    </div>
+  </div>
 
-    <div class="nav-actions">
-      <button class="hamburger" id="hamburgerBtn" aria-label="Open menu" aria-expanded="false">
-        <svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+  <!-- Navbar -->
+  <nav class="nav" id="navbar">
+    <div class="nav-left">
+      <button class="hamburger" id="hamburgerBtn" aria-label="Menu">
+        <svg viewBox="0 0 24 24"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
       </button>
-      <button class="nav-icon" aria-label="Search" id="searchBtn">
+      <ul class="nav-links">
+        <li><a href="shop.html">Shop All</a></li>
+        <li><a href="shop.html?cat=Necklaces">Necklaces</a></li>
+        <li><a href="shop.html?cat=Earrings">Earrings</a></li>
+        <li><a href="shop.html?cat=Rings">Rings</a></li>
+        <li><a href="about.html">Our Story</a></li>
+      </ul>
+    </div>
+
+    <a href="index.html" class="nav-center nav-logo">
+      <img src="https://wearparts.norework.in/wp-content/uploads/2023/09/Hira-1.png" alt="The Hira Store" />
+    </a>
+    
+    <div class="nav-right">
+      <button class="nav-icon" id="searchBtn" aria-label="Search">
         <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="22" y2="22"/></svg>
       </button>
+      <a href="login.html" class="nav-icon" id="accountNavBtn" aria-label="Account">
+        <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      </a>
       <div class="cart-wrap">
-        <a href="cart.html" class="nav-icon" aria-label="Shopping cart" id="cartNavBtn">
+        <a href="cart.html" class="nav-icon" aria-label="Cart">
           <svg viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
         </a>
-        <span class="cart-badge" id="cartBadge" aria-live="polite"></span>
-      </div>
-      <div class="account-wrap">
-        <button class="nav-icon" aria-label="My Account" id="accountBtn">
-          <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-        </button>
-        <div class="account-dropdown" id="accountDropdown">
-          <div class="account-header">
-            <div class="account-avatar">H</div>
-            <div>
-              <p class="account-name">Welcome!</p>
-              <p class="account-sub">Sign in for better experience</p>
-            </div>
-          </div>
-          <div class="account-links">
-            <a href="#" class="account-link">
-              <svg viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
-              Sign In
-            </a>
-            <a href="#" class="account-link">
-              <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
-              Create Account
-            </a>
-            <div class="account-divider"></div>
-            <a href="cart.html" class="account-link">
-              <svg viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
-              My Orders
-            </a>
-            <a href="#" class="account-link">
-              <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
-              Wishlist
-            </a>
-          </div>
-        </div>
+        <span class="cart-badge" id="cartBadge"></span>
       </div>
     </div>
   </nav>
-  <!-- MOBILE NAV DRAWER -->
-  <div class="mobile-nav" id="mobileNav" role="dialog" aria-label="Mobile navigation">
+
+  <!-- Mobile Nav Drawer -->
+  <div class="mobile-nav" id="mobileNav">
     <div class="mobile-nav-overlay" id="mobileNavOverlay"></div>
     <div class="mobile-nav-drawer">
       <div class="mobile-nav-header">
-        <img src="https://wearparts.norework.in/wp-content/uploads/2023/09/Hira-1.png" alt="Hira Store" />
-        <button class="mobile-nav-close" id="mobileNavClose" aria-label="Close menu">
+        <img src="https://wearparts.norework.in/wp-content/uploads/2023/09/Hira-1.png" alt="Hira" style="height:24px" />
+        <button class="mobile-nav-close" id="mobileNavClose">
           <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
       </div>
       <ul class="mobile-nav-links">
-        <li>
-          <a href="#">Jewelry</a>
-          <ul class="mobile-nav-sub">
-            <li><a href="shop.html?cat=Rings">Rings</a></li>
-            <li><a href="shop.html?cat=Necklaces">Necklaces</a></li>
-            <li><a href="shop.html?cat=Earrings">Earrings</a></li>
-            <li><a href="shop.html?cat=Bracelets">Bracelets</a></li>
-            <li><a href="shop.html?cat=Pendants">Pendants</a></li>
-          </ul>
-        </li>
         <li><a href="shop.html">Shop All</a></li>
-        <li><a href="#">Solitaires</a></li>
-        <li><a href="#">Coins</a></li>
-        <li><a href="#">Gifting</a></li>
+        <li><a href="shop.html?cat=Necklaces">Necklaces</a></li>
+        <li><a href="shop.html?cat=Earrings">Earrings</a></li>
+        <li><a href="shop.html?cat=Rings">Rings</a></li>
+        <li><a href="shop.html?cat=Bracelets">Bracelets</a></li>
+        <li><a href="about.html">Our Story</a></li>
       </ul>
-      <div class="mobile-nav-footer">
-        <a href="shop.html" class="mobile-nav-cta">Shop Now</a>
-      </div>
     </div>
   </div>
 
-
-  <!-- â”€â”€â”€ HERO SLIDER â”€â”€â”€ -->
-  <section class="hero" role="region" aria-label="Featured collection slides">
-
-    <div class="slide active" id="slide-0" role="tabpanel" aria-roledescription="slide">
-      <div class="slide-bg" style="background-image:url('https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=1800&q=85')"></div>
-      <div class="slide-overlay"></div>
-      <div class="slide-content">
-        <p class="slide-eyebrow">New Collection 2025</p>
-        <h1 class="slide-title">Timeless Silver,<br/>Modern Soul</h1>
-        <p class="slide-sub">Handcrafted sterling silver jewelry that tells your story. Every piece, a work of art.</p>
-        <div class="slide-ctas">
-          <a href="shop.html" class="btn-primary">Shop Now <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
-          <a href="shop.html" class="btn-ghost">Explore All</a>
-        </div>
-      </div>
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="hero-slider">
+      <img src="https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=2000&q=85" alt="Luxury Silver Jewelry" class="hero-img active" />
+      <img src="https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=2000&q=85" alt="Demi-fine Jewelry" class="hero-img" />
+      <img src="https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=2000&q=85" alt="Gold Vermeil" class="hero-img" />
     </div>
-
-    <div class="slide" id="slide-1" role="tabpanel" aria-roledescription="slide">
-      <div class="slide-bg" style="background-image:url('https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=1800&q=85')"></div>
-      <div class="slide-overlay"></div>
-      <div class="slide-content">
-        <p class="slide-eyebrow">Bridal Essentials</p>
-        <h1 class="slide-title">Elegance for Every<br/>Occasion</h1>
-        <p class="slide-sub">From engagement rings to anniversary gifts â€” celebrate life's precious moments with Hira.</p>
-        <div class="slide-ctas">
-          <a href="shop.html" class="btn-primary">View Bridal <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
-          <a href="shop.html" class="btn-ghost">Lookbook</a>
-        </div>
-      </div>
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+      <p class="hero-eyebrow">The New Collection</p>
+      <h1 class="hero-title">Everyday Elegance<br/>Redefined.</h1>
+      <a href="shop.html" class="hero-btn">Explore Collection</a>
     </div>
-
-    <div class="slide" id="slide-2" role="tabpanel" aria-roledescription="slide">
-      <div class="slide-bg" style="background-image:url('https://images.unsplash.com/photo-1599643477877-530eb83abc8e?w=1800&q=85')"></div>
-      <div class="slide-overlay"></div>
-      <div class="slide-content">
-        <p class="slide-eyebrow">The Earring Edit</p>
-        <h1 class="slide-title">Pieces That Speak<br/>Without Words</h1>
-        <p class="slide-sub">Lightweight, bold, and endlessly wearable. Discover earrings crafted for the modern woman.</p>
-        <div class="slide-ctas">
-          <a href="shop.html" class="btn-primary">Shop Earrings <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
-          <a href="shop.html" class="btn-ghost">New Arrivals</a>
-        </div>
-      </div>
-    </div>
-
-    <div class="slide" id="slide-3" role="tabpanel" aria-roledescription="slide">
-      <div class="slide-bg" style="background-image:url('https://images.unsplash.com/photo-1613945407943-59cd755fd69e?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D')"></div>
-      <div class="slide-overlay"></div>
-      <div class="slide-content">
-        <p class="slide-eyebrow">Signature Rings</p>
-        <h1 class="slide-title">Unleash<br/>The Inner Glow</h1>
-        <p class="slide-sub">Pure 925 sterling silver rings â€” each BIS hallmarked and crafted to last a lifetime.</p>
-        <div class="slide-ctas">
-          <a href="shop.html" class="btn-primary">Shop Rings <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
-          <a href="shop.html" class="btn-ghost">Learn More</a>
-        </div>
-      </div>
-    </div>
-
-    <!-- Arrows -->
-    <button class="slider-arrow arrow-prev" id="prevBtn" aria-label="Previous slide">
-      <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
-    </button>
-    <button class="slider-arrow arrow-next" id="nextBtn" aria-label="Next slide">
-      <svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
-    </button>
-
-    <!-- Dots -->
-    <div class="slider-dots" role="tablist" aria-label="Slide navigation">
-      <button class="dot active" role="tab" aria-selected="true"  aria-label="Go to slide 1"></button>
-      <button class="dot"        role="tab" aria-selected="false" aria-label="Go to slide 2"></button>
-      <button class="dot"        role="tab" aria-selected="false" aria-label="Go to slide 3"></button>
-      <button class="dot"        role="tab" aria-selected="false" aria-label="Go to slide 4"></button>
-    </div>
-
-    <!-- Progress bar -->
-    <div class="progress-bar running" id="progressBar" aria-hidden="true"></div>
   </section>
 
-  <section class="section" aria-label="New Arrivals">
+  <!-- Trust Bar -->
+  <div class="trust-bar">
+    <div class="trust-item">
+      <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      <span class="trust-text">BIS Hallmarked</span>
+    </div>
+    <div class="trust-item">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+      <span class="trust-text">Skin Friendly</span>
+    </div>
+    <div class="trust-item">
+      <svg viewBox="0 0 24 24"><rect x="1" y="3" width="13" height="13"/><polygon points="13 3 20 3 23 6 23 16 13 16 13 3"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="17.5" cy="18.5" r="2.5"/></svg>
+      <span class="trust-text">Free Shipping</span>
+    </div>
+    <div class="trust-item">
+      <svg viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+      <span class="trust-text">Cash on Delivery</span>
+    </div>
+  </div>
+
+  <!-- Shop by Category -->
+  <section class="section">
     <div class="section-header reveal">
-      <p class="section-eyebrow">Just Landed</p>
-      <h2 class="section-title">New Arrivals</h2>
-      <p class="section-subtitle">Freshly crafted pieces â€” be the first to wear them.</p>
-      <div class="divider"></div>
-    </div>
-
-    <div class="products-grid" id="productsGrid">
-      <!-- Products loaded dynamically from ERPNext -->
-      <div id="productsLoading" style="grid-column:1/-1;text-align:center;padding:48px 0;color:var(--text-light);font-size:14px;">Loading products…</div>
-    </div>
-
-    <div class="center-cta reveal">
-      <a href="shop.html" class="btn-outline">
-        View All Products
-        <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-      </a>
-    </div>
-  </section>
-
-  <!-- â”€â”€â”€ TRUST BADGES â”€â”€â”€ -->
-  <section class="trust section" aria-label="Our promises">
-    <div class="trust-grid">
-      <div class="trust-item reveal">
-        <div class="trust-icon">
-          <svg viewBox="0 0 24 24"><rect x="1" y="3" width="13" height="13"/><polygon points="13 3 20 3 23 6 23 16 13 16 13 3"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="17.5" cy="18.5" r="2.5"/></svg>
-        </div>
-        <div>
-          <div class="trust-label">Free Shipping</div>
-          <div class="trust-desc">On all orders above 999</div>
-        </div>
-      </div>
-      <div class="trust-item reveal reveal-delay-1">
-        <div class="trust-icon">
-          <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-        </div>
-        <div>
-          <div class="trust-label">BIS Hallmark</div>
-          <div class="trust-desc">Certified 925 sterling silver</div>
-        </div>
-      </div>
-      <div class="trust-item reveal reveal-delay-2">
-        <div class="trust-icon">
-          <svg viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
-        </div>
-        <div>
-          <div class="trust-label">Easy Returns</div>
-          <div class="trust-desc">30-day hassle-free returns</div>
-        </div>
-      </div>
-      <div class="trust-item reveal reveal-delay-3">
-        <div class="trust-icon">
-          <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-        </div>
-        <div>
-          <div class="trust-label">Certified Silver</div>
-          <div class="trust-desc">Authenticity guaranteed</div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- â”€â”€â”€ SHOP BY MATERIAL â”€â”€â”€ -->
-  <section class="section" aria-label="Shop by Material">
-    <div class="section-header reveal">
-      <p class="section-eyebrow">Alchemy of Materials</p>
-      <h2 class="section-title">Shop by Material</h2>
-      <div class="divider"></div>
-    </div>
-    <div class="materials-grid">
-      <a href="shop.html?cat=all" class="material-card reveal reveal-delay-1">
-        <img src="https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=600&q=85" alt="Rose Gold" loading="lazy" />
-        <div class="material-name">Rose Gold</div>
-      </a>
-      <a href="shop.html?cat=all" class="material-card reveal reveal-delay-2">
-        <img src="https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=600&q=85" alt="Diamond" loading="lazy" />
-        <div class="material-name">Diamond</div>
-      </a>
-      <a href="shop.html?search=stone" class="material-card reveal reveal-delay-3">
-        <img src="https://i.pinimg.com/originals/cf/57/3c/cf573c613718a60baafcc3f6ad4e6f61.png" alt="Gemstone" loading="lazy" />
-        <div class="material-name">Gemstone</div>
-      </a>
-      <a href="shop.html?search=pearl" class="material-card reveal reveal-delay-4">
-        <img src="https://i.pinimg.com/originals/37/b2/2f/37b22f0d6a80abce3592951fb210ed9a.jpg" alt="Pearl" loading="lazy" />
-        <div class="material-name">Pearl</div>
-      </a>
-    </div>
-  </section>
-
-  <!-- â”€â”€â”€ CATEGORIES â”€â”€â”€ -->
-  <section class="section section-alt" aria-label="Shop by category">
-    <div class="section-header reveal">
-      <p class="section-eyebrow">Browse Collections</p>
       <h2 class="section-title">Shop by Category</h2>
-      <div class="divider"></div>
+      <p class="section-desc">Discover our range of meticulously crafted demi-fine jewelry.</p>
     </div>
-    <div class="categories-grid">
-      <a href="shop.html?cat=Rings" class="category-card reveal reveal-delay-1">
-        <div class="category-img-wrap">
-          <img src="https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=400&q=85" alt="Rings" loading="lazy" />
-        </div>
-        <span class="category-name">Rings</span>
+    <div class="cat-grid">
+      <a href="shop.html?cat=Necklaces" class="cat-card reveal reveal-delay-1">
+        <div class="cat-img-wrap"><img src="https://images.unsplash.com/photo-1599643477877-530eb83abc8e?w=400&q=85" alt="Necklaces" /></div>
+        <span class="cat-name">Necklaces</span>
       </a>
-      <a href="shop.html?cat=Necklaces" class="category-card reveal reveal-delay-2">
-        <div class="category-img-wrap">
-          <img src="https://images.unsplash.com/photo-1599643477877-530eb83abc8e?w=400&q=85" alt="Necklaces" loading="lazy" />
-        </div>
-        <span class="category-name">Necklaces</span>
+      <a href="shop.html?cat=Earrings" class="cat-card reveal reveal-delay-2">
+        <div class="cat-img-wrap"><img src="https://images.unsplash.com/photo-1617038220319-276d3cfab638?w=400&q=85" alt="Earrings" /></div>
+        <span class="cat-name">Earrings</span>
       </a>
-      <a href="shop.html?cat=Earrings" class="category-card reveal reveal-delay-3">
-        <div class="category-img-wrap">
-          <img src="https://images.unsplash.com/photo-1617038220319-276d3cfab638?w=400&q=85" alt="Earrings" loading="lazy" />
-        </div>
-        <span class="category-name">Earrings</span>
+      <a href="shop.html?cat=Rings" class="cat-card reveal reveal-delay-3">
+        <div class="cat-img-wrap"><img src="https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=400&q=85" alt="Rings" /></div>
+        <span class="cat-name">Rings</span>
       </a>
-      <a href="shop.html?cat=Bracelets" class="category-card reveal reveal-delay-4">
-        <div class="category-img-wrap">
-          <img src="https://images.unsplash.com/photo-1689397136362-dce64e557fcc?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8YnJhY2VsZXRzJTIwamV3ZWxsZXJ5fGVufDB8fDB8fHww" alt="Bracelets" loading="lazy" />
-        </div>
-        <span class="category-name">Bracelets</span>
+      <a href="shop.html?cat=Bracelets" class="cat-card reveal reveal-delay-4">
+        <div class="cat-img-wrap"><img src="https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=400&q=85" alt="Bracelets" /></div>
+        <span class="cat-name">Bracelets</span>
       </a>
-      <a href="shop.html?cat=Pendants" class="category-card reveal reveal-delay-1">
-        <div class="category-img-wrap">
-          <img src="https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=400&q=85" alt="Pendants" loading="lazy" />
-        </div>
-        <span class="category-name">Pendants</span>
-      </a>
-      <a href="shop.html?cat=Sets" class="category-card reveal reveal-delay-2">
-        <div class="category-img-wrap">
-          <img src="https://images.unsplash.com/photo-1598560917807-1bae44bd2be8?w=400&q=85" alt="Gift Sets" loading="lazy" />
-        </div>
-        <span class="category-name">Sets</span>
+      <a href="shop.html?cat=GiftSets" class="cat-card reveal reveal-delay-1">
+        <div class="cat-img-wrap"><img src="https://images.unsplash.com/photo-1598560917807-1bae44bd2be8?w=400&q=85" alt="Gift Sets" /></div>
+        <span class="cat-name">Gift Sets</span>
       </a>
     </div>
   </section>
 
-  <!-- â”€â”€â”€ PROMO BANNER â”€â”€â”€ -->
-  <div class="promo reveal" role="region" aria-label="Bridal collection promotion">
-    <div class="promo-bg" id="promoBg"></div>
-    <div class="promo-overlay"></div>
-    <div class="promo-content">
-      <p class="promo-eyebrow">Limited Time Offer</p>
-      <h2 class="promo-title">Bridal Collection 2025</h2>
-      <p class="promo-text">Complete your bridal look with our exclusive silver sets. Designed to complement every outfit, crafted to last a lifetime.</p>
-      <a href="#" class="btn-primary">
-        Explore Bridal
-        <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+  <!-- Bestsellers -->
+  <section class="section section-alt">
+    <div class="section-inner">
+      <div class="section-header reveal">
+        <h2 class="section-title">Most Loved Pieces</h2>
+        <p class="section-desc">Our highly coveted bestsellers, handcrafted to perfection.</p>
+      </div>
+      <div class="products-grid" id="productsGrid">
+        <div id="productsLoading" style="grid-column:1/-1;text-align:center;color:var(--text-light);padding:40px;">Loading collection...</div>
+      </div>
+      <div class="center reveal">
+        <a href="shop.html" class="btn-outline-center">Shop Bestsellers</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Philosophy Section -->
+  <section class="philosophy-section reveal">
+    <div class="philosophy-watermark">Hira</div>
+    <div class="philosophy-content">
+      <blockquote class="philosophy-quote">
+        "We believe that elegance is not a luxury reserved for special occasions &mdash; it is a feeling you deserve to carry with you, every day."
+      </blockquote>
+      <div class="philosophy-divider"></div>
+      <div class="philosophy-label">The Hira Store Philosophy</div>
+    </div>
+  </section>
+
+    <section class="section section-alt">
+    <div class="section-inner">
+      <div class="section-header reveal">
+        <h2 class="section-title">New Arrivals</h2>
+        <p class="section-desc">Freshly handcrafted pieces just for you.</p>
+      </div>
+      <div class="products-grid" id="newArrivalsGrid">
+        <div id="newArrivalsLoading" style="grid-column:1/-1;text-align:center;color:var(--text-light);padding:40px;">Loading collection...</div>
+      </div>
+      <div class="center reveal">
+        <a href="shop.html" class="btn-outline-center">Shop New Arrivals</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Promo Banners -->
+  <section class="section">
+    <div class="promo-grid">
+      <a href="shop.html?cat=Bridal" class="promo-card reveal">
+        <img src="https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=800&q=85" alt="Bridal Edit" />
+        <div class="promo-content">
+          <h3 class="promo-title">The Bridal Edit</h3>
+          <span class="promo-link">Explore Collection <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></span>
+        </div>
+      </a>
+      <a href="shop.html?cat=Gifts" class="promo-card reveal reveal-delay-2">
+        <img src="https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=800&q=85" alt="Gifting" />
+        <div class="promo-content">
+          <h3 class="promo-title">Gifts of Love</h3>
+          <span class="promo-link">Shop Gifts <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></span>
+        </div>
       </a>
     </div>
-  </div>
+  </section>
 
-  <!-- â”€â”€â”€ TRENDSPOTTING â”€â”€â”€ -->
-  <section class="section section-alt" aria-label="Trendspotting">
+<!-- Customer Testimonials -->
+  <section class="testimonials-section">
     <div class="section-header reveal">
-      <p class="section-eyebrow">Curated For You</p>
-      <h2 class="section-title">Trendspotting</h2>
-      <div class="divider"></div>
+      <h2 class="section-title">Loved by Our Customers</h2>
+      <p class="section-desc">Real stories from real Hira wearers</p>
     </div>
-    <div class="trend-wrap reveal reveal-delay-1">
-      <div class="trend-item">
-        <img src="https://images.unsplash.com/photo-1596944924616-7b38e7cfac36?w=400&q=80" alt="Layered Necklaces" class="trend-img" loading="lazy"/>
-        <div class="trend-eyebrow">Style Edit</div>
-        <h3 class="trend-title">Layered Necklaces</h3>
-        <p class="trend-desc">Master the art of layering with our pre-styled necklace combinations.</p>
-      </div>
-      <div class="trend-item">
-        <img src="https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=400&q=80" alt="Shoulder Dusters" class="trend-img" loading="lazy"/>
-        <div class="trend-eyebrow">Coveted</div>
-        <h3 class="trend-title">Shoulder Dusters</h3>
-        <p class="trend-desc">Make a statement with our dramatic, elongated drop earrings.</p>
-      </div>
-      <div class="trend-item">
-        <img src="https://i.pinimg.com/originals/31/86/39/31863971af3f1b70732dbd25b8265090.jpg" alt="Watch Jewellery" class="trend-img" loading="lazy"/>
-        <div class="trend-eyebrow">Trending</div>
-        <h3 class="trend-title">Watch Jewellery</h3>
-        <p class="trend-desc">Elevate your timepiece with our exclusive watch charms and bands.</p>
-      </div>
-      <div class="trend-item">
-        <img src="https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=400&q=80" alt="Men's Collection" class="trend-img" loading="lazy"/>
-        <div class="trend-eyebrow">For Him</div>
-        <h3 class="trend-title">The Men's Edit</h3>
-        <p class="trend-desc">Bold kadas, sleek chains, and sophisticated rings curated for men.</p>
-      </div>
-      <div class="trend-item">
-        <img src="https://images.unsplash.com/photo-1599643478514-46b150c9dc86?w=400&q=80" alt="Solitaires" class="trend-img" loading="lazy"/>
-        <div class="trend-eyebrow">Classic</div>
-        <h3 class="trend-title">Solitaire Magic</h3>
-        <p class="trend-desc">Timeless single-stone pieces that capture the maximum amount of light.</p>
-      </div>
-    </div>
-  </section>
-
-<section class="jewel3d-section" id="jewel3dSection" aria-label="3D Jewellery Showcase">
-    <div class="jewel3d-glow" aria-hidden="true"></div>
-    <div class="jewel3d-inner">
-      <div class="jewel3d-text reveal">
-        <p class="section-eyebrow">Master Craftsmanship</p>
-        <h2 class="jewel3d-title">Every Piece,<br/>A Masterpiece</h2>
-        <p class="jewel3d-sub">Our sterling silver jewellery is hand-finished to the highest standard â€” every gem set with precision, every curve polished to perfection. Drag the ring to explore its brilliance.</p>
-        <div class="jewel3d-features">
-          <div class="jewel3d-feature"><span class="jewel3d-dot"></span>925 Sterling Silver</div>
-          <div class="jewel3d-feature"><span class="jewel3d-dot"></span>BIS Hallmarked</div>
-          <div class="jewel3d-feature"><span class="jewel3d-dot"></span>Handcrafted</div>
-        </div>
-        <a href="#" class="btn-primary">
-          Explore Collection
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-        </a>
-      </div>
-      <div class="jewel3d-canvas-wrap" id="jewel3dWrap">
-        <canvas id="jewel3dCanvas"></canvas>
-        <div class="jewel3d-hint" aria-hidden="true">
-          <span></span>Drag to rotate<span></span>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- â”€â”€â”€ TESTIMONIALS â”€â”€â”€ -->
-  <section class="section" aria-label="Customer Reviews">
-    <div class="section-header reveal">
-      <p class="section-eyebrow">What Our Customers Say</p>
-      <h2 class="section-title">Loved by Thousands</h2>
-      <div class="divider"></div>
-    </div>
-    <div class="testimonials-grid">
-      <div class="testimonial-card reveal reveal-delay-1">
-        <div class="testimonial-quote">"</div>
-        <p class="testimonial-text">Absolutely stunning pieces! The quality of the silver is exceptional and the craftsmanship is unbelievable for the price. I've received so many compliments on my Celestial Ring.</p>
-        <div class="testimonial-author">
-          <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&q=80" alt="Priya Sharma" class="author-avatar" loading="lazy" />
-          <div>
-            <div class="author-name">Priya Sharma</div>
-            <div class="author-meta">Mumbai &nbsp;Â·&nbsp; â˜…â˜…â˜…â˜…â˜…</div>
+    <div class="testimonials-carousel-wrap">
+      <div class="testimonials-string-line"></div>
+      <div class="testimonials-track-outer">
+        <div class="testimonials-track" id="testimonialsTrack">
+          <div class="polaroid-card" style="--rot:-4deg;">
+            <div class="polaroid-clip"></div>
+            <div class="polaroid-inner"><img src="https://images.unsplash.com/photo-1602173574767-37ac01994b2a?w=500&q=80" alt="Anuska Ananya" /></div>
+            <div class="polaroid-caption">
+              <div class="polaroid-name">Anuska Ananya, 24</div>
+              <p class="polaroid-text">Hira Store is my go-to place for jewellery. I love that I can wear their jewellery to work, dates, parties and brunches. It goes with everything and makes my outfits look stylish and trendy.</p>
+            </div>
           </div>
-        </div>
-      </div>
-      <div class="testimonial-card reveal reveal-delay-2">
-        <div class="testimonial-quote">"</div>
-        <p class="testimonial-text">Ordered the bridal set for my wedding and I couldn't be happier. The finish is flawless, delivery was fast, and the packaging made it feel like a luxury gift.</p>
-        <div class="testimonial-author">
-          <img src="https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=80&q=80" alt="Ananya Kulkarni" class="author-avatar" loading="lazy" />
-          <div>
-            <div class="author-name">Ananya Kulkarni</div>
-            <div class="author-meta">Pune &nbsp;Â·&nbsp; â˜…â˜…â˜…â˜…â˜…</div>
+          <div class="polaroid-card" style="--rot:2deg;">
+            <div class="polaroid-clip"></div>
+            <div class="polaroid-inner"><img src="https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=500&q=80" alt="Priya Singh" /></div>
+            <div class="polaroid-caption">
+              <div class="polaroid-name">Priya Singh, 34</div>
+              <p class="polaroid-text">I had trouble finding jewellery that suited my minimalist style, but Hira's sleek and elegant designs were exactly what I was looking for. They have pieces for every style and occasion.</p>
+            </div>
           </div>
-        </div>
-      </div>
-      <div class="testimonial-card reveal reveal-delay-3">
-        <div class="testimonial-quote">"</div>
-        <p class="testimonial-text">I was skeptical about buying jewelry online, but Hira Store changed my mind completely. The pieces are exactly as shown, high quality, and the return process was smooth.</p>
-        <div class="testimonial-author">
-          <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=80&q=80" alt="Meera Joshi" class="author-avatar" loading="lazy" />
-          <div>
-            <div class="author-name">Meera Joshi</div>
-            <div class="author-meta">Delhi &nbsp;Â·&nbsp; â˜…â˜…â˜…â˜…â˜…</div>
+          <div class="polaroid-card" style="--rot:-2deg;">
+            <div class="polaroid-clip"></div>
+            <div class="polaroid-inner"><img src="https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=500&q=80" alt="Avni Sharma" /></div>
+            <div class="polaroid-caption">
+              <div class="polaroid-name">Avni Sharma, 27</div>
+              <p class="polaroid-text">Me and my friends love Hira's unique designs. Their pieces add a pop of colour to my outfits. The jewellery is stylish, modern and a breath of fresh air.</p>
+            </div>
+          </div>
+          <div class="polaroid-card" style="--rot:3deg;">
+            <div class="polaroid-clip"></div>
+            <div class="polaroid-inner"><img src="https://images.unsplash.com/photo-1573408301185-9519f94816b5?w=500&q=80" alt="Meera Kapoor" /></div>
+            <div class="polaroid-caption">
+              <div class="polaroid-name">Meera Kapoor, 31</div>
+              <p class="polaroid-text">I gifted a Hira necklace to my sister and she absolutely loved it. The packaging was beautiful and the quality is stunning. Will definitely be ordering again!</p>
+            </div>
+          </div>
+          <div class="polaroid-card" style="--rot:-3deg;">
+            <div class="polaroid-clip"></div>
+            <div class="polaroid-inner"><img src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=500&q=80" alt="Riya Mehta" /></div>
+            <div class="polaroid-caption">
+              <div class="polaroid-name">Riya Mehta, 29</div>
+              <p class="polaroid-text">The craftsmanship is absolutely beautiful. Every piece I've bought from Hira Store feels so luxurious and special. My friends always ask me where I got my jewellery from!</p>
+            </div>
           </div>
         </div>
       </div>
     </div>
   </section>
+  
 
-  <!-- â”€â”€â”€ HIRA & ME (CUSTOMER STORIES) â”€â”€â”€ -->
-  <section class="section section-alt" aria-label="Customer Showcases">
-    <div class="section-header reveal">
-      <p class="section-eyebrow">#HiraAndMe</p>
-      <h2 class="section-title">Styled by You</h2>
-      <p class="section-subtitle">Real customers, real style. Tag @hirastore on Instagram to be featured.</p>
-      <div class="divider"></div>
+  <!-- Heritage Section -->
+  <section class="heritage-section">
+    <div class="heritage-img-wrap reveal">
+      <img src="https://images.unsplash.com/photo-1613945407943-59cd755fd69e?w=1000&q=85" alt="Handcrafted Jewelry from Rajasthan" />
     </div>
-    <div class="ugc-grid">
-      <div class="ugc-item reveal reveal-delay-1">
-        <img src="https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=400&q=80" alt="Customer styling" loading="lazy" />
-        <span class="ugc-handle">ananya_styles</span>
-        <button class="ugc-shop-btn">Shop the Look</button>
-      </div>
-      <div class="ugc-item reveal reveal-delay-2">
-        <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&q=80" alt="Customer styling" loading="lazy" />
-        <span class="ugc-handle">priya.creates</span>
-        <button class="ugc-shop-btn">Shop the Look</button>
-      </div>
-      <div class="ugc-item reveal reveal-delay-3">
-        <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&q=80" alt="Customer styling" loading="lazy" />
-        <span class="ugc-handle">meera_xoxo</span>
-        <button class="ugc-shop-btn">Shop the Look</button>
-      </div>
-      <div class="ugc-item reveal reveal-delay-4">
-        <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&q=80" alt="Customer styling" loading="lazy" />
-        <span class=”ugc-handle”>simran_vibe</span>
-        <button class=”ugc-shop-btn”>Shop the Look</button>
+    <div class="heritage-content">
+      <h2 class="section-title reveal reveal-delay-1">Roots in Rajasthan,<br/>Crafted for the World</h2>
+      <p class="section-desc reveal reveal-delay-2">Every piece of Hira jewelry carries the legacy of expert artisans from Rajasthan. We blend generations of traditional craftsmanship with modern design to create demi-fine jewelry that elevates your everyday style.</p>
+      <div class="reveal reveal-delay-3">
+        <a href="about.html" class="btn-outline-center" style="margin-top:0;">Discover Our Story</a>
       </div>
     </div>
   </section>
 
-  <!-- â”€â”€â”€ NEWSLETTER â”€â”€â”€ -->
-  <div class="newsletter reveal" role="region" aria-label="Newsletter subscription">
-    <p class="newsletter-eyebrow">Stay in the Loop</p>
-    <h2 class="newsletter-title">Get Early Access &amp; Exclusive Offers</h2>
-    <p class="newsletter-sub">Subscribe to receive new arrivals, styling tips, and members-only discounts.</p>
-    <form class="newsletter-form" onsubmit="return false;" aria-label="Email subscription">
-      <label for="emailInput" class="sr-only">Email address</label>
-      <input id="emailInput" type="email" placeholder="Your email address" autocomplete="email" required />
-      <button type="submit">Subscribe</button>
-    </form>
-  </div>
 
-  <!-- â”€â”€â”€ FOOTER â”€â”€â”€ -->
-  <footer role="contentinfo">
+  <!-- UGC / Instagram -->
+  <section class="section">
+    <div class="section-header reveal">
+      <h2 class="section-title">Spotted in Hira</h2>
+      <p class="section-desc">Tag @hirastore to be featured</p>
+    </div>
+    <div class="ig-grid">
+      <div class="ig-item reveal reveal-delay-1">
+        <img src="https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=400&q=80" alt="UGC" />
+        <div class="ig-overlay"><svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg></div>
+      </div>
+      <div class="ig-item reveal reveal-delay-2">
+        <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&q=80" alt="UGC" />
+        <div class="ig-overlay"><svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg></div>
+      </div>
+      <div class="ig-item reveal reveal-delay-3">
+        <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&q=80" alt="UGC" />
+        <div class="ig-overlay"><svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg></div>
+      </div>
+      <div class="ig-item reveal reveal-delay-4">
+        <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&q=80" alt="UGC" />
+        <div class="ig-overlay"><svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
     <div class="footer-grid">
-      <div class="footer-brand">
-        <img src="https://wearparts.norework.in/wp-content/uploads/2023/09/Hira-1.png" alt="Hira Store" />
-        <p class="footer-tagline">We know jewelry shopping can be intimidating, which is why we provide a friendly, no-pressure atmosphere. Find your perfect piece at Hira Jewellery.</p>
+      <div>
+        <div class="footer-brand"><img src="https://wearparts.norework.in/wp-content/uploads/2023/09/Hira-1.png" alt="Hira" /></div>
+        <p class="footer-text">Elevating everyday style with demi-fine jewelry that celebrates your unique journey. 100% hallmarked sterling silver.</p>
         <div class="footer-social">
-          <a href="#" class="social-btn" aria-label="Follow us on Instagram">
-            <svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
-          </a>
-          <a href="#" class="social-btn" aria-label="Follow us on Facebook">
-            <svg viewBox="0 0 24 24"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg>
-          </a>
-          <a href="#" class="social-btn" aria-label="Follow us on Pinterest">
-            <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12c0 4.24 2.65 7.86 6.39 9.29-.09-.78-.17-1.98.04-2.83.19-.77 1.26-5.33 1.26-5.33s-.32-.65-.32-1.6c0-1.5.87-2.62 1.95-2.62.92 0 1.37.69 1.37 1.52 0 .93-.59 2.31-.9 3.59-.25 1.07.54 1.95 1.59 1.95 1.91 0 3.19-2.44 3.19-5.33 0-2.2-1.49-3.74-3.62-3.74-2.47 0-3.91 1.85-3.91 3.76 0 .74.29 1.54.64 1.97.07.08.08.16.06.24l-.24.97c-.04.16-.13.19-.3.12-1.12-.52-1.82-2.17-1.82-3.49 0-2.84 2.06-5.45 5.94-5.45 3.12 0 5.55 2.22 5.55 5.19 0 3.1-1.95 5.59-4.65 5.59-.91 0-1.76-.47-2.05-1.03l-.56 2.08c-.2.78-.75 1.75-1.12 2.35.84.26 1.73.4 2.65.4 5.52 0 10-4.48 10-10S17.52 2 12 2z"/></svg>
-          </a>
-          <a href="#" class="social-btn" aria-label="Watch us on YouTube">
-            <svg viewBox="0 0 24 24"><path d="M22.54 6.42a2.78 2.78 0 00-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46a2.78 2.78 0 00-1.95 1.96A29 29 0 001 12a29 29 0 00.46 5.58A2.78 2.78 0 003.41 19.6C5.12 20 12 20 12 20s6.88 0 8.59-.4a2.78 2.78 0 001.95-1.96A29 29 0 0023 12a29 29 0 00-.46-5.58z"/><polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02"/></svg>
-          </a>
+          <a href="#"><svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg></a>
+          <a href="#"><svg viewBox="0 0 24 24"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg></a>
         </div>
       </div>
-
       <div class="footer-col">
         <h4>Shop</h4>
         <ul>
-          <li><a href="#">Rings</a></li>
           <li><a href="#">Necklaces</a></li>
+          <li><a href="#">Rings</a></li>
           <li><a href="#">Earrings</a></li>
           <li><a href="#">Bracelets</a></li>
-          <li><a href="#">Pendants</a></li>
-          <li><a href="#">Gift Sets</a></li>
         </ul>
       </div>
-
       <div class="footer-col">
         <h4>Help</h4>
         <ul>
           <li><a href="#">Track Order</a></li>
-          <li><a href="#">Returns &amp; Exchange</a></li>
+          <li><a href="#">Returns</a></li>
           <li><a href="#">Shipping Policy</a></li>
-          <li><a href="#">Size Guide</a></li>
-          <li><a href="#">Care Instructions</a></li>
           <li><a href="#">FAQs</a></li>
         </ul>
       </div>
-
       <div class="footer-col">
-        <h4>Company</h4>
-        <ul>
-          <li><a href="#">About Us</a></li>
-          <li><a href="#">Our Story</a></li>
-          <li><a href="#">BIS Certification</a></li>
-          <li><a href="#">Blog</a></li>
-          <li><a href="#">Contact Us</a></li>
-          <li><a href="#">Privacy Policy</a></li>
-        </ul>
+        <h4>Join the List</h4>
+        <p class="footer-text" style="margin-bottom:8px;">Sign up for exclusive offers and new arrivals.</p>
+        <form class="newsletter-form" onsubmit="return false;">
+          <input type="email" placeholder="Email Address" required />
+          <button type="submit">Subscribe</button>
+        </form>
       </div>
     </div>
-
     <div class="footer-bottom">
-      <span>Â© 2025 The Hira Store. All rights reserved.</span>
-      <div class="footer-payments">
-        <span class="payment-badge">UPI</span>
-        <span class="payment-badge">VISA</span>
-        <span class="payment-badge">MC</span>
-        <span class="payment-badge">AMEX</span>
-        <span class="payment-badge">COD</span>
+      <span>&copy; 2025 The Hira Store. All Rights Reserved.</span>
+      <div style="display:flex; gap:10px;">
+        <span>UPI</span> <span>VISA</span> <span>MC</span> <span>COD</span>
       </div>
     </div>
   </footer>
 
-  <!-- ─── QUICK VIEW MODAL ─── -->
-  <div id="quickViewModal" class="qv-overlay" role="dialog" aria-modal="true" aria-labelledby="qvName">
-    <div class="qv-modal" role="document">
-      <button class="qv-close" id="qvClose" aria-label="Close quick view">
-        <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-      </button>
+  <!-- Quick View Modal -->
+  <div id="quickViewModal" class="qv-overlay">
+    <div class="qv-modal">
+      <button class="qv-close" id="qvClose"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
       <div class="qv-body">
-        <!-- Image Column -->
-        <div class="qv-image-col">
-          <div class="qv-img-main">
-            <img id="qvImage" src="" alt="" />
-            <span id="qvBadge" class="product-badge" style="display:none;position:absolute;top:14px;left:14px;"></span>
-            <div class="qv-zoom-hint">Hover to zoom</div>
-          </div>
-        </div>
-        <!-- Info Column -->
+        <div class="qv-img-main"><img id="qvImage" src="" alt="" /><span id="qvBadge" class="product-badge" style="display:none;"></span></div>
         <div class="qv-info-col">
           <span class="qv-cat-tag" id="qvCatTag"></span>
           <h2 class="qv-name" id="qvName">Product Name</h2>
-          <div class="qv-rating-row">
-            <span class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</span>
-            <span class="count" id="qvRatingCount">(124 reviews)</span>
-          </div>
-
           <div class="qv-price-block">
-            <span class="qv-price-now" id="qvPriceNow"></span>
-            <span class="qv-price-was" id="qvPriceWas" style="display:none"></span>
-            <span class="qv-price-save" id="qvPriceSave" style="display:none"></span>
+            <span id="qvPriceNow"></span>
+            <span id="qvPriceWas" style="text-decoration:line-through; font-size:14px; color:var(--text-light); font-weight:400; margin-left:8px; display:none;"></span>
           </div>
-
-          <div class="qv-tags" id="qvTags"></div>
-
-          <div class="qv-trust">
-            <div class="qv-trust-item">
-              <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-              <span>BIS Hallmarked</span>
-            </div>
-            <div class="qv-trust-item">
-              <svg viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
-              <span>30-Day Returns</span>
-            </div>
-            <div class="qv-trust-item">
-              <svg viewBox="0 0 24 24"><rect x="1" y="3" width="13" height="13"/><polygon points="13 3 20 3 23 6 23 16 13 16 13 3"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="17.5" cy="18.5" r="2.5"/></svg>
-              <span>Free Shipping</span>
-            </div>
-          </div>
-
           <div class="qv-btns">
-            <button class="qv-btn-cart" id="qvAddCart">
-              <svg viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
-              Add to Cart
-            </button>
-            <button class="qv-btn-buy" id="qvBuyNow">Buy Now &#8594;</button>
+            <button class="qv-btn-cart" id="qvAddCart"><svg viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg> Add to Cart</button>
+            <button class="qv-btn-buy" id="qvBuyNow">Buy it Now</button>
           </div>
-
-          <a href="shop.html" class="qv-full-link">Browse Full Collection &#8594;</a>
-          <p class="qv-sku" id="qvSku"></p>
+          <a href="shop.html" class="qv-full-link">View Full Details</a>
         </div>
       </div>
     </div>
   </div>
 
   <!-- Search Overlay -->
-  <div id="searchOverlay" class="search-overlay" role="dialog" aria-modal="true" aria-label="Search products">
-    <button class="search-close" id="searchClose" aria-label="Close search">&times;</button>
-    <div class="search-overlay-inner">
-      <p class="search-hint">Search The Hira Store</p>
-      <form class="search-form" id="searchForm" role="search">
-        <input
-          type="search"
-          id="searchOverlayInput"
-          class="search-overlay-input"
-          placeholder="Rings, necklaces, earrings..."
-          autocomplete="off"
-          aria-label="Search products"
-        />
-        <button type="submit" class="search-submit" aria-label="Submit search">
-          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="22" y2="22"/></svg>
-        </button>
-      </form>
-      <div class="search-suggestions">
-        <a href="shop.html?cat=Rings">Rings</a>
-        <a href="shop.html?cat=Necklaces">Necklaces</a>
-        <a href="shop.html?cat=Earrings">Earrings</a>
-        <a href="shop.html?cat=Bracelets">Bracelets</a>
-        <a href="shop.html?cat=Pendants">Pendants</a>
-      </div>
-    </div>
+  <div id="searchOverlay" class="search-overlay">
+    <button class="search-close" id="searchClose">&times;</button>
+    <form class="search-form" id="searchForm">
+      <input type="search" id="searchOverlayInput" class="search-overlay-input" placeholder="Search jewelry..." autocomplete="off" />
+      <button type="submit" class="search-submit"><svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" fill="none" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="22" y2="22"/></svg></button>
+    </form>
   </div>
 
-        <!-- Back to top -->
-  <button class="back-top" id="backTop" aria-label="Back to top">
-    <svg viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg>
-  </button>
-
-  <!-- â”€â”€â”€ SCRIPTS â”€â”€â”€ -->
   <script>
-    /* â”€â”€ SLIDER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
-    const slides   = document.querySelectorAll('.slide');
-    const dots     = document.querySelectorAll('.dot');
-    const progress = document.getElementById('progressBar');
-    const INTERVAL = 4000;
-    let current = 0;
-    let autoTimer;
-
-    function goTo(n) {
-      // Remove active from current
-      slides[current].classList.remove('active');
-      dots[current].classList.remove('active');
-      dots[current].setAttribute('aria-selected', 'false');
-
-      current = (n + slides.length) % slides.length;
-
-      // Activate new slide
-      slides[current].classList.add('active');
-      dots[current].classList.add('active');
-      dots[current].setAttribute('aria-selected', 'true');
-
-      // Reset progress bar
-      progress.classList.remove('running');
-      progress.style.transition = 'none';
-      progress.style.width = '0%';
-      // Trigger reflow then animate
-      void progress.offsetHeight;
-      progress.classList.add('running');
-    }
-
-    function startAuto() {
-      clearInterval(autoTimer);
-      autoTimer = setInterval(() => goTo(current + 1), INTERVAL);
-    }
-
-    document.getElementById('prevBtn').addEventListener('click', () => { goTo(current - 1); startAuto(); });
-    document.getElementById('nextBtn').addEventListener('click', () => { goTo(current + 1); startAuto(); });
-    dots.forEach((dot, i) => dot.addEventListener('click', () => { goTo(i); startAuto(); }));
-
-    // Pause on hover
-    const hero = document.querySelector('.hero');
-    hero.addEventListener('mouseenter', () => clearInterval(autoTimer));
-    hero.addEventListener('mouseleave', () => startAuto());
-
-    // Keyboard support for arrows
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'ArrowLeft')  { goTo(current - 1); startAuto(); }
-      if (e.key === 'ArrowRight') { goTo(current + 1); startAuto(); }
-    });
-
-    startAuto();
-
-    /* â”€â”€ NAVBAR â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
-    const navbar = document.getElementById('navbar');
-    window.addEventListener('scroll', () => {
-      navbar.classList.toggle('scrolled', window.scrollY > 40);
-    }, { passive: true });
-
-    /* â”€â”€ BACK TO TOP â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
-    const backTop = document.getElementById('backTop');
-    window.addEventListener('scroll', () => {
-      backTop.classList.toggle('visible', window.scrollY > 400);
-    }, { passive: true });
-    backTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
-
-    /* â”€â”€ SCROLL REVEAL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
-    const revealEls = document.querySelectorAll('.reveal');
-    const revealObserver = new IntersectionObserver((entries) => {
+    // Reveal Animations
+    const observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
           entry.target.classList.add('visible');
-          revealObserver.unobserve(entry.target);
+          observer.unobserve(entry.target);
         }
       });
-    }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
-    revealEls.forEach(el => revealObserver.observe(el));
+    }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
 
-    /* â”€â”€ PARALLAX PROMO â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
-    const promoBg = document.getElementById('promoBg');
-    if (window.matchMedia('(min-width: 769px)').matches) {
-      window.addEventListener('scroll', () => {
-        const rect  = promoBg.parentElement.getBoundingClientRect();
-        const ratio = (rect.top + rect.height / 2 - window.innerHeight / 2) / window.innerHeight;
-        promoBg.style.transform = `translateY(${ratio * 55}px)`;
-      }, { passive: true });
-    }
-
-    /* â”€â”€ REDUCED MOTION â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      document.querySelectorAll('.slide-bg').forEach(el => el.style.animation = 'none');
-      document.querySelectorAll('.reveal').forEach(el => {
-        el.style.opacity = '1';
-        el.style.transform = 'none';
-        el.style.transition = 'none';
-      });
-    }
-
-    /* ── SCROLL PROGRESS BAR ─────────────────────────────────────────────── */
-    const scrollProgress = document.getElementById('scrollProgress');
+    // Navbar scroll
+    const navbar = document.getElementById('navbar');
     window.addEventListener('scroll', () => {
-      const max = document.documentElement.scrollHeight - window.innerHeight;
-      if (scrollProgress && max > 0) scrollProgress.style.width = (window.scrollY / max * 100) + '%';
-    }, { passive: true });
-
-    /* ── STAGGERED GRID REVEALS ──────────────────────────────────────────── */
-    document.querySelectorAll('.products-grid, .categories-grid, .testimonials-grid, .materials-grid, .trust-grid, .ugc-grid').forEach(grid => {
-      Array.from(grid.children).forEach((item, i) => {
-        if (!item.classList.contains('reveal')) item.classList.add('reveal');
-        item.style.transitionDelay = (i * 0.07) + 's';
-        revealObserver.observe(item);
-      });
+      navbar.classList.toggle('scrolled', window.scrollY > 20);
     });
 
-    /* ── WISHLIST TOGGLE ─────────────────────────────────────────────────── */
-    document.querySelectorAll('.product-wish').forEach(btn => {
-      btn.addEventListener('click', e => {
-        e.stopPropagation();
-        btn.classList.toggle('wished');
-        btn.classList.remove('popping');
-        void btn.offsetWidth;
-        btn.classList.add('popping');
-        btn.addEventListener('animationend', () => btn.classList.remove('popping'), { once: true });
-      });
+    // Mobile Nav
+    const mobNav = document.getElementById('mobileNav');
+    document.getElementById('hamburgerBtn').addEventListener('click', () => mobNav.classList.add('open'));
+    document.getElementById('mobileNavClose').addEventListener('click', () => mobNav.classList.remove('open'));
+    document.getElementById('mobileNavOverlay').addEventListener('click', () => mobNav.classList.remove('open'));
+
+    // Search
+    const searchOverlay = document.getElementById('searchOverlay');
+    const searchInput = document.getElementById('searchOverlayInput');
+    document.getElementById('searchBtn').addEventListener('click', () => {
+      searchOverlay.classList.add('open');
+      setTimeout(() => searchInput.focus(), 100);
+    });
+    document.getElementById('searchClose').addEventListener('click', () => searchOverlay.classList.remove('open'));
+    document.getElementById('searchForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      if(searchInput.value) window.location.href = 'shop.html?search=' + encodeURIComponent(searchInput.value);
     });
 
-    /* ── ADD TO CART FEEDBACK ────────────────────────────────────────────── */
-    document.querySelectorAll('.product-action-btn.pa-primary').forEach(btn => {
-      btn.addEventListener('click', () => {
-        if (btn.dataset.adding) return;
-        btn.dataset.adding = '1';
-        const orig = btn.textContent;
-        btn.textContent = 'Added \u2713';
-        btn.classList.add('cart-added');
-        const badge = document.querySelector('.cart-badge');
-        if (badge) {
-          badge.textContent = parseInt(badge.textContent || '0') + 1;
-          badge.classList.remove('spring');
-          void badge.offsetWidth;
-          badge.classList.add('spring');
-          badge.addEventListener('animationend', () => badge.classList.remove('spring'), { once: true });
-        }
-        setTimeout(() => {
-          btn.textContent = orig;
-          btn.classList.remove('cart-added');
-          delete btn.dataset.adding;
-        }, 1600);
-      });
-    });
-  </script>
+    // Account nav — point to account.html if logged in, login.html if not
+    (function() {
+      const btn = document.getElementById('accountNavBtn');
+      if (!btn) return;
+      const token = localStorage.getItem('hs_session_token');
+      btn.href = token ? 'account.html' : 'login.html';
+    })();
 
-  <script>
-    /* ══════════════════════════════════════════════════════
-       CART BADGE INIT
-    ══════════════════════════════════════════════════════ */
+    // Cart Badge
     function updateCartBadge() {
       try {
         const cart = JSON.parse(localStorage.getItem('hirastore_cart') || '[]');
@@ -2343,212 +855,30 @@
     }
     updateCartBadge();
 
-    /* ══════════════════════════════════════════════════════
-       DYNAMIC FEATURED PRODUCTS
-    ══════════════════════════════════════════════════════ */
-    const BADGE_CYCLE = ['New','Bestseller','','Limited','Trending','','New Arrival',''];
-    const RATINGS     = [124, 89, 57, 203, 76, 134, 45, 289, 167, 312];
-
-    function featuredProductHTML(p, idx) {
-      const badge      = BADGE_CYCLE[idx % BADGE_CYCLE.length];
-      const price      = '$' + Number(p.price_usd || 0).toLocaleString('en-US');
-      const delayClass = 'reveal-delay-' + ((idx % 4) + 1);
-      const rating     = RATINGS[idx % RATINGS.length];
-      const stars      = '&#9733;&#9733;&#9733;&#9733;&#9733;';
-      const pData = encodeURIComponent(JSON.stringify({
-        product_id: p.product_id,
-        name:       p.name,
-        category:   p.category,
-        price:      p.price_usd,
-        currency:   '$',
-        weight:     p.weight || '',
-        image:      'catalog_images/' + p.image,
-        material:   '925 Sterling Silver',
-        badge:      badge || null
-      }));
-      return `<article class="product-card reveal ${delayClass}" data-category="${p.category}" role="listitem" data-product-enc="${pData}">
-        <div class="product-img-wrap">
-          <img src="catalog_images/${p.image}" alt="${p.name}" loading="lazy" onerror="this.parentElement.style.background='#f0ebe5'" />
-          ${badge ? `<span class="product-badge">${badge}</span>` : ''}
-          <button class="product-wish" aria-label="Add ${p.name} to wishlist">
-            <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
-          </button>
-          <div class="product-actions">
-            <button class="product-action-btn pa-primary feat-add-cart">Add to Cart</button>
-            <button class="product-action-btn pa-secondary feat-qv-btn">Quick View</button>
-          </div>
-        </div>
-        <div class="product-info">
-          <h3 class="product-name">${p.name}</h3>
-          <p class="product-meta">925 Sterling Silver &middot; ${p.weight || ''}</p>
-          <div class="product-price">
-            <span class="price-current">${price}</span>
-          </div>
-          <div class="product-rating">
-            <span class="stars">${stars}</span>
-            <span class="rating-count">(${rating})</span>
-          </div>
-        </div>
-      </article>`;
-    }
-
-    (async function loadFeaturedProducts() {
-      const grid = document.getElementById('featuredGrid');
-      if (!grid) return;
+    // Quick View logic
+    const qvOverlay = document.getElementById('quickViewModal');
+    function openQV(dataStr) {
       try {
-        const res  = await fetch('catalog_images/products.json');
-        if (!res.ok) throw new Error();
-        const data = await res.json();
-
-        const featured = data
-          .filter(p => p.status === 'Available' || p.status === 'available')
-          .slice(0, 8);
-
-        if (!featured.length) throw new Error('empty');
-
-        grid.innerHTML = featured.map((p, i) => featuredProductHTML(p, i)).join('');
-
-        // Re-run stagger reveal
-        Array.from(grid.children).forEach((item, i) => {
-          item.style.transitionDelay = (i * 0.07) + 's';
-          revealObserver.observe(item);
-        });
-
-        // Wishlist on dynamic cards
-        grid.querySelectorAll('.product-wish').forEach(btn => {
-          btn.addEventListener('click', e => {
-            e.stopPropagation();
-            btn.classList.toggle('wished');
-            btn.classList.remove('popping');
-            void btn.offsetWidth;
-            btn.classList.add('popping');
-            btn.addEventListener('animationend', () => btn.classList.remove('popping'), { once: true });
-          });
-        });
-
-        // Add to cart on dynamic cards
-        grid.querySelectorAll('.feat-add-cart').forEach(btn => {
-          btn.addEventListener('click', () => {
-            if (btn.dataset.adding) return;
-            btn.dataset.adding = '1';
-            const card = btn.closest('[data-product-enc]');
-            if (card) {
-              try {
-                const p = JSON.parse(decodeURIComponent(card.dataset.productEnc));
-                let cart = JSON.parse(localStorage.getItem('hirastore_cart') || '[]');
-                const existing = cart.find(c => c.id === p.product_id);
-                if (existing) existing.qty = Math.min(existing.qty + 1, 10);
-                else cart.push({ id: p.product_id, name: p.name, category: p.category, weight: p.weight, price: p.price, currency: p.currency, image: p.image, qty: 1 });
-                localStorage.setItem('hirastore_cart', JSON.stringify(cart));
-                updateCartBadge();
-                const badge = document.getElementById('cartBadge');
-                if (badge) {
-                  badge.classList.remove('spring');
-                  void badge.offsetWidth;
-                  badge.classList.add('spring');
-                  badge.addEventListener('animationend', () => badge.classList.remove('spring'), { once: true });
-                }
-              } catch(e) {}
-            }
-            const orig = btn.textContent;
-            btn.textContent = 'Added ✓';
-            btn.classList.add('cart-added');
-            setTimeout(() => { btn.textContent = orig; btn.classList.remove('cart-added'); delete btn.dataset.adding; }, 1600);
-          });
-        });
-
-      } catch(e) {
-        grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:48px 24px;color:var(--text-light);font-size:14px;">
-          <p>Browse our full collection in the shop.</p>
-          <a href="shop.html" style="color:var(--gold);font-weight:600;text-decoration:underline;margin-top:12px;display:inline-block;">View All Products &rarr;</a>
-        </div>`;
-      }
-    })();
-
-    /* ══════════════════════════════════════════════════════
-       QUICK VIEW MODAL
-    ══════════════════════════════════════════════════════ */
-    const qvOverlay  = document.getElementById('quickViewModal');
-    const qvCloseBtn = document.getElementById('qvClose');
-
-    function openQV(encodedData) {
-      let p;
-      try { p = JSON.parse(decodeURIComponent(encodedData)); }
-      catch(e) { return; }
-
-      // Populate image
-      const img = document.getElementById('qvImage');
-      img.src = p.image || '';
-      img.alt = p.name || '';
-
-      // Category + name
-      document.getElementById('qvCatTag').textContent = p.category || '';
-      document.getElementById('qvName').textContent   = p.name || '';
-
-      // Price
-      const priceNow = document.getElementById('qvPriceNow');
-      const priceWas = document.getElementById('qvPriceWas');
-      const priceSav = document.getElementById('qvPriceSave');
-      const curr = p.currency || '$';
-      priceNow.textContent = curr + Number(p.price || 0).toLocaleString('en-US');
-
-      if (p.priceOrig) {
-        priceWas.textContent  = p.priceOrig; priceWas.style.display = '';
-        priceSav.textContent  = p.discount || ''; priceSav.style.display = p.discount ? '' : 'none';
-      } else {
-        priceWas.style.display = 'none'; priceSav.style.display = 'none';
-      }
-
-      // Tags
-      const tagsEl = document.getElementById('qvTags');
-      tagsEl.innerHTML = '';
-      [p.material, p.weight, p.category].filter(Boolean).forEach(t => {
-        tagsEl.insertAdjacentHTML('beforeend', `<span class="qv-tag">${t}</span>`);
-      });
-
-      // Badge
-      const badge = document.getElementById('qvBadge');
-      if (p.badge) { badge.textContent = p.badge; badge.style.display = ''; }
-      else { badge.style.display = 'none'; }
-
-      // Rating count (pseudo-random but stable per product)
-      const ratingNums = [124, 89, 57, 203, 76, 134, 45, 289, 167];
-      const rIdx = Math.abs((p.product_id || '').split('').reduce((a, c) => a + c.charCodeAt(0), 0)) % ratingNums.length;
-      document.getElementById('qvRatingCount').textContent = '(' + ratingNums[rIdx] + ' reviews)';
-
-      // SKU
-      document.getElementById('qvSku').textContent = p.product_id ? 'SKU: ' + p.product_id : '';
-
-      // Store for cart actions
-      qvOverlay.dataset.productEnc = encodedData;
-
-      // Open
-      qvOverlay.classList.add('open');
-      document.body.style.overflow = 'hidden';
-      setTimeout(() => qvCloseBtn.focus(), 100);
+        const p = JSON.parse(decodeURIComponent(dataStr));
+        document.getElementById('qvImage').src = p.image || '';
+        document.getElementById('qvCatTag').textContent = p.category || '';
+        document.getElementById('qvName').textContent = p.name || '';
+        document.getElementById('qvPriceNow').textContent = (p.currency||'$') + Number(p.price||0).toLocaleString('en-US');
+        qvOverlay.dataset.productEnc = dataStr;
+        qvOverlay.classList.add('open');
+      } catch(e) {}
     }
-
-    function closeQV() {
-      qvOverlay.classList.remove('open');
-      document.body.style.overflow = '';
-    }
-
-    qvCloseBtn.addEventListener('click', closeQV);
-    qvOverlay.addEventListener('click', e => { if (e.target === qvOverlay) closeQV(); });
-    document.addEventListener('keydown', e => {
-      if (e.key === 'Escape' && qvOverlay.classList.contains('open')) closeQV();
-    });
-
-    // Event delegation for Quick View triggers (works for dynamically added cards too)
+    document.getElementById('qvClose').addEventListener('click', () => qvOverlay.classList.remove('open'));
+    
     document.addEventListener('click', e => {
-      const btn = e.target.closest('.feat-qv-btn, .pa-secondary.qv-trigger, [data-action="quickview"]');
-      if (btn) {
-        const card = btn.closest('[data-product-enc]');
-        if (card) openQV(card.dataset.productEnc);
+      const btn = e.target.closest('.pa-secondary');
+      if(btn) {
+        const card = btn.closest('.product-card');
+        if(card && card.dataset.productEnc) openQV(card.dataset.productEnc);
       }
     });
 
-    // QV Add to Cart
+    // Add to Cart
     document.getElementById('qvAddCart').addEventListener('click', function() {
       if (this.dataset.adding) return;
       this.dataset.adding = '1';
@@ -2558,662 +888,181 @@
           let cart = JSON.parse(localStorage.getItem('hirastore_cart') || '[]');
           const existing = cart.find(c => c.id === p.product_id);
           if (existing) existing.qty = Math.min(existing.qty + 1, 10);
-          else cart.push({ id: p.product_id, name: p.name, category: p.category, weight: p.weight, price: p.price, currency: p.currency || '$', image: p.image, qty: 1 });
+          else cart.push({ id: p.product_id, name: p.name, category: p.category, price: p.price, image: p.image, qty: 1 });
           localStorage.setItem('hirastore_cart', JSON.stringify(cart));
           updateCartBadge();
         }
       } catch(e) {}
       const orig = this.innerHTML;
-      this.innerHTML = `<svg viewBox="0 0 24 24" style="width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:2.5;flex-shrink:0"><polyline points="20 6 9 17 4 12"/></svg> Added to Cart!`;
-      this.classList.add('cart-added');
-      setTimeout(() => { this.innerHTML = orig; this.classList.remove('cart-added'); delete this.dataset.adding; }, 2200);
+      this.innerHTML = `Added ✓`;
+      setTimeout(() => { this.innerHTML = orig; delete this.dataset.adding; }, 1500);
     });
-
-    // QV Buy Now
-    document.getElementById('qvBuyNow').addEventListener('click', function() {
+    document.getElementById('qvBuyNow').addEventListener('click', () => {
       document.getElementById('qvAddCart').click();
-      setTimeout(() => { window.location.href = 'cart.html'; }, 700);
+      setTimeout(() => window.location.href = 'cart.html', 500);
     });
-  </script>
 
-  <script>
-    /* ── SEARCH OVERLAY ───────────────────────────────────────────────── */
+    // Testimonials infinite scroll — duplicate cards for seamless loop
     (function() {
-      const overlay = document.getElementById('searchOverlay');
-      const btn     = document.getElementById('searchBtn');
-      const close   = document.getElementById('searchClose');
-      const form    = document.getElementById('searchForm');
-      const input   = document.getElementById('searchOverlayInput');
+      const track = document.getElementById('testimonialsTrack');
+      if (!track) return;
+      const clone = track.innerHTML;
+      track.innerHTML += clone; // duplicate so animation loops seamlessly
 
-      function openSearch() {
-        overlay.classList.add('open');
-        document.body.style.overflow = 'hidden';
-        setTimeout(() => input.focus(), 80);
-      }
-      function closeSearch() {
-        overlay.classList.remove('open');
-        document.body.style.overflow = '';
-      }
-
-      btn.addEventListener('click', openSearch);
-      close.addEventListener('click', closeSearch);
-      overlay.addEventListener('click', e => { if (e.target === overlay) closeSearch(); });
-      document.addEventListener('keydown', e => {
-        if (e.key === 'Escape' && overlay.classList.contains('open')) closeSearch();
-      });
-      form.addEventListener('submit', e => {
-        e.preventDefault();
-        const q = input.value.trim();
-        if (q) window.location.href = 'shop.html?search=' + encodeURIComponent(q);
-      });
+      // Drag to scroll
+      const outer = track.parentElement;
+      let isDragging = false, startX = 0, scrollLeft = 0;
+      outer.addEventListener('mousedown', e => { isDragging = true; startX = e.pageX - outer.offsetLeft; scrollLeft = outer.scrollLeft; outer.style.userSelect = 'none'; });
+      outer.addEventListener('mouseleave', () => { isDragging = false; outer.style.userSelect = ''; });
+      outer.addEventListener('mouseup', () => { isDragging = false; outer.style.userSelect = ''; });
+      outer.addEventListener('mousemove', e => { if (!isDragging) return; e.preventDefault(); const x = e.pageX - outer.offsetLeft; outer.scrollLeft = scrollLeft - (x - startX); });
     })();
 
-    /* ── ACCOUNT DROPDOWN ──────────────────────────────────────────────── */
-    (function() {
-      const btn      = document.getElementById('accountBtn');
-      const dropdown = document.getElementById('accountDropdown');
-
-      btn.addEventListener('click', e => {
-        e.stopPropagation();
-        dropdown.classList.toggle('open');
-      });
-      document.addEventListener('click', e => {
-        if (!dropdown.contains(e.target) && e.target !== btn) {
-          dropdown.classList.remove('open');
-        }
-      });
-      document.addEventListener('keydown', e => {
-        if (e.key === 'Escape') dropdown.classList.remove('open');
-      });
-    })();
   </script>
 
-  <!-- â”€â”€â”€ THREE.JS + INTERACTIVE ANIMATIONS â”€â”€â”€ -->
-  <script type="module">
-    import * as THREE from 'three';
-    import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
-
-    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-       3D SOLITAIRE RING SCENE
-    â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
-    (function initJewelScene() {
-      const wrap   = document.getElementById('jewel3dWrap');
-      const canvas = document.getElementById('jewel3dCanvas');
-      if (!canvas || !wrap) return;
-
-      let W = wrap.clientWidth  || 480;
-      let H = wrap.clientHeight || 480;
-
-      /* â”€â”€ Scene â”€â”€ */
-      const scene = new THREE.Scene();
-      scene.background = new THREE.Color(0x080604);
-      scene.fog = new THREE.FogExp2(0x080604, 0.048);
-
-      /* â”€â”€ Camera â”€â”€ */
-      const camera = new THREE.PerspectiveCamera(40, 1, 0.1, 100);
-      camera.position.set(0, 0.4, 5.8);
-
-      /* â”€â”€ Renderer â”€â”€ */
-      const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
-      renderer.setSize(W, H);
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-      renderer.toneMapping = THREE.ACESFilmicToneMapping;
-      renderer.toneMappingExposure = 1.2;
-      renderer.outputColorSpace = THREE.SRGBColorSpace;
-
-      /* â”€â”€ Environment map (makes metals/glass look real) â”€â”€ */
-      const pmrem = new THREE.PMREMGenerator(renderer);
-      scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
-      pmrem.dispose();
-
-      /* â”€â”€ Materials â”€â”€ */
-      const goldMat = new THREE.MeshStandardMaterial({
-        color: new THREE.Color(0x005969),
-        metalness: 0.99,
-        roughness: 0.04,
-        envMapIntensity: 1.5,
-      });
-      const goldLightMat = new THREE.MeshStandardMaterial({
-        color: new THREE.Color(0x007a8c),
-        metalness: 0.99,
-        roughness: 0.02,
-        envMapIntensity: 1.8,
-      });
-      const diamondMat = new THREE.MeshPhysicalMaterial({
-        color: new THREE.Color(0xffffff),
-        metalness: 0,
-        roughness: 0,
-        transmission: 1.0,
-        thickness: 0.55,
-        ior: 2.42,
-        reflectivity: 1,
-        clearcoat: 1,
-        clearcoatRoughness: 0,
-        envMapIntensity: 3.0,
-      });
-      const accentStoneMat = new THREE.MeshPhysicalMaterial({
-        color: new THREE.Color(0xfff8f0),
-        metalness: 0,
-        roughness: 0,
-        transmission: 0.88,
-        ior: 1.9,
-        clearcoat: 1,
-        envMapIntensity: 2.2,
-      });
-
-      /* â”€â”€ Jewelry Group â”€â”€ */
-      const jewelry = new THREE.Group();
-      scene.add(jewelry);
-
-      // Ring band
-      jewelry.add(new THREE.Mesh(
-        new THREE.TorusGeometry(1.0, 0.105, 36, 180),
-        goldMat
-      ));
-
-      // Setting base (platform under gem)
-      const settingBase = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.245, 0.205, 0.10, 8),
-        goldMat
-      );
-      settingBase.position.y = 1.0;
-      jewelry.add(settingBase);
-
-      // 4 prongs holding the gem
-      for (let i = 0; i < 4; i++) {
-        const prong = new THREE.Mesh(
-          new THREE.CylinderGeometry(0.026, 0.018, 0.44, 6),
-          goldLightMat
-        );
-        const a = (i / 4) * Math.PI * 2 + Math.PI / 4;
-        prong.position.set(Math.cos(a) * 0.225, 1.22, Math.sin(a) * 0.225);
-        jewelry.add(prong);
-      }
-
-      // Diamond gem group (rotates independently)
-      const gemGroup = new THREE.Group();
-      gemGroup.position.set(0, 1.33, 0);
-
-      // Crown (top cone â€” 8-sided for facets)
-      const crown = new THREE.Mesh(new THREE.ConeGeometry(0.285, 0.21, 8), diamondMat);
-      crown.position.y = 0.105;
-      gemGroup.add(crown);
-
-      // Table (flat top face)
-      const table = new THREE.Mesh(new THREE.CylinderGeometry(0.186, 0.186, 0.032, 8), diamondMat);
-      table.position.y = 0.222;
-      gemGroup.add(table);
-
-      // Girdle (thin gold band at gem's widest point)
-      const girdle = new THREE.Mesh(new THREE.CylinderGeometry(0.292, 0.292, 0.028, 8), goldLightMat);
-      girdle.position.y = -0.012;
-      gemGroup.add(girdle);
-
-      // Pavilion (inverted cone â€” bottom half of diamond)
-      const pavilion = new THREE.Mesh(new THREE.ConeGeometry(0.285, 0.39, 8), diamondMat);
-      pavilion.rotation.x = Math.PI;
-      pavilion.position.y = -0.20;
-      gemGroup.add(pavilion);
-
-      jewelry.add(gemGroup);
-
-      // Small accent stones along the band shoulders
-      const accentAngles = [0.18, 0.32, 0.46, Math.PI - 0.18, Math.PI - 0.32, Math.PI - 0.46]
-        .flatMap(a => [a, Math.PI * 2 - a]);
-      accentAngles.forEach(angle => {
-        const gem = new THREE.Mesh(new THREE.OctahedronGeometry(0.048, 0), accentStoneMat);
-        gem.position.set(Math.cos(angle) * 1.0, Math.sin(angle) * 1.0, 0);
-        gem.lookAt(new THREE.Vector3(0, 0, 0.5));
-        jewelry.add(gem);
-      });
-
-      /* â”€â”€ Sparkle Particles â”€â”€ */
-      const PCOUNT = 520;
-      const pPos = new Float32Array(PCOUNT * 3);
-      const pCol = new Float32Array(PCOUNT * 3);
-      const pColorPool = [
-        [0.733, 0.545, 0.361], // gold
-        [0.831, 0.663, 0.478], // gold light
-        [0.612, 0.447, 0.271], // gold dark
-        [1.00,  0.98,  0.88],  // warm white
-        [1.00,  0.93,  0.72],  // soft cream
-      ];
-      for (let i = 0; i < PCOUNT; i++) {
-        const theta = Math.random() * Math.PI * 2;
-        const phi   = Math.acos(2 * Math.random() - 1);
-        const r     = 1.9 + Math.random() * 3.4;
-        pPos[i*3]   = r * Math.sin(phi) * Math.cos(theta);
-        pPos[i*3+1] = r * Math.sin(phi) * Math.sin(theta) * 0.68;
-        pPos[i*3+2] = r * Math.cos(phi);
-        const c = pColorPool[Math.floor(Math.random() * pColorPool.length)];
-        pCol[i*3] = c[0]; pCol[i*3+1] = c[1]; pCol[i*3+2] = c[2];
-      }
-      const pGeo = new THREE.BufferGeometry();
-      pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
-      pGeo.setAttribute('color',    new THREE.BufferAttribute(pCol, 3));
-      const pMat = new THREE.PointsMaterial({
-        size: 0.065, sizeAttenuation: true, vertexColors: true,
-        transparent: true, opacity: 0.75,
-        blending: THREE.AdditiveBlending, depthWrite: false,
-      });
-      const particles = new THREE.Points(pGeo, pMat);
-      scene.add(particles);
-
-      // Close-in halo ring of sparks around the band
-      const HCOUNT = 120;
-      const hPos = new Float32Array(HCOUNT * 3);
-      for (let i = 0; i < HCOUNT; i++) {
-        const t = (i / HCOUNT) * Math.PI * 2 + (Math.random() - 0.5) * 0.18;
-        const r = 1.0 + (Math.random() - 0.5) * 0.28;
-        hPos[i*3]   = Math.cos(t) * r;
-        hPos[i*3+1] = Math.sin(t) * r;
-        hPos[i*3+2] = (Math.random() - 0.5) * 0.18;
-      }
-      const hGeo = new THREE.BufferGeometry();
-      hGeo.setAttribute('position', new THREE.BufferAttribute(hPos, 3));
-      const hMat = new THREE.PointsMaterial({
-        color: new THREE.Color(0x007a8c), size: 0.028, sizeAttenuation: true,
-        transparent: true, opacity: 0.55,
-        blending: THREE.AdditiveBlending, depthWrite: false,
-      });
-      const halo = new THREE.Points(hGeo, hMat);
-      scene.add(halo);
-
-      /* â”€â”€ Lights â”€â”€ */
-      scene.add(new THREE.AmbientLight(0xfaf5ee, 0.5));
-
-      const keyLight = new THREE.DirectionalLight(0xffffff, 2.8);
-      keyLight.position.set(3, 5, 3);
-      scene.add(keyLight);
-
-      const goldFill = new THREE.PointLight(0x005969, 6, 14);
-      goldFill.position.set(-3.2, 2, 3);
-      scene.add(goldFill);
-
-      const goldRim = new THREE.PointLight(0x007a8c, 3.5, 12);
-      goldRim.position.set(3.2, -1.5, 2);
-      scene.add(goldRim);
-
-      const topLight = new THREE.PointLight(0xfff0cc, 2.5, 10);
-      topLight.position.set(0, 5, 0);
-      scene.add(topLight);
-
-      const backCool = new THREE.PointLight(0x2515dd, 0.9, 12);
-      backCool.position.set(0, -3, -5);
-      scene.add(backCool);
-
-      /* â”€â”€ Interaction state â”€â”€ */
-      const rot = { x: 0, y: 0 };
-      const vel = { x: 0, y: 0 };
-      const hover = { x: 0, y: 0 };
-      let dragging = false;
-      let autoMode = true;
-      let prev = { x: 0, y: 0 };
-      let resumeTimer = null;
-
-      function startDrag(cx, cy) {
-        dragging = true;
-        autoMode = false;
-        vel.x = 0; vel.y = 0;
-        prev.x = cx; prev.y = cy;
-        if (resumeTimer) { clearTimeout(resumeTimer); resumeTimer = null; }
-      }
-      function moveDrag(cx, cy) {
-        if (dragging) {
-          vel.y = (cx - prev.x) * 0.013;
-          vel.x = (cy - prev.y) * 0.013;
-          rot.y += vel.y;
-          rot.x += vel.x;
-          prev.x = cx; prev.y = cy;
-        }
-        const rect = canvas.getBoundingClientRect();
-        const nx = (cx - rect.left)  / rect.width;
-        const ny = (cy - rect.top)   / rect.height;
-        if (nx >= 0 && nx <= 1 && ny >= 0 && ny <= 1) {
-          hover.y = (nx - 0.5) *  0.55;
-          hover.x = (ny - 0.5) * -0.38;
-        }
-      }
-      function endDrag() {
-        dragging = false;
-        resumeTimer = setTimeout(() => { autoMode = true; }, 2500);
-      }
-
-      canvas.addEventListener('mousedown',  e => startDrag(e.clientX, e.clientY));
-      canvas.addEventListener('touchstart', e => { startDrag(e.touches[0].clientX, e.touches[0].clientY); e.preventDefault(); }, { passive: false });
-      window.addEventListener('mousemove',  e => moveDrag(e.clientX, e.clientY));
-      window.addEventListener('touchmove',  e => moveDrag(e.touches[0].clientX, e.touches[0].clientY), { passive: true });
-      window.addEventListener('mouseup',    endDrag);
-      window.addEventListener('touchend',   endDrag);
-
-      /* â”€â”€ Resize â”€â”€ */
-      new ResizeObserver(() => {
-        const w = wrap.clientWidth;
-        const h = wrap.clientHeight;
-        if (w > 0 && h > 0) renderer.setSize(w, h);
-      }).observe(wrap);
-
-      /* â”€â”€ Animation Loop â”€â”€ */
-      const clock = new THREE.Clock();
-
-      function animate() {
-        requestAnimationFrame(animate);
-        const t = clock.getElapsedTime();
-
-        if (autoMode && !dragging) {
-          rot.y += 0.005;
-          rot.x += (hover.x * 0.45 - rot.x) * 0.045;
-          jewelry.rotation.y = rot.y + hover.y * 0.45;
-          jewelry.rotation.x = rot.x;
-        } else if (dragging) {
-          jewelry.rotation.y = rot.y;
-          jewelry.rotation.x = THREE.MathUtils.clamp(rot.x, -0.65, 0.65);
-        } else {
-          // inertia coast
-          rot.y += vel.y; rot.x += vel.x;
-          vel.y *= 0.93;  vel.x *= 0.93;
-          rot.x += (0 - rot.x) * 0.016;
-          jewelry.rotation.y = rot.y;
-          jewelry.rotation.x = rot.x;
-        }
-
-        // Gentle float
-        jewelry.position.y = Math.sin(t * 0.72) * 0.075;
-
-        // Gem sparkle rotation
-        gemGroup.rotation.y = t * 0.55;
-
-        // Particles drift
-        particles.rotation.y = t * 0.052;
-        particles.rotation.x = t * 0.026;
-        pMat.opacity = 0.58 + Math.sin(t * 1.9) * 0.14;
-
-        halo.rotation.z = t * 0.09;
-        hMat.opacity = 0.38 + Math.sin(t * 2.4) * 0.13;
-
-        // Pulsing lights
-        goldFill.intensity = 5.0 + Math.sin(t * 1.3) * 1.3;
-        goldRim.intensity  = 3.0 + Math.cos(t * 1.7) * 0.9;
-
-        renderer.render(scene, camera);
-      }
-      animate();
-    })();
-
-
-    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-       CURSOR GOLD SPARKLE TRAIL
-    â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
-    (function initCursorSparkle() {
-      if (window.matchMedia('(hover: none)').matches) return;
-      const canvas = document.getElementById('cursorSparkle');
-      if (!canvas) return;
-      const ctx = canvas.getContext('2d');
-
-      function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
-      resize();
-      window.addEventListener('resize', resize);
-
-      const sparkles = [];
-      const COLORS = ['#005969','#007a8c','#fff8ee','#003d4a','#ffffff','#ffe4b0'];
-
-      window.addEventListener('mousemove', e => {
-        if (Math.random() < 0.32) {
-          const count = Math.random() < 0.3 ? 2 : 1;
-          for (let i = 0; i < count; i++) {
-            const angle = Math.random() * Math.PI * 2;
-            const spd   = Math.random() * 2.8 + 0.5;
-            sparkles.push({
-              x: e.clientX + (Math.random() - 0.5) * 16,
-              y: e.clientY + (Math.random() - 0.5) * 16,
-              vx: Math.cos(angle) * spd * 0.75,
-              vy: Math.sin(angle) * spd - 1.6,
-              size:  Math.random() * 4.8 + 1.2,
-              alpha: 1,
-              color: COLORS[Math.floor(Math.random() * COLORS.length)],
-              rot:   Math.random() * Math.PI * 2,
-              rotV:  (Math.random() - 0.5) * 0.28,
-            });
-          }
-        }
-      });
-
-      function drawStar(x, y, size, alpha, color, rot) {
-        ctx.save();
-        ctx.globalAlpha = alpha;
-        ctx.fillStyle   = color;
-        ctx.translate(x, y);
-        ctx.rotate(rot);
-        ctx.beginPath();
-        for (let i = 0; i < 8; i++) {
-          const a = (i / 8) * Math.PI * 2 - Math.PI / 2;
-          const r = i % 2 === 0 ? size : size * 0.36;
-          i === 0
-            ? ctx.moveTo(Math.cos(a) * r, Math.sin(a) * r)
-            : ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r);
-        }
-        ctx.closePath();
-        ctx.fill();
-        ctx.restore();
-      }
-
-      function loop() {
-        requestAnimationFrame(loop);
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        for (let i = sparkles.length - 1; i >= 0; i--) {
-          const s = sparkles[i];
-          s.x += s.vx; s.y += s.vy;
-          s.vy += 0.1; s.vx *= 0.97;
-          s.alpha -= 0.027;
-          s.rot   += s.rotV;
-          if (s.alpha <= 0) { sparkles.splice(i, 1); continue; }
-          drawStar(s.x, s.y, s.size, s.alpha, s.color, s.rot);
-        }
-      }
-      loop();
-    })();
-
-
-    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-       PRODUCT CARD 3D TILT + SHIMMER
-    â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
-    (function initCardTilt() {
-      document.querySelectorAll('.product-card').forEach(card => {
-        const imgWrap = card.querySelector('.product-img-wrap');
-
-        card.addEventListener('mousemove', e => {
-          const rect = card.getBoundingClientRect();
-          const cx = (e.clientX - rect.left) / rect.width  - 0.5;
-          const cy = (e.clientY - rect.top)  / rect.height - 0.5;
-          card.style.transform  = `perspective(720px) rotateY(${cx * 9}deg) rotateX(${-cy * 7}deg) translateY(-5px) scale(1.015)`;
-          card.style.transition = 'transform 0.08s ease, box-shadow 0.25s';
-          card.style.boxShadow  = `${cx * 14}px ${cy * -14}px 32px rgba(0,89,105,0.22)`;
-          if (imgWrap) {
-            imgWrap.style.setProperty('--shim-x', ((cx + 0.5) * 100) + '%');
-            imgWrap.style.setProperty('--shim-y', ((cy + 0.5) * 100) + '%');
-            imgWrap.classList.add('shimmer-active');
-          }
-        });
-
-        card.addEventListener('mouseleave', () => {
-          card.style.transform  = '';
-          card.style.transition = 'transform 0.55s var(--ease-out), box-shadow 0.35s';
-          card.style.boxShadow  = '';
-          if (imgWrap) imgWrap.classList.remove('shimmer-active');
-        });
-      });
-    })();
-  </script>
-
-  <!-- ERPNext Integration -->
+  <!-- ERPNext Integration (Retained) -->
   <script>
-  (function() {
-    var ERP_URL    = '';  // proxy: /erp/ maps to ERPNext
-    var API_KEY    = 'df4ffcff00dcb5d';
-    var API_SECRET = '3057f54eeacc73c';
-    var AUTH = 'token ' + API_KEY + ':' + API_SECRET;
-    var FIELDS = ['name','item_name','item_group','standard_rate','image','custom_is_featured','custom_material'];
+    (function() {
+      var ERP_URL    = '';
+      var API_KEY    = 'df4ffcff00dcb5d';
+      var API_SECRET = '3057f54eeacc73c';
+      var FIELDS = ['name','item_name','item_group','standard_rate','image','custom_is_featured','custom_material'];
+      var WISH_SVG = '<svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>';
 
-    var WISH_SVG = '<svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>';
+      function formatPrice(n) { return '$' + Number(n).toLocaleString('en-US'); }
 
-    function formatPrice(n) {
-      return '₹' + Number(n).toLocaleString('en-IN');
-    }
+      function buildCard(item, idx) {
+        var imgSrc = item.image ? (item.image.startsWith('http') ? item.image : 'http://127.0.0.1:8001' + item.image) : 'https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=700&q=85';
+        var name  = item.item_name || item.name;
+        var price = item.standard_rate || 0;
+        var meta  = item.custom_material || item.item_group || '925 Silver';
+        var delay = ['','reveal-delay-1','reveal-delay-2','reveal-delay-3'][idx % 4];
+        var badge = item.custom_is_featured ? '<span class="product-badge">Featured</span>' : '';
+        var pData = encodeURIComponent(JSON.stringify({ name: name, category: item.item_group || '', image: imgSrc, price: price, currency: '$', product_id: item.name }));
 
-    function buildCard(item, idx) {
-      var imgSrc = item.image ? (item.image.startsWith('http') ? item.image : 'http://127.0.0.1:8001' + item.image) : 'https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=700&q=85';
-      var name  = item.item_name || item.name;
-      var price = item.standard_rate || 0;
-      var meta  = item.custom_material || item.item_group || '925 Sterling Silver';
-      var delays = ['','reveal-delay-1','reveal-delay-2','reveal-delay-3'];
-      var delay  = delays[idx % 4];
-      var badge  = item.custom_is_featured ? '<span class="product-badge">Featured</span>' : '';
-      return '<article class="product-card reveal ' + delay + '">' +
-        '<div class="product-img-wrap">' +
-          '<img src="' + imgSrc + '" alt="' + name + '" loading="lazy" />' +
-          badge +
-          '<button class="product-wish" aria-label="Add ' + name + ' to wishlist">' + WISH_SVG + '</button>' +
-          '<div class="product-actions">' +
-            '<button class="product-action-btn pa-primary">Add to Cart</button>' +
-            '<button class="product-action-btn pa-secondary">Quick View</button>' +
-          '</div>' +
-        '</div>' +
-        '<div class="product-info">' +
-          '<h3 class="product-name">' + name + '</h3>' +
-          '<p class="product-meta">' + meta + '</p>' +
-          '<div class="product-price">' +
-            '<span class="price-current">' + formatPrice(price) + '</span>' +
-          '</div>' +
-        '</div>' +
-      '</article>';
-    }
-
-    function attachCardListeners(grid) {
-      grid.querySelectorAll('.product-wish').forEach(function(btn) {
-        btn.addEventListener('click', function(e) {
-          e.stopPropagation();
-          btn.classList.toggle('wished');
-          btn.classList.remove('popping'); void btn.offsetWidth; btn.classList.add('popping');
-          btn.addEventListener('animationend', function() { btn.classList.remove('popping'); }, { once: true });
-        });
-      });
-      grid.querySelectorAll('.product-action-btn.pa-primary').forEach(function(btn) {
-        btn.addEventListener('click', function() {
-          if (btn.dataset.adding) return;
-          btn.dataset.adding = '1';
-          var orig = btn.textContent;
-          btn.textContent = 'Added ✓';
-          btn.classList.add('cart-added');
-          var badge = document.querySelector('.cart-badge');
-          if (badge) {
-            badge.textContent = parseInt(badge.textContent || '0') + 1;
-            badge.classList.remove('spring'); void badge.offsetWidth; badge.classList.add('spring');
-            badge.addEventListener('animationend', function() { badge.classList.remove('spring'); }, { once: true });
-          }
-          setTimeout(function() { btn.textContent = orig; btn.classList.remove('cart-added'); delete btn.dataset.adding; }, 1600);
-        });
-      });
-      var obs = new IntersectionObserver(function(entries) {
-        entries.forEach(function(e) { if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); } });
-      }, { threshold: 0.1, rootMargin: "0px 0px -40px 0px" });
-      grid.querySelectorAll('.reveal').forEach(function(el) { obs.observe(el); });
-    }
-
-    async function loadFromLocalJSON(grid, loading) {
-      var res = await fetch('catalog_images/products.json');
-      if (!res.ok) throw new Error('products.json not found');
-      var data = await res.json();
-      var items = data.filter(function(p) { return p.status === 'Available' || p.status === 'available'; }).slice(0, 8);
-      if (!items.length) throw new Error('empty');
-      grid.innerHTML = items.map(function(p, i) {
-        var delays = ['','reveal-delay-1','reveal-delay-2','reveal-delay-3'];
-        var delay = delays[i % 4];
-        var priceNum = p.price_usd || p.price || 0;
-        var priceDisplay = priceNum ? '$' + Number(priceNum).toLocaleString('en-US') : '';
-        var imgSrc = p.image ? 'catalog_images/' + p.image : '';
-        var badge = p.badge ? '<span class="product-badge">' + p.badge + '</span>' : '';
-        var pData = encodeURIComponent(JSON.stringify({
-          name: p.name, category: p.category, image: imgSrc,
-          price: priceNum, currency: '$', weight: p.weight,
-          material: '925 Sterling Silver', product_id: p.product_id, badge: p.badge || null
-        }));
-        return '<article class="product-card reveal ' + delay + '" data-product-enc="' + pData + '">' +
+        return '<div class="product-card reveal ' + delay + '" data-product-enc="' + pData + '">' +
           '<div class="product-img-wrap">' +
-            (imgSrc ? '<img src="' + imgSrc + '" alt="' + p.name + '" loading="lazy" onerror="this.parentElement.style.background=\'#f0ebe5\'" />' : '') +
+            '<img src="' + imgSrc + '" alt="' + name + '" loading="lazy" />' +
             badge +
-            '<button class="product-wish" aria-label="Add ' + p.name + ' to wishlist">' + WISH_SVG + '</button>' +
+            '<button class="product-wish">' + WISH_SVG + '</button>' +
             '<div class="product-actions">' +
               '<button class="product-action-btn pa-primary">Add to Cart</button>' +
-              '<button class="product-action-btn pa-secondary feat-qv-btn">Quick View</button>' +
+              '<button class="product-action-btn pa-secondary">Quick View</button>' +
             '</div>' +
           '</div>' +
           '<div class="product-info">' +
-            '<h3 class="product-name">' + p.name + '</h3>' +
-            '<p class="product-meta">925 Sterling Silver' + (p.weight ? ' · ' + p.weight : '') + '</p>' +
-            '<div class="product-price"><span class="price-current">' + priceDisplay + '</span></div>' +
+            '<h3 class="product-name">' + name + '</h3>' +
+            '<p class="product-meta">' + meta + '</p>' +
+            '<div class="product-price">' + formatPrice(price) + '</div>' +
           '</div>' +
-        '</article>';
-      }).join('');
-      attachCardListeners(grid);
-    }
+        '</div>';
+      }
 
-    async function loadProducts() {
-      var grid    = document.getElementById('productsGrid');
-      var loading = document.getElementById('productsLoading');
-      try {
-        var params = new URLSearchParams({
-          fields: JSON.stringify(FIELDS),
-          filters: JSON.stringify([['disabled','=',0]]),
-          limit_page_length: '8',
-          order_by: 'creation desc'
+      function attachCardListeners(grid) {
+        grid.querySelectorAll('.product-wish').forEach(btn => {
+          btn.addEventListener('click', e => {
+            e.stopPropagation();
+            btn.classList.toggle('wished');
+            btn.classList.remove('popping'); void btn.offsetWidth; btn.classList.add('popping');
+          });
         });
-        var res = await fetch(ERP_URL + '/erp/api/resource/Item?' + params, {
-          headers: { Accept: 'application/json' }
+        grid.querySelectorAll('.pa-primary').forEach(btn => {
+          btn.addEventListener('click', () => {
+            if (btn.dataset.adding) return;
+            btn.dataset.adding = '1';
+            const orig = btn.textContent;
+            try {
+              const card = btn.closest('.product-card');
+              if (card && card.dataset.productEnc) {
+                const p = JSON.parse(decodeURIComponent(card.dataset.productEnc));
+                if (p.product_id) {
+                  let cart = JSON.parse(localStorage.getItem('hirastore_cart') || '[]');
+                  const existing = cart.find(c => c.id === p.product_id);
+                  if (existing) existing.qty = Math.min(existing.qty + 1, 10);
+                  else cart.push({ id: p.product_id, name: p.name, category: p.category, price: p.price, image: p.image, qty: 1 });
+                  localStorage.setItem('hirastore_cart', JSON.stringify(cart));
+                  if (typeof updateCartBadge === 'function') updateCartBadge();
+                }
+              }
+            } catch(e) {}
+            btn.textContent = 'Added ✓';
+            setTimeout(() => { btn.textContent = orig; delete btn.dataset.adding; }, 1500);
+          });
         });
-        if (!res.ok) throw new Error('HTTP ' + res.status);
+        grid.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+      }
+
+      async function loadFromLocalJSON(grid, loading, limitCount) {
+        var res = await fetch('catalog_images/products.json');
+        if (!res.ok) throw new Error('products.json not found');
         var data = await res.json();
-        var items = data.data || [];
-        if (items.length === 0) {
-          loading.textContent = 'No products yet — add items in ERPNext to see them here.';
-          return;
-        }
-        grid.innerHTML = items.map(function(item, i) { return buildCard(item, i); }).join('');
+        var limit = parseInt(limitCount) || 8;
+        var items = data.filter(p => p.status === 'Available' || p.status === 'available').slice(0, limit);
+        if (!items.length) throw new Error('empty');
+        
+        grid.innerHTML = items.map((p, i) => {
+          var delay = ['','reveal-delay-1','reveal-delay-2','reveal-delay-3'][i % 4];
+          var priceNum = p.price_usd || p.price || 0;
+          var imgSrc = p.image ? 'catalog_images/' + p.image : 'https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=700&q=85';
+          var badge = p.badge ? '<span class="product-badge">' + p.badge + '</span>' : '';
+          var pData = encodeURIComponent(JSON.stringify({
+            name: p.name, category: p.category, image: imgSrc, price: priceNum, currency: '$', product_id: p.product_id
+          }));
+          
+          return '<div class="product-card reveal ' + delay + '" data-product-enc="' + pData + '">' +
+            '<div class="product-img-wrap">' +
+              '<img src="' + imgSrc + '" alt="' + p.name + '" loading="lazy" />' +
+              badge +
+              '<button class="product-wish">' + WISH_SVG + '</button>' +
+              '<div class="product-actions">' +
+                '<button class="product-action-btn pa-primary">Add to Cart</button>' +
+                '<button class="product-action-btn pa-secondary">Quick View</button>' +
+              '</div>' +
+            '</div>' +
+            '<div class="product-info">' +
+              '<h3 class="product-name">' + p.name + '</h3>' +
+              '<p class="product-meta">925 Silver</p>' +
+              '<div class="product-price">$' + Number(priceNum).toLocaleString('en-US') + '</div>' +
+            '</div>' +
+          '</div>';
+        }).join('');
         attachCardListeners(grid);
-      } catch(err) {
-        console.warn('ERPNext unavailable, loading from local catalog…', err.message);
+      }
+
+      async function loadProducts(gridId, limitCount, orderByField) {
+        var grid = document.getElementById(gridId);
+        if (!grid) return;
+        var loading = document.getElementById(gridId + 'Loading');
         try {
-          await loadFromLocalJSON(grid, loading);
-        } catch(e2) {
-          loading.innerHTML = 'Could not load products. <small style="display:block;margin-top:6px">' + e2.message + '</small>';
+          var params = new URLSearchParams({ fields: JSON.stringify(FIELDS), filters: JSON.stringify([['disabled','=',0]]), limit_page_length: limitCount, order_by: orderByField });
+          var res = await fetch(ERP_URL + '/erp/api/resource/Item?' + params, { headers: { Accept: 'application/json' } });
+          if (!res.ok) throw new Error('HTTP ' + res.status);
+          var data = await res.json();
+          if (!data.data || data.data.length === 0) throw new Error('No items');
+          grid.innerHTML = data.data.map((item, i) => buildCard(item, i)).join('');
+          attachCardListeners(grid);
+        } catch(err) {
+          try { await loadFromLocalJSON(grid, loading, limitCount); } 
+          catch(e2) { if (loading) loading.innerHTML = 'Could not load collection.'; }
         }
       }
-    }
-
-    document.addEventListener('DOMContentLoaded', loadProducts);
-  })();
-
-    /* MOBILE NAV */
-    (function() {
-      var hamburger = document.getElementById('hamburgerBtn');
-      var mobileNav = document.getElementById('mobileNav');
-      var mobileClose = document.getElementById('mobileNavClose');
-      var mobileOverlay = document.getElementById('mobileNavOverlay');
-      function openNav() {
-        mobileNav.classList.add('open');
-        document.body.style.overflow = 'hidden';
-        hamburger.setAttribute('aria-expanded','true');
-      }
-      function closeNav() {
-        mobileNav.classList.remove('open');
-        document.body.style.overflow = '';
-        hamburger.setAttribute('aria-expanded','false');
-      }
-      if(hamburger) hamburger.addEventListener('click', openNav);
-      if(mobileClose) mobileClose.addEventListener('click', closeNav);
-      if(mobileOverlay) mobileOverlay.addEventListener('click', closeNav);
-      document.addEventListener('keydown', function(e){ if(e.key==='Escape') closeNav(); });
+      
+      document.addEventListener('DOMContentLoaded', () => {
+        loadProducts('productsGrid', '8', 'modified desc');
+        loadProducts('newArrivalsGrid', '4', 'creation desc');
+        
+        // Hero Slider
+        const heroImgs = document.querySelectorAll('.hero-slider .hero-img');
+        if (heroImgs.length > 1) {
+          let curIdx = 0;
+          setInterval(() => {
+            heroImgs[curIdx].classList.remove('active');
+            curIdx = (curIdx + 1) % heroImgs.length;
+            heroImgs[curIdx].classList.add('active');
+          }, 6000);
+        }
+      });
     })();
   </script>
-
 </body>
 </html>
