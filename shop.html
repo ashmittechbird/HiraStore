@@ -556,8 +556,7 @@
        ERPNEXT CONFIG
        Change ERPNEXT_URL to your production URL
     ══════════════════════════════════════════════ */
-    const ERPNEXT_URL   = 'http://127.0.0.1:8001';
-    const ERPNEXT_TOKEN = 'token df4ffcff00dcb5d:c1bfebcfc38ed0d';
+    const ERPNEXT_URL   = '';  // proxy through server.js /erp/ → 127.0.0.1:8001
 
     /* ══════════════════════════════════════════════
        SCROLL REVEAL
@@ -637,7 +636,7 @@
         "image","weight_per_unit","custom_material","custom_is_featured","disabled"
       ]);
       const filters = JSON.stringify([["disabled","=",0],["is_sales_item","=",1]]);
-      const endpoint = `${ERPNEXT_URL}/api/resource/Item` +
+      const endpoint = `/erp/api/resource/Item` +
         `?filters=${encodeURIComponent(filters)}` +
         `&fields=${encodeURIComponent(fields)}` +
         `&limit_page_length=500` +
@@ -648,7 +647,7 @@
 
       try {
         const res = await fetch(endpoint, {
-          headers: { 'Authorization': ERPNEXT_TOKEN, 'Accept': 'application/json' },
+          headers: { 'Accept': 'application/json' },
           signal: ctrl.signal
         });
         clearTimeout(tid);
@@ -660,7 +659,7 @@
         return items.map(item => {
           let img = '';
           if (item.image) {
-            img = item.image.startsWith('/') ? ERPNEXT_URL + item.image : item.image;
+            img = item.image.startsWith('/') ? '/erp' + item.image : item.image;
           }
           return {
             product_id: item.name,

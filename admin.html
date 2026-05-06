@@ -1616,18 +1616,20 @@ if(zone){
 
 /* ─── INIT ─── */
 (function init(){
+  // Default to local ERPNext if nothing saved yet
+  const DEFAULTS = {url:'http://127.0.0.1:8001',key:'df4ffcff00dcb5d',secret:'054316891a5f19f'};
   loadCFG();
-  if(CFG.url&&CFG.key&&CFG.secret){
-    // Auto-login if saved credentials
-    frappe('GET','/api/resource/Item?limit=1')
-      .then(()=>bootApp())
-      .catch(()=>{
-        // Pre-fill login form
-        document.getElementById('login-url').value=CFG.url;
-        document.getElementById('login-key').value=CFG.key;
-        document.getElementById('login-secret').value=CFG.secret;
-      });
-  }
+  if(!CFG.url) CFG = Object.assign(CFG, DEFAULTS);
+
+  // Auto-login
+  frappe('GET','/api/resource/Item?limit=1')
+    .then(()=>{ saveCFG(); bootApp(); })
+    .catch(()=>{
+      // Pre-fill login form with current config
+      document.getElementById('login-url').value=CFG.url;
+      document.getElementById('login-key').value=CFG.key;
+      document.getElementById('login-secret').value=CFG.secret;
+    });
   // Prefill saved URL if any
   if(CFG.url) document.getElementById('login-url').value=CFG.url;
   if(CFG.key) document.getElementById('login-key').value=CFG.key;
