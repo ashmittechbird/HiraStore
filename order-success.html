@@ -204,7 +204,7 @@
   // Render items
   document.getElementById('orderItems').innerHTML = (data.items || []).map(item => {
     const price = item.price_usd || item.price || 0;
-    const imgSrc = item.image ? 'catalog_images/' + item.image : '';
+    const imgSrc = item.image ? (item.image.startsWith('http') ? item.image : item.image.startsWith('/') ? '/erp' + item.image : 'catalog_images/' + item.image) : '';
     return `<div class="order-item">
       ${imgSrc ? `<img class="order-img" src="${imgSrc}" alt="${item.name}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : ''}
       <div class="order-img-ph" ${imgSrc ? 'style="display:none"' : ''}>IMG</div>

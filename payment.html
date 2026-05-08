@@ -195,6 +195,7 @@
       <div class="summary-totals">
         <div class="total-row"><span>Subtotal</span><span id="subtotal">—</span></div>
         <div class="total-row"><span>Shipping</span><span>Free</span></div>
+        <div class="total-row" id="discountRow" style="display:none;color:#16a34a"><span id="discountLabel">Discount</span><span id="discountVal">—</span></div>
         <div class="total-row grand"><span>Total</span><span class="val" id="grandTotal">—</span></div>
       </div>
     </div>
@@ -227,7 +228,9 @@
   if (!cart.length)  { location.href = '/cart';     }
   if (!customer)     { location.href = '/checkout';  }
 
-  const orderTotal = cart.reduce((s, i) => s + (i.price_usd || i.price || 0) * (i.qty || 1), 0);
+  const subtotalAmt = cart.reduce((s, i) => s + (i.price_usd || i.price || 0) * (i.qty || 1), 0);
+  const discountAmt = parseFloat(customer?.discount || 0);
+  const orderTotal  = Math.max(0, subtotalAmt - discountAmt);
 
   // ─── Render ship-to & summary ─────────────────────────────────────────────
   function renderShipTo() {
@@ -240,12 +243,17 @@
   function renderSummary() {
     const count = cart.reduce((s, i) => s + (i.qty || 1), 0);
     document.getElementById('item-count-label').textContent = count + ' item' + (count !== 1 ? 's' : '');
-    document.getElementById('subtotal').textContent  = '$' + orderTotal.toFixed(2);
+    document.getElementById('subtotal').textContent  = '$' + subtotalAmt.toFixed(2);
     document.getElementById('grandTotal').textContent = '$' + orderTotal.toFixed(2);
+    if (discountAmt > 0) {
+      document.getElementById('discountRow').style.display = 'flex';
+      document.getElementById('discountLabel').textContent = 'Discount' + (customer.couponCode ? ' (' + customer.couponCode + ')' : '');
+      document.getElementById('discountVal').textContent   = '-$' + discountAmt.toFixed(2);
+    }
     document.getElementById('summaryItems').innerHTML = cart.map(item => {
       const price  = item.price_usd || item.price || 0;
       const imgSrc = item.image
-        ? (item.image.startsWith('http') ? item.image : 'catalog_images/' + item.image)
+        ? (item.image.startsWith('http') ? item.image : item.image.startsWith('/') ? '/erp' + item.image : 'catalog_images/' + item.image)
         : '';
       return `<div class="summary-item">
         ${imgSrc ? `<img class="summary-img" src="${imgSrc}" alt="${item.name}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : ''}

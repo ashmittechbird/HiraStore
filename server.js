@@ -8,16 +8,51 @@ const path    = require('path');
 const url     = require('url');
 const crypto  = require('crypto');
 
-const PORT        = 5500;
-const ERP_HOST    = '127.0.0.1';
-const ERP_PORT    = 8001;
-const API_KEY     = 'df4ffcff00dcb5d';
-const API_SECRET  = '054316891a5f19f';
+const PORT        = process.env.PORT        || 5500;
+const ERP_HOST    = process.env.ERP_HOST    || '127.0.0.1';
+const ERP_PORT    = process.env.ERP_PORT    || 8001;
+const API_KEY     = process.env.ERP_API_KEY    || 'df4ffcff00dcb5d';
+const API_SECRET  = process.env.ERP_API_SECRET || '054316891a5f19f';
 const AUTH_HEADER = `token ${API_KEY}:${API_SECRET}`;
 
-// ─── SESSION STORE ────────────────────────────────────────────────────────────
-// token -> { frappeSid, email, fullName, expires }
+// ─── SESSION STORE (persisted to sessions.json) ───────────────────────────────
+const SESSIONS_FILE = path.join(__dirname, 'sessions.json');
 const sessions = new Map();
+
+function saveSessions() {
+  try {
+    const obj = {};
+    for (const [k, v] of sessions) obj[k] = v;
+    fs.writeFileSync(SESSIONS_FILE, JSON.stringify(obj));
+  } catch(e) {}
+}
+
+function loadSessions() {
+  try {
+    if (!fs.existsSync(SESSIONS_FILE)) return;
+    const obj = JSON.parse(fs.readFileSync(SESSIONS_FILE, 'utf8'));
+    const now = Date.now();
+    for (const [k, v] of Object.entries(obj)) {
+      if (v.expires > now) sessions.set(k, v);
+    }
+  } catch(e) {}
+}
+loadSessions();
+
+// ─── RATE LIMITER (login) ─────────────────────────────────────────────────────
+const loginAttempts = new Map(); // ip -> { count, resetAt }
+function checkRateLimit(ip) {
+  const now = Date.now();
+  const rec = loginAttempts.get(ip);
+  if (!rec || rec.resetAt < now) {
+    loginAttempts.set(ip, { count: 1, resetAt: now + 15 * 60000 });
+    return false; // not limited
+  }
+  rec.count++;
+  if (rec.count > 10) return true; // blocked
+  return false;
+}
+function clearRateLimit(ip) { loginAttempts.delete(ip); }
 
 function genToken() { return crypto.randomBytes(32).toString('hex'); }
 
@@ -104,6 +139,9 @@ function erpSession(method, erpPath, sid, body) {
 
 // ─── AUTH HANDLERS ────────────────────────────────────────────────────────────
 async function handleLogin(req, res) {
+  const ip = req.socket?.remoteAddress || 'unknown';
+  if (checkRateLimit(ip)) return jsonRes(res, 429, { error: 'Too many login attempts. Try again in 15 minutes.' });
+
   const body = JSON.parse(await readBody(req));
   const { email, password } = body;
   if (!email || !password) return jsonRes(res, 400, { error: 'email and password required' });
@@ -152,14 +190,53 @@ async function handleLogin(req, res) {
   // Store session (7 days)
   const token = genToken();
   sessions.set(token, { frappeSid: sid, email, fullName, expires: Date.now() + 7 * 86400000 });
+  saveSessions();
 
   jsonRes(res, 200, { token, email, fullName });
 }
 
 function handleLogout(req, res) {
   const token = req.headers['x-session-token'];
-  if (token) sessions.delete(token);
+  if (token) { sessions.delete(token); saveSessions(); }
   jsonRes(res, 200, { ok: true });
+}
+
+// ─── SIGNUP ───────────────────────────────────────────────────────────────────
+async function handleSignup(req, res) {
+  const body = JSON.parse(await readBody(req));
+  const { fullName, email, password } = body;
+  if (!fullName || !email || !password) return jsonRes(res, 400, { error: 'fullName, email, and password required' });
+  if (password.length < 6) return jsonRes(res, 400, { error: 'Password must be at least 6 characters' });
+
+  // Check if user already exists
+  const checkRes = await erpAdmin('GET', `/api/resource/User?filters=${encodeURIComponent(JSON.stringify([["email","=",email]]))}&fields=["name"]&limit=1`);
+  if (checkRes.body?.data?.length) return jsonRes(res, 409, { error: 'An account with this email already exists' });
+
+  // Create Frappe user
+  const createRes = await erpAdmin('POST', '/api/resource/User', {
+    first_name: fullName.split(' ')[0],
+    last_name:  fullName.split(' ').slice(1).join(' ') || '',
+    email,
+    new_password: password,
+    send_welcome_email: 0,
+    roles: [{ role: 'Customer' }],
+    enabled: 1,
+  });
+  if (createRes.status !== 200) {
+    const msg = createRes.body?.exception || createRes.body?.message || 'Could not create account';
+    return jsonRes(res, 500, { error: msg });
+  }
+
+  // Also create Customer record in ERPNext
+  await erpAdmin('POST', '/api/resource/Customer', {
+    customer_name: fullName,
+    customer_type: 'Individual',
+    customer_group: 'Individual',
+    territory: 'All Territories',
+    email_id: email,
+  }).catch(() => {}); // non-fatal
+
+  jsonRes(res, 200, { ok: true, message: 'Account created. You can now log in.' });
 }
 
 function handleMe(req, res) {
@@ -369,6 +446,9 @@ const server = http.createServer((req, res) => {
   // ── API ROUTES ──
   if (pathname === '/api/auth/login'  && req.method === 'POST')
     return handleLogin(req, res).catch(e => jsonRes(res, 500, { error: e.message }));
+
+  if (pathname === '/api/auth/signup' && req.method === 'POST')
+    return handleSignup(req, res).catch(e => jsonRes(res, 500, { error: e.message }));
 
   if (pathname === '/api/auth/logout' && req.method === 'POST')
     return handleLogout(req, res);

@@ -310,7 +310,7 @@
 
     container.innerHTML = cart.map(item => {
       const price  = (item.price_usd || item.price || 0);
-      const imgSrc = item.image ? 'catalog_images/' + item.image : '';
+      const imgSrc = item.image ? (item.image.startsWith('http') ? item.image : item.image.startsWith('/') ? '/erp' + item.image : 'catalog_images/' + item.image) : '';
       return `<div class="summary-item">
         ${imgSrc ? `<img class="summary-img" src="${imgSrc}" alt="${item.name}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : ''}
         <div class="summary-img-placeholder" ${imgSrc ? 'style="display:none"' : ''}>IMG</div>

@@ -298,14 +298,16 @@
             <th>Amount</th>
             <th>Status</th>
             <th>Delivery</th>
+            <th></th>
           </tr></thead>
           <tbody>
-            ${orders.map(o => `<tr>
+            ${orders.map(o => `<tr style="cursor:pointer" onclick="viewOrderDetail('${o.name}','${o.customer_name||''}','${formatDate(o.creation)}','${o.status||''}','${parseFloat(o.grand_total||0).toFixed(2)}','${o.delivery_date?formatDate(o.delivery_date):''}','${(o.contact_email||'').replace(/'/g,'')}')">
               <td class="order-num">${o.name}</td>
               <td>${formatDate(o.creation)}</td>
               <td style="font-family:var(--font-serif);color:var(--brand)">$${parseFloat(o.grand_total||0).toFixed(2)}</td>
               <td>${statusBadge(o.status)}</td>
               <td>${o.delivery_date ? formatDate(o.delivery_date) : '—'}</td>
+              <td style="color:var(--brand);font-size:12px;white-space:nowrap">View →</td>
             </tr>`).join('')}
           </tbody>
         </table>
@@ -424,8 +426,69 @@
     setTimeout(() => el.classList.remove('show'), 2800);
   }
 
+  // ─── ORDER DETAIL MODAL ────────────────────────────────────────────────────
+  async function viewOrderDetail(name, customer, date, status, total, delivery, email) {
+    const mo = document.getElementById('orderModal');
+    const mc = document.getElementById('orderModalContent');
+    mo.style.display = 'flex';
+    mc.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text-light)"><div class="spin" style="margin:0 auto 12px"></div>Loading…</div>';
+
+    try {
+      const res  = await fetch(`/erp/api/resource/Sales Order/${encodeURIComponent(name)}?fields=${encodeURIComponent(JSON.stringify(["name","customer","transaction_date","grand_total","status","delivery_date","contact_email","contact_mobile","remarks","items"]))}`);
+      const data = await res.json();
+      const o    = data.data || {};
+      const items = o.items || [];
+
+      mc.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;flex-wrap:wrap;gap:12px">
+          <div>
+            <div style="font-size:12px;color:var(--text-light);text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px">Order</div>
+            <div style="font-family:var(--font-serif);font-size:1.4rem;color:var(--brand)">${o.name||name}</div>
+          </div>
+          ${statusBadge(o.status||status)}
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;font-size:13px">
+          <div><span style="color:var(--text-light)">Date: </span>${formatDate(o.transaction_date||date)}</div>
+          <div><span style="color:var(--text-light)">Delivery by: </span>${o.delivery_date ? formatDate(o.delivery_date) : '—'}</div>
+          <div><span style="color:var(--text-light)">Email: </span>${o.contact_email||email||'—'}</div>
+          <div><span style="color:var(--text-light)">Phone: </span>${o.contact_mobile||'—'}</div>
+        </div>
+        ${items.length ? `
+        <div style="border-top:1px solid var(--border-soft);padding-top:16px;margin-bottom:16px">
+          <div style="font-size:12px;font-weight:500;color:var(--text-light);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px">Items</div>
+          ${items.map(i => `
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border-soft);font-size:13px">
+              <div>
+                <div style="font-weight:500;color:var(--text)">${i.item_name||i.item_code}</div>
+                <div style="color:var(--text-light);font-size:12px">Qty: ${i.qty} × $${parseFloat(i.rate||0).toFixed(2)}</div>
+              </div>
+              <div style="font-family:var(--font-serif);color:var(--brand)">$${parseFloat(i.amount||0).toFixed(2)}</div>
+            </div>`).join('')}
+        </div>
+        <div style="text-align:right;font-size:16px;font-weight:500">
+          Total: <span style="font-family:var(--font-serif);color:var(--brand);font-size:1.2rem">$${parseFloat(o.grand_total||total||0).toFixed(2)}</span>
+        </div>` : `<div style="color:var(--text-light);font-size:13px;padding:12px 0">Item details not available.</div>`}
+        ${o.remarks ? `<div style="margin-top:16px;padding:12px;background:var(--ivory);border-radius:6px;font-size:12px;color:var(--text-light);line-height:1.6"><strong>Notes:</strong> ${o.remarks}</div>` : ''}
+      `;
+    } catch(e) {
+      mc.innerHTML = `<div style="padding:24px;text-align:center;color:#c0392b">Could not load order details: ${e.message}</div>`;
+    }
+  }
+
+  function closeOrderModal() {
+    document.getElementById('orderModal').style.display = 'none';
+  }
+
   // ─── INIT ──────────────────────────────────────────────────────────────────
   boot().then(() => loadOrders());
 </script>
+
+<!-- ORDER DETAIL MODAL -->
+<div id="orderModal" style="display:none;position:fixed;inset:0;background:rgba(0,26,32,.55);z-index:999;align-items:center;justify-content:center;padding:24px" onclick="if(event.target===this)closeOrderModal()">
+  <div style="background:#fff;border-radius:12px;max-width:560px;width:100%;max-height:85vh;overflow:auto;box-shadow:0 24px 64px rgba(0,0,0,.18);padding:28px;position:relative">
+    <button onclick="closeOrderModal()" style="position:absolute;top:16px;right:16px;background:rgba(0,26,32,.07);border:none;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:16px;color:#334d52;display:flex;align-items:center;justify-content:center">&#x2715;</button>
+    <div id="orderModalContent"></div>
+  </div>
+</div>
 </body>
 </html>

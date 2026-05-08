@@ -1263,11 +1263,7 @@
 
   <script>
     // ─── CART STATE ─────────────────────────────────────────────────────────
-    const PROMO_CODES = {
-      'HIRA10': { type: 'percent', value: 10, label: '10% off' },
-      'SILVER15': { type: 'percent', value: 15, label: '15% off' },
-      'WELCOME20': { type: 'fixed', value: 20, label: '$20 off' },
-    };
+    // Promos validated via ERPNext — no hardcoded codes
 
     const TAX_RATE = 0.0; // Set to 0 for international; update as needed
 
@@ -1458,9 +1454,7 @@
 
       let discount = 0;
       if (appliedPromo) {
-        const promo = PROMO_CODES[appliedPromo];
-        if (promo.type === 'percent') discount = subtotal * promo.value / 100;
-        else discount = Math.min(promo.value, subtotal);
+        discount = appliedPromo.discount;
       }
 
       const afterDiscount = subtotal - discount;
@@ -1480,36 +1474,46 @@
       if (discount > 0) {
         discRow.style.display = 'flex';
         document.getElementById('summaryDiscount').textContent = '−$' + discount.toFixed(2);
+        document.getElementById('summaryDiscountLabel') && (document.getElementById('summaryDiscountLabel').textContent = 'Discount' + (appliedPromo?.code ? ' (' + appliedPromo.code + ')' : ''));
       } else {
         discRow.style.display = 'none';
       }
     }
 
-    // ─── PROMO ─────────────────────────────────────────────────────────────
-    function applyPromo() {
+    // ─── PROMO — validated via ERPNext ─────────────────────────────────────
+    async function applyPromo() {
       const input = document.getElementById('promoInput');
-      const code = input.value.trim().toUpperCase();
-      const msg = document.getElementById('promoMessage');
+      const code  = input.value.trim().toUpperCase();
+      const msg   = document.getElementById('promoMessage');
+      if (!code) { msg.textContent = 'Please enter a promo code.'; msg.className = 'promo-message error'; return; }
 
-      if (!code) {
-        msg.textContent = 'Please enter a promo code.';
-        msg.className = 'promo-message error';
-        return;
-      }
-
-      if (PROMO_CODES[code]) {
-        appliedPromo = code;
-        msg.textContent = '✓ ' + PROMO_CODES[code].label + ' applied!';
-        msg.className = 'promo-message success';
-        input.disabled = true;
-        showToast('Promo code applied — ' + PROMO_CODES[code].label, 'success');
-        updateSummary();
-      } else {
+      msg.textContent = 'Checking…'; msg.className = 'promo-message';
+      const subtotal = cart.reduce((s, c) => s + (c.price * c.qty), 0);
+      try {
+        const res  = await fetch('/api/coupon/validate', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code, amount: subtotal }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          appliedPromo = null;
+          msg.textContent = data.error || 'Invalid or expired promo code.';
+          msg.className = 'promo-message error';
+          input.disabled = false;
+        } else {
+          const pct = data.coupon.discount_percentage || 0;
+          appliedPromo = { code, discount: parseFloat(data.discount), label: pct + '% off' };
+          msg.textContent = '✓ ' + appliedPromo.label + ' applied!';
+          msg.className = 'promo-message success';
+          input.disabled = true;
+          showToast('Promo code applied — ' + appliedPromo.label, 'success');
+        }
+      } catch (e) {
         appliedPromo = null;
-        msg.textContent = 'Invalid or expired promo code.';
+        msg.textContent = 'Could not validate coupon. Try again.';
         msg.className = 'promo-message error';
-        updateSummary();
       }
+      updateSummary();
     }
 
     // ─── PROMO INPUT ENTER ─────────────────────────────────────────────────

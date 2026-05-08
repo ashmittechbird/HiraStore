@@ -1249,6 +1249,21 @@
       setTimeout(() => { addBtn.textContent = 'Add to Cart'; }, 1600);
     };
 
+    // View full details link
+    let detailBtn = document.getElementById('qvDetailBtn');
+    if (!detailBtn) {
+      detailBtn = document.createElement('a');
+      detailBtn.id = 'qvDetailBtn';
+      detailBtn.style.cssText = 'display:block;text-align:center;margin-top:10px;font-size:13px;color:var(--brand);text-decoration:none;';
+      addBtn.parentNode.appendChild(detailBtn);
+    }
+    detailBtn.textContent = 'View Full Details →';
+    detailBtn.onclick = function(e) {
+      e.preventDefault();
+      sessionStorage.setItem('hs_product_view', JSON.stringify(p));
+      window.location.href = 'product.html?id=' + encodeURIComponent(p.product_id);
+    };
+
     const overlay = document.getElementById('qvOverlay');
     overlay.style.display = 'flex';
     document.body.style.overflow = 'hidden';
