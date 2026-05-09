@@ -471,19 +471,39 @@ async function handleCreateOrder(req, res) {
     deliveryDate.setDate(deliveryDate.getDate() + 7);
     const delivDate    = deliveryDate.toISOString().split('T')[0];
 
+    // Create a proper Address doc for this order's shipping details
+    let shippingAddressName = null;
+    try {
+      const addrTitle = `${customer.fullName}-${Date.now().toString().slice(-6)}`;
+      const addrRes = await erpAdmin('POST', '/api/resource/Address', {
+        address_title: addrTitle,
+        address_type:  'Shipping',
+        address_line1: customer.address || '',
+        city:          customer.city    || '',
+        state:         customer.state   || '',
+        pincode:       customer.zip     || '',
+        country:       customer.country || 'India',
+        phone:         customer.phone   || '',
+        email_id:      customer.email   || '',
+        links: [{ link_doctype: 'Customer', link_name: customer.fullName }],
+      });
+      shippingAddressName = addrRes.body?.data?.name || null;
+    } catch(e) {
+      console.warn('[CreateOrder] Address doc failed (non-fatal):', e.message);
+    }
+
     const remarks = [
-      `Address: ${customer.address}, ${customer.city}, ${customer.state} ${customer.zip}, ${customer.country || 'India'}`,
-      customer.phone ? `Phone: ${customer.phone}` : '',
-      paymentId ? `Square Payment ID: ${paymentId}` : '',
+      paymentId  ? `Square Payment ID: ${paymentId}` : '',
       couponCode ? `Coupon: ${couponCode} (Discount: $${discount || '0'})` : '',
     ].filter(Boolean).join(' | ');
 
     const orderData = {
-      customer:          customer.fullName,
-      transaction_date:  today,
-      delivery_date:     delivDate,
-      contact_email:     customer.email,
-      contact_mobile:    customer.phone,
+      customer:               customer.fullName,
+      transaction_date:       today,
+      delivery_date:          delivDate,
+      contact_email:          customer.email,
+      contact_mobile:         customer.phone,
+      ...(shippingAddressName ? { shipping_address_name: shippingAddressName } : {}),
       remarks,
       items: cart.map(item => ({
         item_code:  item.name || item.id,

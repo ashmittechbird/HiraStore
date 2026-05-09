@@ -991,6 +991,32 @@ td{padding:12px 14px;font-size:13px;vertical-align:middle}
   </div>
 </div>
 
+<!-- CUSTOMER DETAIL MODAL -->
+<div class="modal-bg" id="cust-detail-modal">
+  <div class="modal" style="max-width:660px">
+    <div class="modal-hd">
+      <h3 id="cust-detail-title">Customer Details</h3>
+      <button class="modal-close" onclick="closeModal('cust-detail-modal')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body" id="cust-detail-body" style="max-height:70vh;overflow-y:auto"></div>
+  </div>
+</div>
+
+<!-- ORDER DETAIL MODAL -->
+<div class="modal-bg" id="order-detail-modal">
+  <div class="modal" style="max-width:640px">
+    <div class="modal-hd">
+      <h3 id="order-detail-title">Order Details</h3>
+      <button class="modal-close" onclick="closeModal('order-detail-modal')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body" id="order-detail-body"></div>
+  </div>
+</div>
+
 <!-- CONFIRM MODAL -->
 <div class="modal-bg" id="confirm-modal">
   <div class="modal confirm-modal">
@@ -1373,7 +1399,7 @@ function confirmDelete(id,name){
 async function loadOrders(){
   document.getElementById('orders-table-wrap').innerHTML='<div class="loading-overlay"><div class="spin"></div><p>Loading orders…</p></div>';
   try{
-    const fields=JSON.stringify(["name","customer","transaction_date","grand_total","status","delivery_date","contact_phone","shipping_address_name"]);
+    const fields=JSON.stringify(["name","customer","transaction_date","grand_total","status","delivery_date","contact_phone","shipping_address_name","per_delivered"]);
     const res=await frappe('GET',`/api/resource/Sales Order?fields=${encodeURIComponent(fields)}&limit=500&order_by=transaction_date desc`);
     allOrders=res.data||[];
     renderOrders(allOrders);
@@ -1404,20 +1430,34 @@ function renderOrders(orders){
     return;
   }
   document.getElementById('orders-table-wrap').innerHTML=`<table>
-    <thead><tr><th>Order ID</th><th>Customer</th><th>Contact</th><th>Date</th><th>Amount</th><th>Status</th><th>Update</th></tr></thead>
+    <thead><tr><th>Order ID</th><th>Customer</th><th>Date</th><th>Amount</th><th>Status</th><th>Items</th><th>Stock</th><th>Update</th></tr></thead>
     <tbody>${orders.map(o=>{
-      const phone=o.contact_phone||'—';
-      const addr=o.shipping_address_name||'';
+      const delivered=(o.per_delivered||0)>=100;
       return `<tr>
         <td class="td-name" style="font-size:12px">${o.name}</td>
         <td>
           <div style="font-weight:500;font-size:13px">${o.customer||'—'}</div>
-          ${addr?`<div style="font-size:11px;color:var(--text3);max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${addr}">${addr}</div>`:''}
+          ${o.contact_phone?`<div style="font-size:11px;color:var(--text3)">${o.contact_phone}</div>`:''}
         </td>
-        <td style="font-size:12px;color:var(--text2)">${phone}</td>
         <td style="color:var(--text3);font-size:12px">${formatDate(o.transaction_date)}</td>
         <td style="font-family:var(--font-d);font-size:15px">$${(o.grand_total||0).toFixed(2)}</td>
         <td>${statusBadge(o.status)}</td>
+        <td>
+          <button class="btn btn-outline btn-sm" onclick="viewOrderDetails('${o.name}')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            View Items
+          </button>
+        </td>
+        <td>
+          ${delivered
+            ?`<span class="badge badge-green">Shipped</span>`
+            :(o.status==='Cancelled'
+              ?`<span class="badge badge-red">Cancelled</span>`
+              :`<button class="btn btn-gold btn-sm" onclick="shipOrder('${o.name}',this)">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+                  Ship
+                </button>`)}
+        </td>
         <td>
           <select class="status-select" onchange="updateOrderStatus('${o.name}',this.value)">
             ${['Draft','To Deliver and Bill','To Bill','To Deliver','Completed','Cancelled'].map(s=>`<option value="${s}"${o.status===s?' selected':''}>${s}</option>`).join('')}
@@ -1438,6 +1478,111 @@ async function updateOrderStatus(id,status){
   }catch(e){
     toast('Failed to update: '+e.message,'error');
     loadOrders();
+  }
+}
+
+/* ─── ORDER DETAILS ─── */
+async function viewOrderDetails(name){
+  document.getElementById('order-detail-title').textContent=name;
+  document.getElementById('order-detail-body').innerHTML='<div class="loading-overlay"><div class="spin"></div></div>';
+  openModal('order-detail-modal');
+  try{
+    const res=await frappe('GET','/api/resource/Sales Order/'+encodeURIComponent(name));
+    const o=res.data;
+    const items=o.items||[];
+
+    // Fetch linked shipping address if available
+    let addr=null;
+    if(o.shipping_address_name){
+      addr=await frappe('GET','/api/resource/Address/'+encodeURIComponent(o.shipping_address_name)).then(r=>r.data).catch(()=>null);
+    }
+
+    // Parse payment info from remarks (only payment/coupon now)
+    const payMatch=(o.remarks||'').match(/Square Payment ID:\s*([^\s|]+)/i);
+    const couponMatch=(o.remarks||'').match(/Coupon:\s*([^|]+)/i);
+
+    document.getElementById('order-detail-body').innerHTML=`
+      <!-- Customer + contact -->
+      <div style="margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--border)">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:13px">
+          <div><span style="color:var(--text3);font-size:11px;text-transform:uppercase;letter-spacing:.08em">Customer</span><div style="font-weight:500;margin-top:2px">${o.customer||'—'}</div></div>
+          <div><span style="color:var(--text3);font-size:11px;text-transform:uppercase;letter-spacing:.08em">Date</span><div style="margin-top:2px">${formatDate(o.transaction_date)}</div></div>
+          ${o.contact_email?`<div><span style="color:var(--text3);font-size:11px;text-transform:uppercase;letter-spacing:.08em">Email</span><div style="margin-top:2px">${o.contact_email}</div></div>`:''}
+          ${o.contact_mobile?`<div><span style="color:var(--text3);font-size:11px;text-transform:uppercase;letter-spacing:.08em">Phone</span><div style="margin-top:2px">${o.contact_mobile}</div></div>`:''}
+        </div>
+      </div>
+
+      <!-- Shipping address -->
+      ${addr?`<div style="margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--border)">
+        <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:8px">Shipping Address</div>
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;font-size:13px">
+          <div style="font-weight:500">${o.customer}</div>
+          ${addr.address_line1?`<div style="color:var(--text2);margin-top:2px">${addr.address_line1}</div>`:''}
+          ${addr.address_line2?`<div style="color:var(--text2)">${addr.address_line2}</div>`:''}
+          <div style="color:var(--text2)">${[addr.city,addr.state,addr.pincode].filter(Boolean).join(', ')}</div>
+          <div style="color:var(--text2)">${addr.country||''}</div>
+          ${addr.phone?`<div style="color:var(--text3);font-size:12px;margin-top:4px">📞 ${addr.phone}</div>`:''}
+          ${addr.email_id?`<div style="color:var(--text3);font-size:12px">✉ ${addr.email_id}</div>`:''}
+        </div>
+      </div>`:''}
+
+      <!-- Payment info -->
+      ${payMatch||couponMatch?`<div style="margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--border)">
+        <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:8px">Payment</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px">
+          ${payMatch?`<span style="background:var(--green-bg);color:var(--green);padding:4px 10px;border-radius:6px;font-size:12px;font-weight:500">Square — ${payMatch[1]}</span>`:''}
+          ${couponMatch?`<span style="background:var(--amber-bg);color:var(--amber);padding:4px 10px;border-radius:6px;font-size:12px;font-weight:500">Coupon: ${couponMatch[1].trim()}</span>`:''}
+        </div>
+      </div>`:''}
+
+      <table style="width:100%;border-collapse:collapse">
+        <thead><tr>
+          <th style="text-align:left;padding:8px 10px;font-size:11px;color:var(--text3);text-transform:uppercase;background:var(--surface2);border-bottom:1px solid var(--border)">Item</th>
+          <th style="text-align:center;padding:8px 10px;font-size:11px;color:var(--text3);text-transform:uppercase;background:var(--surface2);border-bottom:1px solid var(--border)">Qty</th>
+          <th style="text-align:right;padding:8px 10px;font-size:11px;color:var(--text3);text-transform:uppercase;background:var(--surface2);border-bottom:1px solid var(--border)">Rate</th>
+          <th style="text-align:right;padding:8px 10px;font-size:11px;color:var(--text3);text-transform:uppercase;background:var(--surface2);border-bottom:1px solid var(--border)">Total</th>
+        </tr></thead>
+        <tbody>${items.map(i=>`<tr style="border-bottom:1px solid var(--border)">
+          <td style="padding:10px;font-weight:500;font-size:13px">${i.item_name||i.item_code}</td>
+          <td style="padding:10px;text-align:center;color:var(--text2)">${i.qty}</td>
+          <td style="padding:10px;text-align:right;font-family:var(--font-d)">$${(i.rate||0).toFixed(2)}</td>
+          <td style="padding:10px;text-align:right;font-family:var(--font-d);font-weight:600">$${(i.amount||0).toFixed(2)}</td>
+        </tr>`).join('')}</tbody>
+      </table>
+      <div style="text-align:right;padding:14px 10px 0;font-family:var(--font-d);font-size:20px;font-weight:600;border-top:2px solid var(--border);margin-top:4px">
+        Total: $${(o.grand_total||0).toFixed(2)}
+      </div>
+    `;
+  }catch(e){
+    document.getElementById('order-detail-body').innerHTML=`<div class="empty"><p style="color:var(--red)">Failed: ${e.message}</p></div>`;
+  }
+}
+
+async function shipOrder(name,btn){
+  if(!confirm('Create Delivery Note for '+name+' and deduct stock from inventory?'))return;
+  btn.disabled=true;
+  btn.innerHTML='<div class="spin" style="width:14px;height:14px"></div>';
+  try{
+    // Step 1: Make Delivery Note from Sales Order
+    const makeRes=await frappe('POST','/api/method/erpnext.selling.doctype.sales_order.sales_order.make_delivery_note',{source_name:name});
+    const dn=makeRes.message;
+    if(!dn)throw new Error('ERPNext did not return a Delivery Note');
+
+    // Step 2: Save the DN
+    const saveRes=await frappe('POST','/api/resource/Delivery Note',dn);
+    const dnName=saveRes.data?.name;
+    if(!dnName)throw new Error('Failed to save Delivery Note');
+
+    // Step 3: Submit the DN — this deducts stock
+    await frappe('PUT','/api/resource/Delivery Note/'+encodeURIComponent(dnName),{docstatus:1});
+
+    toast('Stock deducted! Delivery Note: '+dnName,'success');
+    loadOrders();
+    loadDashboard();
+  }catch(e){
+    toast('Ship failed: '+e.message,'error');
+    btn.disabled=false;
+    btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg> Ship';
   }
 }
 
@@ -1477,15 +1622,135 @@ function renderCustomers(customers){
     return;
   }
   el.innerHTML=`<div class="tbl-wrap"><table>
-    <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Type</th><th>Joined</th></tr></thead>
+    <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Type</th><th>Joined</th><th>Details</th></tr></thead>
     <tbody>${customers.map(c=>`<tr>
       <td class="td-name">${c.customer_name||c.name}</td>
       <td style="font-size:12px;color:var(--text2)">${c.email_id||'—'}</td>
       <td style="font-size:12px;color:var(--text2)">${c.mobile_no||'—'}</td>
       <td><span style="font-size:11px;background:var(--blue-bg);color:var(--blue);padding:2px 8px;border-radius:99px">${c.customer_type||'Individual'}</span></td>
       <td style="font-size:12px;color:var(--text3)">${c.creation?new Date(c.creation).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}):'—'}</td>
+      <td><button class="btn btn-outline btn-sm" onclick="viewCustomerDetails('${(c.customer_name||c.name).replace(/'/g,"\\'")}','${c.email_id||''}')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        View
+      </button></td>
     </tr>`).join('')}</tbody>
   </table></div>`;
+}
+
+/* ─── CUSTOMER DETAILS ─── */
+async function viewCustomerDetails(customerName, email){
+  document.getElementById('cust-detail-title').textContent=customerName;
+  document.getElementById('cust-detail-body').innerHTML='<div class="loading-overlay"><div class="spin"></div></div>';
+  openModal('cust-detail-modal');
+  try{
+    // Fetch addresses + recent orders in parallel
+    const addrFilter=encodeURIComponent(JSON.stringify([["Dynamic Link","link_doctype","=","Customer"],["Dynamic Link","link_name","=",customerName]]));
+    const addrFields=encodeURIComponent(JSON.stringify(["address_line1","address_line2","city","state","pincode","country","phone","email_id","address_type"]));
+    const ordFilter=encodeURIComponent(JSON.stringify([["customer","=",customerName]]));
+    const ordFields=encodeURIComponent(JSON.stringify(["name","transaction_date","grand_total","status","remarks","contact_email","contact_mobile","per_delivered"]));
+
+    const [addrRes,ordRes]=await Promise.all([
+      frappe('GET',`/api/resource/Address?filters=${addrFilter}&fields=${addrFields}&limit=10`).catch(()=>({data:[]})),
+      frappe('GET',`/api/resource/Sales Order?filters=${ordFilter}&fields=${ordFields}&limit=20&order_by=creation desc`).catch(()=>({data:[]}))
+    ]);
+
+    const addresses=addrRes.data||[];
+    const orders=ordRes.data||[];
+
+    // Parse payment info from remarks
+    function parseRemarks(remarks){
+      if(!remarks)return{};
+      const parts={};
+      const payMatch=remarks.match(/Square Payment ID:\s*([^\s|]+)/i);
+      if(payMatch)parts.paymentId=payMatch[1];
+      const couponMatch=remarks.match(/Coupon:\s*([^|]+)/i);
+      if(couponMatch)parts.coupon=couponMatch[1].trim();
+      const addrMatch=remarks.match(/Address:\s*([^|]+)/i);
+      if(addrMatch)parts.address=addrMatch[1].trim();
+      const phoneMatch=remarks.match(/Phone:\s*([^|]+)/i);
+      if(phoneMatch)parts.phone=phoneMatch[1].trim();
+      return parts;
+    }
+
+    const totalSpent=orders.reduce((s,o)=>s+(o.grand_total||0),0);
+    const completedOrders=orders.filter(o=>o.status==='Completed').length;
+
+    document.getElementById('cust-detail-body').innerHTML=`
+      <!-- Summary strip -->
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px">
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px;text-align:center">
+          <div style="font-family:var(--font-d);font-size:26px;font-weight:600">${orders.length}</div>
+          <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em">Total Orders</div>
+        </div>
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px;text-align:center">
+          <div style="font-family:var(--font-d);font-size:26px;font-weight:600">$${totalSpent.toFixed(0)}</div>
+          <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em">Total Spent</div>
+        </div>
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px;text-align:center">
+          <div style="font-family:var(--font-d);font-size:26px;font-weight:600">${completedOrders}</div>
+          <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em">Completed</div>
+        </div>
+      </div>
+
+      <!-- Contact info -->
+      <div style="margin-bottom:18px">
+        <div style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:10px">Contact Info</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px">
+          ${email?`<div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px">
+            <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:2px">Email</div>
+            <div style="font-weight:500">${email}</div>
+          </div>`:''}
+          ${orders[0]?.contact_mobile?`<div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px">
+            <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:2px">Phone</div>
+            <div style="font-weight:500">${orders[0].contact_mobile}</div>
+          </div>`:''}
+        </div>
+      </div>
+
+      <!-- Shipping addresses -->
+      ${addresses.length?`<div style="margin-bottom:18px">
+        <div style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:10px">Shipping Address${addresses.length>1?'es':''}</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          ${addresses.map(a=>`<div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;font-size:13px">
+            <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px">${a.address_type||'Shipping'}</div>
+            <div style="font-weight:500">${[a.address_line1,a.address_line2].filter(Boolean).join(', ')}</div>
+            <div style="color:var(--text2)">${[a.city,a.state,a.pincode].filter(Boolean).join(', ')}</div>
+            <div style="color:var(--text2)">${a.country||''}</div>
+            ${a.phone?`<div style="color:var(--text3);font-size:12px;margin-top:4px">📞 ${a.phone}</div>`:''}
+          </div>`).join('')}
+        </div>
+      </div>`:''}
+
+      <!-- Order history -->
+      ${orders.length?`<div>
+        <div style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:10px">Order History</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          ${orders.map(o=>{
+            const p=parseRemarks(o.remarks);
+            return`<div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 14px">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+                <span style="font-weight:600;font-size:13px">${o.name}</span>
+                ${statusBadge(o.status)}
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:12px;color:var(--text2)">
+                <div>Date: ${formatDate(o.transaction_date)}</div>
+                <div style="font-family:var(--font-d);font-size:15px;color:var(--text);font-weight:600">$${(o.grand_total||0).toFixed(2)}</div>
+                ${p.address?`<div style="grid-column:1/-1">Address: ${p.address}</div>`:''}
+                ${p.paymentId?`<div style="grid-column:1/-1">
+                  <span style="background:var(--green-bg);color:var(--green);padding:2px 8px;border-radius:4px;font-size:11px;font-weight:500">
+                    Payment: Square — ${p.paymentId}
+                  </span>
+                </div>`:''}
+                ${p.coupon?`<div style="grid-column:1/-1">Coupon: ${p.coupon}</div>`:''}
+              </div>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>`:'<div style="text-align:center;color:var(--text3);font-size:13px;padding:20px">No orders yet</div>'}
+    `;
+  }catch(e){
+    document.getElementById('cust-detail-body').innerHTML=`<div class="empty"><p style="color:var(--red)">Failed: ${e.message}</p></div>`;
+  }
 }
 
 /* ─── OFFERS ─── */
