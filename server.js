@@ -15,6 +15,31 @@ const API_KEY     = process.env.ERP_API_KEY    || 'df4ffcff00dcb5d';
 const API_SECRET  = process.env.ERP_API_SECRET || '054316891a5f19f';
 const AUTH_HEADER = `token ${API_KEY}:${API_SECRET}`;
 
+// ─── HOMEPAGE CURATION (persisted to homepage.json) ──────────────────────────
+const HOMEPAGE_FILE = path.join(__dirname, 'homepage.json');
+
+function readHomepage() {
+  try { return JSON.parse(fs.readFileSync(HOMEPAGE_FILE, 'utf8')); }
+  catch(e) { return { most_loved: [], new_arrivals: [] }; }
+}
+
+function writeHomepage(data) {
+  fs.writeFileSync(HOMEPAGE_FILE, JSON.stringify(data, null, 2));
+}
+
+async function handleHomepageGet(req, res) {
+  jsonRes(res, 200, readHomepage());
+}
+
+async function handleHomepageSave(req, res) {
+  const body = JSON.parse(await readBody(req));
+  const { most_loved, new_arrivals } = body;
+  if (!Array.isArray(most_loved) || !Array.isArray(new_arrivals))
+    return jsonRes(res, 400, { error: 'most_loved and new_arrivals must be arrays' });
+  writeHomepage({ most_loved, new_arrivals });
+  jsonRes(res, 200, { success: true });
+}
+
 // ─── SESSION STORE (persisted to sessions.json) ───────────────────────────────
 const SESSIONS_FILE = path.join(__dirname, 'sessions.json');
 const sessions = new Map();
@@ -290,10 +315,19 @@ async function handleCustomerProfile(req, res) {
 async function handleOffers(req, res) {
   try {
     const today  = new Date().toISOString().split('T')[0];
-    const fields = encodeURIComponent(JSON.stringify(["name","coupon_code","coupon_type","discount_percentage","minimum_amount","valid_from","valid_upto","description"]));
-    const filters = encodeURIComponent(JSON.stringify([["valid_upto",">=",today]]));
-    const r = await erpAdmin('GET', `/api/resource/Coupon Code?fields=${fields}&filters=${filters}&limit=20`);
-    jsonRes(res, 200, r.body);
+    // Avoid discount_percentage in list query — blocked by Frappe security
+    const fields  = encodeURIComponent(JSON.stringify(["name","coupon_code","coupon_type","minimum_amount","valid_from","valid_upto","description"]));
+    // No date filter — fetch all, filter expired in code (handles coupons with no expiry date)
+    const r = await erpAdmin('GET', `/api/resource/Coupon Code?fields=${fields}&limit=50`);
+    const all = r.body?.data || [];
+    // Keep coupons that have no expiry OR expiry is today or later
+    const list = all.filter(c => !c.valid_upto || c.valid_upto >= today);
+
+    // Fetch full docs in parallel to get discount_percentage
+    const full = await Promise.all(
+      list.map(c => erpAdmin('GET', `/api/resource/Coupon Code/${encodeURIComponent(c.name)}`).then(d => d.body?.data || c).catch(() => c))
+    );
+    jsonRes(res, 200, { data: full });
   } catch (e) {
     jsonRes(res, 200, { data: [] });
   }
@@ -306,12 +340,20 @@ async function handleCouponValidate(req, res) {
 
   try {
     const today  = new Date().toISOString().split('T')[0];
-    const fields = encodeURIComponent(JSON.stringify(["name","coupon_code","coupon_type","discount_percentage","minimum_amount"]));
-    const filters = encodeURIComponent(JSON.stringify([["coupon_code","=",code],["valid_upto",">=",today]]));
+    // Step 1: find the coupon by code (avoid discount_percentage in list query — blocked by Frappe)
+    const fields  = encodeURIComponent(JSON.stringify(["name","coupon_code","coupon_type","minimum_amount","valid_upto"]));
+    const filters = encodeURIComponent(JSON.stringify([["coupon_code","=",code]]));
     const r = await erpAdmin('GET', `/api/resource/Coupon Code?fields=${fields}&filters=${filters}&limit=1`);
-    const coupon = r.body?.data?.[0];
+    const hit = r.body?.data?.[0];
 
-    if (!coupon) return jsonRes(res, 404, { error: 'Invalid or expired coupon code' });
+    if (!hit) return jsonRes(res, 404, { error: 'Invalid coupon code' });
+    // Check expiry in code — coupons with no valid_upto are always valid
+    if (hit.valid_upto && hit.valid_upto < today) return jsonRes(res, 404, { error: 'This coupon code has expired' });
+
+    // Step 2: fetch full document to get discount_percentage
+    const docRes = await erpAdmin('GET', `/api/resource/Coupon Code/${encodeURIComponent(hit.name)}`);
+    const coupon = docRes.body?.data || hit;
+
     if (coupon.minimum_amount && parseFloat(amount) < coupon.minimum_amount) {
       return jsonRes(res, 400, { error: `Minimum order $${coupon.minimum_amount} required for this coupon` });
     }
@@ -323,6 +365,80 @@ async function handleCouponValidate(req, res) {
     jsonRes(res, 200, { valid: true, coupon, discount });
   } catch (e) {
     jsonRes(res, 500, { error: 'Could not validate coupon' });
+  }
+}
+
+// ─── COUPON CREATE / DELETE ───────────────────────────────────────────────────
+async function handleCouponCreate(req, res) {
+  const body = JSON.parse(await readBody(req));
+  const { coupon_code, discount_percentage, minimum_amount, valid_from, valid_upto, description } = body;
+
+  if (!coupon_code || !discount_percentage || !valid_upto)
+    return jsonRes(res, 400, { error: 'coupon_code, discount_percentage, and valid_upto are required' });
+
+  try {
+    const today = new Date().toISOString().split('T')[0];
+
+    // Get company name (needed for Pricing Rule)
+    const compRes = await erpAdmin('GET', '/api/resource/Company?fields=["name"]&limit=1');
+    const company = compRes.body?.data?.[0]?.name || '';
+
+    // Step 1: Create a Pricing Rule (ERPNext requires this linked to Coupon Code)
+    const prRes = await erpAdmin('POST', '/api/resource/Pricing Rule', {
+      title: `Coupon: ${coupon_code}`,
+      apply_on: 'Transaction',
+      price_or_product_discount: 'Price',
+      rate_or_discount: 'Discount Percentage',
+      discount_percentage: parseFloat(discount_percentage),
+      selling: 1,
+      company,
+      valid_from: valid_from || today,
+      valid_upto,
+    });
+
+    if (!prRes.body?.data?.name)
+      return jsonRes(res, 500, { error: prRes.body?.message || 'Failed to create pricing rule' });
+
+    const pricing_rule = prRes.body.data.name;
+
+    // Step 2: Create the Coupon Code linked to the Pricing Rule
+    const cpRes = await erpAdmin('POST', '/api/resource/Coupon Code', {
+      coupon_code,
+      coupon_type: 'Percentage',
+      pricing_rule,
+      discount_percentage: parseFloat(discount_percentage),
+      minimum_amount: minimum_amount ? parseFloat(minimum_amount) : 0,
+      valid_from: valid_from || today,
+      valid_upto,
+      description: description || `${discount_percentage}% discount`,
+    });
+
+    if (!cpRes.body?.data?.name)
+      return jsonRes(res, 500, { error: cpRes.body?.message || 'Failed to create coupon code' });
+
+    jsonRes(res, 200, { success: true, coupon: cpRes.body.data });
+  } catch (e) {
+    jsonRes(res, 500, { error: e.message || 'Failed to create coupon' });
+  }
+}
+
+async function handleCouponDelete(req, res) {
+  const body = JSON.parse(await readBody(req));
+  const { name } = body;
+  if (!name) return jsonRes(res, 400, { error: 'name required' });
+  try {
+    // Also fetch the linked pricing rule so we can delete it
+    const docRes = await erpAdmin('GET', `/api/resource/Coupon Code/${encodeURIComponent(name)}`);
+    const pricingRule = docRes.body?.data?.pricing_rule;
+
+    await erpAdmin('DELETE', `/api/resource/Coupon Code/${encodeURIComponent(name)}`);
+
+    if (pricingRule)
+      await erpAdmin('DELETE', `/api/resource/Pricing Rule/${encodeURIComponent(pricingRule)}`).catch(() => {});
+
+    jsonRes(res, 200, { success: true });
+  } catch (e) {
+    jsonRes(res, 500, { error: e.message || 'Failed to delete coupon' });
   }
 }
 
@@ -462,11 +578,23 @@ const server = http.createServer((req, res) => {
   if (pathname === '/api/customer/profile' && req.method === 'POST')
     return handleCustomerProfile(req, res).catch(e => jsonRes(res, 500, { error: e.message }));
 
+  if (pathname === '/api/homepage/sections' && req.method === 'GET')
+    return handleHomepageGet(req, res);
+
+  if (pathname === '/api/homepage/sections' && req.method === 'POST')
+    return handleHomepageSave(req, res).catch(e => jsonRes(res, 500, { error: e.message }));
+
   if (pathname === '/api/offers'          && req.method === 'GET')
     return handleOffers(req, res).catch(e => jsonRes(res, 200, { data: [] }));
 
   if (pathname === '/api/coupon/validate' && req.method === 'POST')
     return handleCouponValidate(req, res).catch(e => jsonRes(res, 500, { error: e.message }));
+
+  if (pathname === '/api/coupon/create'   && req.method === 'POST')
+    return handleCouponCreate(req, res).catch(e => jsonRes(res, 500, { error: e.message }));
+
+  if (pathname === '/api/coupon/delete'   && req.method === 'POST')
+    return handleCouponDelete(req, res).catch(e => jsonRes(res, 500, { error: e.message }));
 
   if (pathname === '/api/orders/create'   && req.method === 'POST')
     return handleCreateOrder(req, res).catch(e => jsonRes(res, 500, { error: e.message }));

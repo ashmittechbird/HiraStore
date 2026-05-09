@@ -1042,14 +1042,55 @@
           grid.innerHTML = data.data.map((item, i) => buildCard(item, i)).join('');
           attachCardListeners(grid);
         } catch(err) {
-          try { await loadFromLocalJSON(grid, loading, limitCount); } 
+          try { await loadFromLocalJSON(grid, loading, limitCount); }
           catch(e2) { if (loading) loading.innerHTML = 'Could not load collection.'; }
         }
       }
-      
-      document.addEventListener('DOMContentLoaded', () => {
-        loadProducts('productsGrid', '8', 'modified desc');
-        loadProducts('newArrivalsGrid', '4', 'creation desc');
+
+      async function loadCuratedSection(gridId, itemIds) {
+        var grid = document.getElementById(gridId);
+        if (!grid) return;
+        if (!itemIds || itemIds.length === 0) throw new Error('empty');
+        var params = new URLSearchParams({
+          fields: JSON.stringify(FIELDS),
+          filters: JSON.stringify([['name','in',itemIds],['disabled','=',0]]),
+          limit_page_length: itemIds.length
+        });
+        var res = await fetch(ERP_URL + '/erp/api/resource/Item?' + params, { headers: { Accept: 'application/json' } });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        var data = await res.json();
+        if (!data.data || data.data.length === 0) throw new Error('No items');
+        // Preserve the order the admin chose
+        var map = {};
+        data.data.forEach(function(i) { map[i.name] = i; });
+        var ordered = itemIds.map(function(id) { return map[id]; }).filter(Boolean);
+        grid.innerHTML = ordered.map(function(item, i) { return buildCard(item, i); }).join('');
+        attachCardListeners(grid);
+      }
+
+      document.addEventListener('DOMContentLoaded', async function() {
+        try {
+          var sections = await fetch('/api/homepage/sections').then(function(r) { return r.json(); });
+          // Most Loved — use curated list if set, else fallback to auto sort
+          if (sections.most_loved && sections.most_loved.length > 0) {
+            loadCuratedSection('productsGrid', sections.most_loved).catch(function() {
+              loadProducts('productsGrid', '8', 'modified desc');
+            });
+          } else {
+            loadProducts('productsGrid', '8', 'modified desc');
+          }
+          // New Arrivals — use curated list if set, else fallback
+          if (sections.new_arrivals && sections.new_arrivals.length > 0) {
+            loadCuratedSection('newArrivalsGrid', sections.new_arrivals).catch(function() {
+              loadProducts('newArrivalsGrid', '4', 'creation desc');
+            });
+          } else {
+            loadProducts('newArrivalsGrid', '4', 'creation desc');
+          }
+        } catch(e) {
+          loadProducts('productsGrid', '8', 'modified desc');
+          loadProducts('newArrivalsGrid', '4', 'creation desc');
+        }
         
         // Hero Slider
         const heroImgs = document.querySelectorAll('.hero-slider .hero-img');

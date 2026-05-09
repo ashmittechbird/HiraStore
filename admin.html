@@ -588,6 +588,10 @@ td{padding:12px 14px;font-size:13px;vertical-align:middle}
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><circle cx="7" cy="7" r="1.5" fill="currentColor"/></svg>
         Products
       </div>
+      <div class="sb-item" data-page="homepage" onclick="navTo('homepage',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        Homepage
+      </div>
       <div class="sb-item" data-page="orders" onclick="navTo('orders',this)">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg>
         Orders
@@ -807,6 +811,47 @@ td{padding:12px 14px;font-size:13px;vertical-align:middle}
         <div class="card">
           <div class="card-hd"><h2>All Customers</h2></div>
           <div id="customers-container"><div class="loading-overlay"><div class="spin"></div><p>Loading customers…</p></div></div>
+        </div>
+      </div>
+
+      <!-- ══ HOMEPAGE PAGE ══ -->
+      <div class="page" id="page-homepage">
+        <div class="toolbar" style="justify-content:space-between;align-items:center">
+          <div style="font-size:13px;color:var(--text2)">Select which products appear in each section on the home page</div>
+          <div style="display:flex;gap:10px">
+            <button class="btn btn-ghost btn-sm" onclick="loadHomepage()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+              Refresh
+            </button>
+            <button class="btn btn-gold btn-sm" onclick="saveHomepage()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+              Save Homepage
+            </button>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+          <!-- Most Loved -->
+          <div class="card">
+            <div class="card-hd" style="display:flex;justify-content:space-between;align-items:center">
+              <h2>Most Loved Pieces</h2>
+              <span id="ml-count" style="font-size:12px;color:var(--text2);font-weight:400">0 selected</span>
+            </div>
+            <div class="card-body" style="padding:12px">
+              <div style="font-size:12px;color:var(--text2);margin-bottom:12px;padding:0 4px">Check the products you want to show in this section (shown in order selected)</div>
+              <div id="hp-most-loved" style="display:flex;flex-direction:column;gap:8px"><div class="loading-overlay"><div class="spin"></div><p>Loading…</p></div></div>
+            </div>
+          </div>
+          <!-- New Arrivals -->
+          <div class="card">
+            <div class="card-hd" style="display:flex;justify-content:space-between;align-items:center">
+              <h2>New Arrivals</h2>
+              <span id="na-count" style="font-size:12px;color:var(--text2);font-weight:400">0 selected</span>
+            </div>
+            <div class="card-body" style="padding:12px">
+              <div style="font-size:12px;color:var(--text2);margin-bottom:12px;padding:0 4px">Check the products you want to show in this section (shown in order selected)</div>
+              <div id="hp-new-arrivals" style="display:flex;flex-direction:column;gap:8px"><div class="loading-overlay"><div class="spin"></div><p>Loading…</p></div></div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -1032,6 +1077,7 @@ function bootApp(){
   loadOrders();
   loadCustomers();
   loadOffers();
+  loadHomepage();
 }
 
 function setConnStatus(ok){
@@ -1045,7 +1091,7 @@ function navTo(page,el){
   if(el) el.classList.add('active');
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
-  const titles={dashboard:'Dashboard',products:'Products',orders:'Orders',customers:'Customers',offers:'Offers & Coupons',settings:'Settings'};
+  const titles={dashboard:'Dashboard',products:'Products',homepage:'Homepage Sections',orders:'Orders',customers:'Customers',offers:'Offers & Coupons',settings:'Settings'};
   document.getElementById('page-title').textContent=titles[page]||page;
 }
 
@@ -1450,9 +1496,12 @@ async function loadOffers(){
   el.innerHTML='<div class="loading-overlay"><div class="spin"></div><p>Loading offers…</p></div>';
   try{
     const today=new Date().toISOString().split('T')[0];
-    const fields=JSON.stringify(["name","coupon_code","coupon_type","discount_percentage","minimum_amount","valid_from","valid_upto","description"]);
+    const fields=JSON.stringify(["name","coupon_code","coupon_type","minimum_amount","valid_from","valid_upto","description"]);
     const res=await frappe('GET',`/api/resource/Coupon Code?fields=${encodeURIComponent(fields)}&limit=50&order_by=creation desc`);
-    allOffers=res.data||[];
+    const list=res.data||[];
+    // Fetch full docs in parallel to get discount_percentage (blocked in list queries by Frappe)
+    const full=await Promise.all(list.map(c=>frappe('GET',`/api/resource/Coupon Code/${encodeURIComponent(c.name)}`).then(d=>d.data||c).catch(()=>c)));
+    allOffers=full;
     renderOffers(allOffers);
   }catch(e){
     el.innerHTML=`<div class="empty"><div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><circle cx="7" cy="7" r="1.5" fill="currentColor"/></svg></div><h3>No coupon codes</h3><p>${e.message}</p></div>`;
@@ -1498,16 +1547,12 @@ async function createCoupon(){
   if(!code||!pct||!upto){toast('Code, discount % and valid until are required','error');return;}
 
   try{
-    await frappe('POST','/api/resource/Coupon Code',{
-      coupon_code:          code,
-      coupon_type:          'Percentage',
-      discount_percentage:  parseFloat(pct),
-      minimum_amount:       min?parseFloat(min):0,
-      valid_from:           from||new Date().toISOString().split('T')[0],
-      valid_upto:           upto,
-      description:          desc||`${pct}% discount`,
-      is_use_count_required:0,
-    });
+    // Route through server proxy — handles Pricing Rule + Coupon Code creation in ERPNext
+    const r=await fetch('/api/coupon/create',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({coupon_code:code,discount_percentage:parseFloat(pct),minimum_amount:min?parseFloat(min):0,
+        valid_from:from||new Date().toISOString().split('T')[0],valid_upto:upto,description:desc||`${pct}% discount`})});
+    const data=await r.json();
+    if(!r.ok)throw new Error(data.error||'Failed');
     toast('Coupon code created: '+code,'success');
     document.getElementById('o-code').value='';
     document.getElementById('o-pct').value='';
@@ -1522,7 +1567,9 @@ async function createCoupon(){
 async function deleteCoupon(name){
   if(!confirm('Delete coupon "'+name+'"?'))return;
   try{
-    await frappe('DELETE','/api/resource/Coupon Code/'+encodeURIComponent(name));
+    const r=await fetch('/api/coupon/delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name})});
+    const data=await r.json();
+    if(!r.ok)throw new Error(data.error||'Failed');
     toast('Coupon deleted','success');
     loadOffers();
   }catch(e){toast('Failed: '+e.message,'error');}
@@ -1634,6 +1681,113 @@ if(zone){
   if(CFG.url) document.getElementById('login-url').value=CFG.url;
   if(CFG.key) document.getElementById('login-key').value=CFG.key;
 })();
+
+/* ─── HOMEPAGE CURATION ─────────────────────────────────────────────────────── */
+let hpAllItems = [];       // all items from ERPNext
+let hpMostLoved = [];      // current selected item IDs for Most Loved
+let hpNewArrivals = [];    // current selected item IDs for New Arrivals
+
+async function loadHomepage() {
+  document.getElementById('hp-most-loved').innerHTML = '<div class="loading-overlay"><div class="spin"></div><p>Loading…</p></div>';
+  document.getElementById('hp-new-arrivals').innerHTML = '<div class="loading-overlay"><div class="spin"></div><p>Loading…</p></div>';
+
+  // Load items and saved selections independently so one failure doesn't block the other
+  try {
+    const fields = encodeURIComponent(JSON.stringify(["name","item_name","image","standard_rate","item_group"]));
+    const filters = encodeURIComponent(JSON.stringify([["disabled","=",0]]));
+    const itemsRes = await frappe('GET', `/api/resource/Item?fields=${fields}&filters=${filters}&limit=200&order_by=item_name%20asc`);
+    hpAllItems = itemsRes.data || [];
+  } catch(e) {
+    document.getElementById('hp-most-loved').innerHTML = '<p style="color:var(--red);padding:12px">Failed to load products: ' + e.message + '</p>';
+    document.getElementById('hp-new-arrivals').innerHTML = '<p style="color:var(--red);padding:12px">Failed to load products: ' + e.message + '</p>';
+    return;
+  }
+
+  try {
+    const r = await fetch('/api/homepage/sections');
+    const text = await r.text();
+    const sections = JSON.parse(text);
+    hpMostLoved = sections.most_loved || [];
+    hpNewArrivals = sections.new_arrivals || [];
+  } catch(e) {
+    // Server not restarted yet or no selections saved — use empty defaults
+    hpMostLoved = [];
+    hpNewArrivals = [];
+  }
+
+  renderHpSection('hp-most-loved', 'ml-count', hpMostLoved);
+  renderHpSection('hp-new-arrivals', 'na-count', hpNewArrivals);
+}
+
+function renderHpSection(containerId, countId, selectedIds) {
+  const el = document.getElementById(containerId);
+  const isML = containerId === 'hp-most-loved';
+
+  if (!hpAllItems.length) {
+    el.innerHTML = '<p style="color:var(--text2);padding:12px;text-align:center">No products found</p>';
+    return;
+  }
+
+  // Sort: selected items first (in their chosen order), then rest alphabetically
+  const selected = selectedIds.map(id => hpAllItems.find(i => i.name === id)).filter(Boolean);
+  const unselected = hpAllItems.filter(i => !selectedIds.includes(i.name));
+  const sorted = [...selected, ...unselected];
+
+  el.innerHTML = sorted.map(item => {
+    const checked = selectedIds.includes(item.name);
+    const img = item.image
+      ? (item.image.startsWith('http') ? item.image : (CFG.url + item.image))
+      : 'https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=100&q=70';
+    const price = item.standard_rate ? '$' + Number(item.standard_rate).toLocaleString('en-US') : '';
+    return `<label style="display:flex;align-items:center;gap:12px;padding:8px 10px;border-radius:8px;cursor:pointer;border:1.5px solid ${checked ? 'var(--gold)' : 'var(--border)'};background:${checked ? 'var(--gold-xl)' : 'transparent'};transition:all .15s" onmouseenter="this.style.background=this.querySelector('input').checked?'var(--gold-xl)':'var(--surface)'" onmouseleave="this.style.background=this.querySelector('input').checked?'var(--gold-xl)':'transparent'">
+      <input type="checkbox" ${checked ? 'checked' : ''} onchange="toggleHpItem('${item.name}','${isML ? 'ml' : 'na'}',this)" style="display:none"/>
+      <img src="${img}" alt="" style="width:44px;height:44px;object-fit:cover;border-radius:6px;flex-shrink:0;border:1px solid var(--border)"/>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:500;color:var(--text1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${item.item_name || item.name}</div>
+        <div style="font-size:11px;color:var(--text2)">${item.item_group || ''} ${price ? '· ' + price : ''}</div>
+      </div>
+      <div style="width:20px;height:20px;border-radius:50%;border:2px solid ${checked ? 'var(--gold)' : 'var(--border)'};background:${checked ? 'var(--gold)' : 'transparent'};display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s">
+        ${checked ? '<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>' : ''}
+      </div>
+    </label>`;
+  }).join('');
+
+  updateHpCount(countId, selectedIds.length);
+}
+
+function toggleHpItem(itemId, section, checkbox) {
+  const arr = section === 'ml' ? hpMostLoved : hpNewArrivals;
+  const countId = section === 'ml' ? 'ml-count' : 'na-count';
+  const idx = arr.indexOf(itemId);
+  if (idx === -1) arr.push(itemId);
+  else arr.splice(idx, 1);
+  // Re-render just this section
+  renderHpSection(section === 'ml' ? 'hp-most-loved' : 'hp-new-arrivals', countId, arr);
+}
+
+function updateHpCount(countId, n) {
+  document.getElementById(countId).textContent = n + ' selected';
+}
+
+async function saveHomepage() {
+  try {
+    const r = await fetch('/api/homepage/sections', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ most_loved: hpMostLoved, new_arrivals: hpNewArrivals })
+    });
+    const text = await r.text();
+    if (!r.ok) {
+      let msg = text;
+      try { msg = JSON.parse(text).error || text; } catch(e) {}
+      if (text === 'Not found') msg = 'Server not updated — please restart server.js (Ctrl+C then node server.js)';
+      throw new Error(msg);
+    }
+    toast('Homepage sections saved!', 'success');
+  } catch(e) {
+    toast('Failed to save: ' + e.message, 'error');
+  }
+}
 </script>
   <script>
   (function(){

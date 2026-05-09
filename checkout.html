@@ -25,7 +25,7 @@
 
     /* NAV */
     .nav{display:flex;align-items:center;justify-content:space-between;padding:0 40px;height:64px;background:var(--white);border-bottom:1px solid var(--border-soft);position:sticky;top:0;z-index:100}
-    .nav-logo{font-family:var(--font-display);font-size:1.35rem;color:var(--brand);text-decoration:none;letter-spacing:.02em}
+    .nav-logo{text-decoration:none;display:flex;align-items:center}.nav-logo img{height:48px;width:auto;filter:contrast(1.2)}
     .nav-back{font-size:13px;color:var(--text-light);text-decoration:none;display:flex;align-items:center;gap:6px;transition:color .2s}
     .nav-back:hover{color:var(--brand)}
     .nav-back svg{width:16px;height:16px}
@@ -102,7 +102,7 @@
 <body>
 
 <nav class="nav">
-  <a href="index.html" class="nav-logo">The Hira Store</a>
+  <a href="index.html" class="nav-logo"><img src="https://wearparts.norework.in/wp-content/uploads/2023/09/Hira-1.png" alt="The Hira Store" /></a>
   <a href="cart.html" class="nav-back">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
     Back to Cart
