@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
@@ -60,8 +60,8 @@
 <body>
 
 <nav class="nav">
-  <a href="index.html" class="nav-logo"><img src="https://wearparts.norework.in/wp-content/uploads/2023/09/Hira-1.png" alt="The Hira Store" /></a>
-  <a href="login.html" class="nav-back">
+  <a href="/" class="nav-logo"><img src="https://wearparts.norework.in/wp-content/uploads/2023/09/Hira-1.png" alt="The Hira Store" /></a>
+  <a href="/login" class="nav-back">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
     Sign In
   </a>
@@ -114,7 +114,7 @@
     </div>
 
     <div class="auth-footer">
-      <p>Already have an account? <a href="login.html">Sign in</a></p>
+      <p>Already have an account? <a href="/login">Sign in</a></p>
     </div>
   </div>
 </div>
@@ -183,7 +183,7 @@
         localStorage.setItem('hs_user_email',    loginData.email);
         localStorage.setItem('hs_user_name',     loginData.fullName);
       }
-      setTimeout(() => { window.location.href = 'account.html'; }, 1400);
+      setTimeout(() => { window.location.href = '/account'; }, 1400);
     } catch (e) {
       showError(e.message);
       btn.disabled = false; spin.style.display = 'none'; txt.textContent = 'Create Account';

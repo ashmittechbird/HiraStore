@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
@@ -41,6 +41,13 @@
 
     .page-wrap{max-width:1040px;margin:0 auto;padding:40px 24px;display:grid;grid-template-columns:1fr 380px;gap:32px;align-items:start}
     @media(max-width:768px){.page-wrap{grid-template-columns:1fr;padding:24px 16px}.order-col{order:-1}}
+    @media(max-width:500px){
+      .nav{padding:0 16px}
+      .steps{padding:16px 0 8px;overflow-x:auto;justify-content:flex-start;padding-left:12px}
+      .step{padding:0 10px;font-size:12px;white-space:nowrap}
+      .step-div{width:20px}
+      .step-num{width:20px;height:20px;font-size:10px}
+    }
 
     .card{background:var(--white);border-radius:10px;border:1px solid var(--border-soft);box-shadow:var(--shadow)}
     .card-head{padding:24px 28px 20px;border-bottom:1px solid var(--border-soft)}
@@ -114,8 +121,8 @@
 <body>
 
 <nav class="nav">
-  <a href="index.html" class="nav-logo"><img src="https://wearparts.norework.in/wp-content/uploads/2023/09/Hira-1.png" alt="The Hira Store" /></a>
-  <a href="checkout.html" class="nav-back">
+  <a href="/" class="nav-logo"><img src="https://wearparts.norework.in/wp-content/uploads/2023/09/Hira-1.png" alt="The Hira Store" /></a>
+  <a href="/checkout" class="nav-back">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
     Back to Details
   </a>
@@ -183,7 +190,7 @@
           <div class="ship-to-name" id="shipName">—</div>
           <div class="ship-to-addr" id="shipAddr">—</div>
         </div>
-        <a href="checkout.html" style="font-size:13px;color:var(--brand);text-decoration:none">Edit details</a>
+        <a href="/checkout" style="font-size:13px;color:var(--brand);text-decoration:none">Edit details</a>
       </div>
     </div>
     <div class="card">
@@ -222,11 +229,13 @@
   const SQUARE_CONFIGURED = !SQUARE_APP_ID.includes('REPLACE_WITH') && !SQUARE_LOCATION_ID.includes('REPLACE_WITH');
   // ───────────────────────────────────────────────────────────────────────────
 
+  if (!localStorage.getItem('hs_session_token')) { location.href = '/login?return=/checkout'; }
+
   const cart     = JSON.parse(localStorage.getItem('hirastore_cart') || '[]');
   const customer = JSON.parse(sessionStorage.getItem('hs_checkout') || 'null');
 
   if (!cart.length)  { location.href = '/cart';     }
-  if (!customer)     { location.href = '/checkout';  }
+  if (!customer)     { location.href = '/checkout'; }
 
   const subtotalAmt = cart.reduce((s, i) => s + (i.price_usd || i.price || 0) * (i.qty || 1), 0);
   const discountAmt = parseFloat(customer?.discount || 0);
@@ -329,9 +338,9 @@
         </p>
         <ol style="font-size:12px;color:#6b4500;padding-left:18px;line-height:1.9">
           <li>Go to <a href="https://developer.squareup.com/apps" target="_blank" style="color:#005969">developer.squareup.com/apps</a> → create an app</li>
-          <li>Copy <strong>Sandbox Application ID</strong> → paste in payment.html as <code>SQUARE_APP_ID</code></li>
+          <li>Copy <strong>Sandbox Application ID</strong> → paste in /payment as <code>SQUARE_APP_ID</code></li>
           <li>Copy <strong>Sandbox Access Token</strong> → add as Vercel env var <code>SQUARE_ACCESS_TOKEN</code></li>
-          <li>Copy <strong>Location ID</strong> → add as env var <code>SQUARE_LOCATION_ID</code> and update <code>SQUARE_LOCATION_ID</code> in payment.html</li>
+          <li>Copy <strong>Location ID</strong> → add as env var <code>SQUARE_LOCATION_ID</code> and update <code>SQUARE_LOCATION_ID</code> in /payment</li>
         </ol>
         <div style="margin-top:10px;padding:8px 12px;background:rgba(0,0,0,.04);border-radius:6px;font-size:11px;color:#8a5800">
           🧪 <strong>Demo mode active</strong> — clicking Pay Now simulates a successful order without charging any card.

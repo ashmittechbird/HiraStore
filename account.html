@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
@@ -108,18 +108,58 @@
 
     .toast-msg{position:fixed;bottom:24px;right:24px;background:var(--brand);color:#fff;padding:12px 18px;border-radius:8px;font-size:13px;box-shadow:0 4px 20px rgba(0,89,105,.25);z-index:999;opacity:0;transform:translateY(8px);transition:.25s}
     .toast-msg.show{opacity:1;transform:none}
+
+    /* RESPONSIVE NAV */
+    .hamburger{display:none;width:40px;height:40px;align-items:center;justify-content:center;background:none;border:none;cursor:pointer;padding:0}
+    .hamburger svg{width:22px;height:22px;stroke:var(--text);stroke-width:1.8;fill:none}
+    .mob-drawer{position:fixed;inset:0;z-index:500;pointer-events:none}
+    .mob-drawer.open{pointer-events:auto}
+    .mob-overlay{position:absolute;inset:0;background:rgba(0,0,0,.4);opacity:0;transition:opacity .3s}
+    .mob-drawer.open .mob-overlay{opacity:1}
+    .mob-panel{position:absolute;top:0;left:0;bottom:0;width:260px;background:var(--white);transform:translateX(-100%);transition:transform .35s cubic-bezier(.22,1,.36,1);padding:24px 0;box-shadow:4px 0 24px rgba(0,0,0,.1)}
+    .mob-drawer.open .mob-panel{transform:none}
+    .mob-close{display:flex;justify-content:flex-end;padding:0 16px 20px}
+    .mob-close button{background:none;border:none;cursor:pointer;padding:6px}
+    .mob-close button svg{width:20px;height:20px;stroke:var(--text);stroke-width:1.8;fill:none}
+    .mob-links a,.mob-links button{display:block;width:100%;text-align:left;padding:14px 24px;font-size:14px;color:var(--text);text-decoration:none;border-bottom:1px solid var(--border-soft);background:none;border-left:none;border-right:none;border-top:none;font-family:var(--font-body);cursor:pointer;transition:background .15s}
+    .mob-links a:hover,.mob-links button:hover{background:var(--ivory);color:var(--brand)}
+    .orders-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+    @media(max-width:600px){
+      .nav{padding:0 16px}
+      .nav-links{display:none}
+      .hamburger{display:flex}
+    }
+    @media(max-width:480px){
+      .side-nav-item span.label{display:none}
+      .side-nav-item{justify-content:center;padding:13px}
+      .account-sidebar .user-block{padding:16px}
+    }
   </style>
 </head>
 <body>
 
 <nav class="nav">
-  <a href="index.html" class="nav-logo"><img src="https://wearparts.norework.in/wp-content/uploads/2023/09/Hira-1.png" alt="The Hira Store" /></a>
+  <button class="hamburger" id="acctHamburger" aria-label="Menu">
+    <svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+  </button>
+  <a href="/" class="nav-logo"><img src="https://wearparts.norework.in/wp-content/uploads/2023/09/Hira-1.png" alt="The Hira Store" /></a>
   <div class="nav-links">
-    <a href="shop.html" class="nav-link">Shop</a>
-    <a href="cart.html" class="nav-link">Cart</a>
+    <a href="/shop" class="nav-link">Shop</a>
+    <a href="/cart" class="nav-link">Cart</a>
     <button class="nav-signout" onclick="signOut()">Sign Out</button>
   </div>
 </nav>
+<div class="mob-drawer" id="acctDrawer">
+  <div class="mob-overlay" id="acctOverlay"></div>
+  <div class="mob-panel">
+    <div class="mob-close"><button id="acctClose"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+    <div class="mob-links">
+      <a href="/shop">Shop All</a>
+      <a href="/cart">Cart</a>
+      <button onclick="signOut()">Sign Out</button>
+    </div>
+  </div>
+</div>
 
 <div class="page-wrap">
   <!-- SIDEBAR -->
@@ -229,7 +269,7 @@
 
   // Redirect to login if not authenticated
   if (!TOKEN) {
-    window.location.href = 'login.html?return=account.html';
+    window.location.href = '/login?return=/account';
   }
 
   const headers = { 'X-Session-Token': TOKEN };
@@ -256,7 +296,7 @@
       if (saved.phone)   document.getElementById('pf-phone').value   = saved.phone;
     } catch (e) {
       localStorage.removeItem('hs_session_token');
-      window.location.href = 'login.html?return=account.html';
+      window.location.href = '/login?return=/account';
     }
   }
 
@@ -285,7 +325,7 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>
           <h3>No orders yet</h3>
           <p>Your orders will appear here after your first purchase.</p>
-          <a href="shop.html" style="color:var(--brand);font-size:13px;font-weight:500;margin-top:12px;display:inline-block">Browse Shop →</a>
+          <a href="/shop" style="color:var(--brand);font-size:13px;font-weight:500;margin-top:12px;display:inline-block">Browse Shop →</a>
         </div>`;
         return;
       }
@@ -415,7 +455,7 @@
     localStorage.removeItem('hs_session_token');
     localStorage.removeItem('hs_user_email');
     localStorage.removeItem('hs_user_name');
-    window.location.href = 'index.html';
+    window.location.href = '/';
   }
 
   // ─── TOAST ─────────────────────────────────────────────────────────────────
@@ -478,6 +518,16 @@
   function closeOrderModal() {
     document.getElementById('orderModal').style.display = 'none';
   }
+
+  // ─── MOBILE NAV ────────────────────────────────────────────────────────────
+  (function(){
+    var h=document.getElementById('acctHamburger'),d=document.getElementById('acctDrawer'),c=document.getElementById('acctClose'),o=document.getElementById('acctOverlay');
+    function open(){d.classList.add('open');document.body.style.overflow='hidden';}
+    function close(){d.classList.remove('open');document.body.style.overflow='';}
+    if(h)h.addEventListener('click',open);
+    if(c)c.addEventListener('click',close);
+    if(o)o.addEventListener('click',close);
+  })();
 
   // ─── INIT ──────────────────────────────────────────────────────────────────
   boot().then(() => loadOrders());

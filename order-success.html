@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
@@ -112,7 +112,7 @@
 <body>
 
 <nav class="nav">
-  <a href="index.html" class="nav-logo"><img src="https://wearparts.norework.in/wp-content/uploads/2023/09/Hira-1.png" alt="The Hira Store" /></a>
+  <a href="/" class="nav-logo"><img src="https://wearparts.norework.in/wp-content/uploads/2023/09/Hira-1.png" alt="The Hira Store" /></a>
 </nav>
 
 <div class="steps">
@@ -182,15 +182,15 @@
     </div>
 
     <div class="actions">
-      <a href="shop.html" class="btn-primary">Continue Shopping</a>
-      <a href="index.html" class="btn-outline">Go to Homepage</a>
+      <a href="/shop" class="btn-primary">Continue Shopping</a>
+      <a href="/" class="btn-outline">Go to Homepage</a>
     </div>
   </div>
 </div>
 
 <script>
   const data = JSON.parse(sessionStorage.getItem('hs_last_order') || 'null');
-  if (!data) { location.href = 'index.html'; }
+  if (!data) { location.href = '/'; }
 
   document.getElementById('orderNum').textContent = data.orderName;
   document.getElementById('confirmOrderInline').textContent = data.orderName;

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
@@ -42,6 +42,13 @@
     /* PRODUCT LAYOUT */
     .product-wrap{max-width:1100px;margin:0 auto;padding:32px 24px 64px;display:grid;grid-template-columns:1fr 480px;gap:48px;align-items:start}
     @media(max-width:860px){.product-wrap{grid-template-columns:1fr;gap:32px;padding:24px 16px 48px}}
+    @media(max-width:600px){
+      .nav{padding:0 16px}
+      .nav-right{gap:8px}
+      .nav-link{display:none}
+      .cart-btn{padding:6px 10px;font-size:12px}
+      .breadcrumb{padding:12px 16px 0;font-size:11px}
+    }
 
     /* IMAGE GALLERY */
     .gallery{position:sticky;top:80px}
@@ -105,11 +112,16 @@
 <body>
 
 <nav class="nav">
-  <a href="index.html" class="nav-logo"><img src="https://wearparts.norework.in/wp-content/uploads/2023/09/Hira-1.png" alt="The Hira Store" /></a>
+  <a href="/" class="nav-logo"><img src="https://wearparts.norework.in/wp-content/uploads/2023/09/Hira-1.png" alt="The Hira Store" /></a>
   <div class="nav-right">
-    <a href="shop.html" class="nav-link">Shop</a>
-    <a href="account.html" class="nav-link" id="accountLink">Account</a>
-    <a href="cart.html" class="cart-btn">
+    <a href="/shop" class="nav-link">Shop</a>
+    <a href="/account" class="nav-link" id="accountLink">Account</a>
+    <a href="/wishlist" class="nav-link" id="wishlistLink" style="display:flex;align-items:center;gap:4px;position:relative">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+      Wishlist
+      <span id="wishNavBadge" style="display:none;position:absolute;top:-6px;right:-12px;background:var(--brand);color:#fff;font-size:10px;font-weight:600;width:18px;height:18px;border-radius:50%;align-items:center;justify-content:center"></span>
+    </a>
+    <a href="/cart" class="cart-btn">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 001.98 1.61h9.72a2 2 0 001.98-1.61L23 6H6"/></svg>
       Cart
       <span class="cart-badge" id="cartBadge" style="display:none"></span>
@@ -118,8 +130,8 @@
 </nav>
 
 <div class="breadcrumb">
-  <a href="index.html">Home</a> ›
-  <a href="shop.html">Shop</a> ›
+  <a href="/">Home</a> ›
+  <a href="/shop">Shop</a> ›
   <span id="bcName">Loading…</span>
 </div>
 
@@ -193,15 +205,16 @@
   // ─── INIT ─────────────────────────────────────────────────────────────────
   async function init() {
     updateCartBadge();
+    updateWishNavBadge();
     const token = localStorage.getItem('hs_session_token');
-    document.getElementById('accountLink').href = token ? 'account.html' : 'login.html';
+    document.getElementById('accountLink').href = token ? '/account' : '/login';
 
     if (product) {
       renderProduct(product);
     } else if (prodId) {
       await fetchProduct(prodId);
     } else {
-      window.location.href = 'shop.html';
+      window.location.href = '/shop';
     }
   }
 
@@ -229,7 +242,7 @@
         description: d.description || d.custom_short_description || '',
       });
     } catch(e) {
-      document.querySelector('.product-wrap').innerHTML = '<div style="padding:48px;text-align:center;color:var(--text-light)">Product not found. <a href="shop.html" style="color:var(--brand)">Back to shop</a></div>';
+      document.querySelector('.product-wrap').innerHTML = '<div style="padding:48px;text-align:center;color:var(--text-light)">Product not found. <a href="/shop" style="color:var(--brand)">Back to shop</a></div>';
     }
   }
 
@@ -321,6 +334,15 @@
     else badge.style.display = 'none';
   }
 
+  // ─── WISHLIST NAV BADGE ───────────────────────────────────────────────────
+  function updateWishNavBadge() {
+    const count = getWishlist().length;
+    const badge = document.getElementById('wishNavBadge');
+    if (!badge) return;
+    if (count > 0) { badge.textContent = count; badge.style.display = 'flex'; }
+    else badge.style.display = 'none';
+  }
+
   // ─── WISHLIST ─────────────────────────────────────────────────────────────
   function getWishlist() {
     try { return JSON.parse(localStorage.getItem('hs_wishlist') || '[]'); } catch(e) { return []; }
@@ -338,6 +360,7 @@
     }
     localStorage.setItem('hs_wishlist', JSON.stringify(list));
     updateWishBtn();
+    updateWishNavBadge();
   }
   function updateWishBtn() {
     if (!product) return;

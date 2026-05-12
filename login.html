@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
@@ -94,8 +94,8 @@
 <body>
 
 <nav class="nav">
-  <a href="index.html" class="nav-logo"><img src="https://wearparts.norework.in/wp-content/uploads/2023/09/Hira-1.png" alt="The Hira Store" /></a>
-  <a href="index.html" class="nav-back">
+  <a href="/" class="nav-logo"><img src="https://wearparts.norework.in/wp-content/uploads/2023/09/Hira-1.png" alt="The Hira Store" /></a>
+  <a href="/" class="nav-back">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
     Back to Home
   </a>
@@ -142,8 +142,8 @@
     </div>
 
     <div class="auth-footer">
-      <p>New to The Hira Store? <a href="signup.html">Create an account</a></p>
-      <p style="margin-top:8px"><a href="shop.html">Browse Shop</a></p>
+      <p>New to The Hira Store? <a href="/signup">Create an account</a></p>
+      <p style="margin-top:8px"><a href="/shop">Browse Shop</a></p>
     </div>
   </div>
 </div>
@@ -162,7 +162,7 @@
 
   function returnUrl() {
     const p = new URLSearchParams(window.location.search);
-    return p.get('return') || 'account.html';
+    return p.get('return') || '/account';
   }
 
   async function doLogin() {
@@ -211,7 +211,7 @@
 
   function continueAsGuest() {
     const p = new URLSearchParams(window.location.search);
-    window.location.href = p.get('return') || 'checkout.html';
+    window.location.href = p.get('return') || '/checkout';
   }
 
   // Enter key submits

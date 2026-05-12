@@ -15,6 +15,22 @@ const API_KEY     = process.env.ERP_API_KEY    || 'df4ffcff00dcb5d';
 const API_SECRET  = process.env.ERP_API_SECRET || '054316891a5f19f';
 const AUTH_HEADER = `token ${API_KEY}:${API_SECRET}`;
 
+// ─── HELPERS ─────────────────────────────────────────────────────────────────
+function stripHtml(str) {
+  return String(str || '').replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
+}
+
+function parseFrappeError(body) {
+  const raw = body?.exception || body?.message || body?._server_messages || '';
+  const text = stripHtml(raw);
+  if (/common names|surnames|easy to guess|capitalization/i.test(text)) {
+    return 'Password is too weak. Use a mix of uppercase, lowercase, numbers and symbols (e.g. MyStore@123).';
+  }
+  if (/already exists/i.test(text)) return 'An account with this email already exists.';
+  if (text) return text;
+  return 'Something went wrong. Please try again.';
+}
+
 // ─── HOMEPAGE CURATION (persisted to homepage.json) ──────────────────────────
 const HOMEPAGE_FILE = path.join(__dirname, 'homepage.json');
 
@@ -248,8 +264,7 @@ async function handleSignup(req, res) {
     enabled: 1,
   });
   if (createRes.status !== 200) {
-    const msg = createRes.body?.exception || createRes.body?.message || 'Could not create account';
-    return jsonRes(res, 500, { error: msg });
+    return jsonRes(res, 400, { error: parseFrappeError(createRes.body) });
   }
 
   // Also create Customer record in ERPNext
@@ -627,11 +642,21 @@ const server = http.createServer((req, res) => {
   }
 
   // ── STATIC FILES ──
+  const mime = { '.html': 'text/html', '.css': 'text/css', '.js': 'application/javascript', '.json': 'application/json', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.svg': 'image/svg+xml', '.webp': 'image/webp' };
   let filePath = path.join(__dirname, pathname === '/' ? 'index.html' : pathname);
   fs.readFile(filePath, (err, data) => {
+    if (err && !path.extname(pathname)) {
+      // Clean URL fallback: /shop → shop.html (matches Frappe routing)
+      const htmlPath = path.join(__dirname, pathname + '.html');
+      fs.readFile(htmlPath, (err2, data2) => {
+        if (err2) { res.writeHead(404); res.end('Not found'); return; }
+        res.writeHead(200, { 'Content-Type': 'text/html' });
+        res.end(data2);
+      });
+      return;
+    }
     if (err) { res.writeHead(404); res.end('Not found'); return; }
-    const ext  = path.extname(filePath);
-    const mime = { '.html': 'text/html', '.css': 'text/css', '.js': 'application/javascript', '.json': 'application/json', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.svg': 'image/svg+xml', '.webp': 'image/webp' };
+    const ext = path.extname(filePath);
     res.writeHead(200, { 'Content-Type': mime[ext] || 'text/plain' });
     res.end(data);
   });

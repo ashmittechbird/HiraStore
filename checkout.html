@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
@@ -42,6 +42,13 @@
     /* LAYOUT */
     .page-wrap{max-width:1040px;margin:0 auto;padding:40px 24px;display:grid;grid-template-columns:1fr 380px;gap:32px;align-items:start}
     @media(max-width:768px){.page-wrap{grid-template-columns:1fr;padding:24px 16px}.order-col{order:-1}}
+    @media(max-width:500px){
+      .nav{padding:0 16px}
+      .steps{padding:16px 0 8px;overflow-x:auto;justify-content:flex-start;padding-left:12px}
+      .step{padding:0 10px;font-size:12px;white-space:nowrap}
+      .step-div{width:20px}
+      .step-num{width:20px;height:20px;font-size:10px}
+    }
 
     /* FORM CARD */
     .card{background:var(--white);border-radius:10px;border:1px solid var(--border-soft);box-shadow:var(--shadow)}
@@ -102,8 +109,8 @@
 <body>
 
 <nav class="nav">
-  <a href="index.html" class="nav-logo"><img src="https://wearparts.norework.in/wp-content/uploads/2023/09/Hira-1.png" alt="The Hira Store" /></a>
-  <a href="cart.html" class="nav-back">
+  <a href="/" class="nav-logo"><img src="https://wearparts.norework.in/wp-content/uploads/2023/09/Hira-1.png" alt="The Hira Store" /></a>
+  <a href="/cart" class="nav-back">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
     Back to Cart
   </a>
@@ -225,6 +232,27 @@
 </div>
 
 <script>
+  // ─── AUTH GUARD ────────────────────────────────────────────────────────────
+  (function authGuard() {
+    const token = localStorage.getItem('hs_session_token');
+    if (!token) {
+      window.location.href = '/login?return=/checkout';
+      return;
+    }
+    // Verify token is still valid
+    fetch('/api/auth/me', { headers: { 'X-Session-Token': token } })
+      .then(r => r.json())
+      .then(d => {
+        if (!d.email) {
+          localStorage.removeItem('hs_session_token');
+          window.location.href = '/login?return=/checkout';
+        }
+      })
+      .catch(() => {
+        // Network error — let user proceed, server will reject on submit if invalid
+      });
+  })();
+
   const cart = JSON.parse(localStorage.getItem('hirastore_cart') || '[]');
   let appliedCoupon = null;
   let discountAmount = 0;
@@ -285,7 +313,7 @@
   function renderSummary() {
     const container = document.getElementById('summaryItems');
     if (!cart.length) {
-      container.innerHTML = '<div class="empty-cart-msg">Your cart is empty. <a href="shop.html">Browse products</a></div>';
+      container.innerHTML = '<div class="empty-cart-msg">Your cart is empty. <a href="/shop">Browse products</a></div>';
       document.getElementById('subtotal').textContent   = '$0.00';
       document.getElementById('grandTotal').textContent = '$0.00';
       document.getElementById('item-count-label').textContent = '0 items';
@@ -343,8 +371,9 @@
       subtotal:   subtotal.toFixed(2),
       total:      Math.max(0, subtotal - discountAmount).toFixed(2),
     };
+    data.sessionToken = localStorage.getItem('hs_session_token') || '';
     sessionStorage.setItem('hs_checkout', JSON.stringify(data));
-    window.location.href = 'payment.html';
+    window.location.href = '/payment';
   }
 
   renderSummary();
