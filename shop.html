@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -217,6 +217,16 @@
     .reveal-delay-3 { transition-delay:0.19s; }
     .reveal-delay-4 { transition-delay:0.26s; }
 
+    /* ── OUR STORY STRIP ── */
+    .heritage-section { display: grid; grid-template-columns: 1fr 1fr; align-items: center; background: var(--surface); overflow: hidden; margin-bottom: 0; }
+    .heritage-img-wrap { position: relative; height: 100%; min-height: 460px; overflow: hidden; }
+    .heritage-img-wrap img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+    .heritage-content { padding: 80px 10%; }
+    .heritage-content .heritage-title { font-family: 'Playfair Display', serif; font-size: 30px; font-weight: 400; color: var(--text-main); margin-bottom: 20px; line-height: 1.3; }
+    .heritage-content .heritage-desc { font-size: 15px; color: var(--text-light); line-height: 1.8; margin-bottom: 32px; max-width: 400px; }
+    .btn-story { display: inline-flex; align-items: center; justify-content: center; border: 1px solid var(--text-main); color: var(--text-main); padding: 14px 40px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.15em; transition: all 0.3s; text-decoration: none; }
+    .btn-story:hover { background: var(--text-main); color: #fff; }
+
     /* ── FOOTER ── */
     footer {
       background: var(--surface);
@@ -247,17 +257,9 @@
       .products-grid, .skeleton-grid { grid-template-columns: repeat(3,1fr); }
     }
     @media (max-width: 768px) {
-      .nav { padding:0 20px; }
-      .nav-links { display:none; }
-      .page-header { padding:40px 20px 24px; }
-      .shop-toolbar, .shop-filters { padding:0 20px; }
-      .products-container { padding:0 20px 60px; }
-      .products-grid, .skeleton-grid { grid-template-columns: repeat(2,1fr); gap:16px; }
-      .footer-grid { grid-template-columns:1fr 1fr; gap:32px; }
-      footer { padding:40px 20px 24px; }
-    }
-    @media (max-width: 768px) {
       .nav { padding: 0 16px; }
+      .nav-links { display: none; }
+      .hamburger { display: flex; }
       .page-header { padding: 32px 16px 20px; }
       .shop-toolbar { padding: 0 16px; flex-wrap: wrap; gap: 10px; }
       .search-wrap { max-width: 100%; flex: 1 1 100%; }
@@ -266,13 +268,18 @@
       .shop-filters::-webkit-scrollbar { display: none; }
       .filter-btn { flex-shrink: 0; }
       .products-container { padding: 0 16px 60px; }
+      .products-grid, .skeleton-grid { grid-template-columns: repeat(2,1fr); gap: 16px; }
       footer { padding: 40px 16px 24px; }
       .footer-grid { grid-template-columns: 1fr; gap: 24px; }
+      .heritage-section { grid-template-columns: 1fr; }
+      .heritage-img-wrap { min-height: 300px; }
+      .heritage-content { padding: 48px 24px; text-align: center; }
+      .heritage-content .section-desc { margin: 0 auto 32px; }
     }
     @media (max-width: 480px) {
-      .products-grid, .skeleton-grid { grid-template-columns: repeat(2,1fr); gap:12px; }
-      .product-name { font-size:14px; }
-      .price-current { font-size:15px; }
+      .products-grid, .skeleton-grid { grid-template-columns: repeat(2,1fr); gap: 12px; }
+      .product-name { font-size: 14px; }
+      .price-current { font-size: 15px; }
     }
 
     
@@ -359,14 +366,14 @@
         <svg viewBox="0 0 24 24"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
       </button>
       <ul class="nav-links">
-        <li><a href="shop.html">Shop All</a></li>
-        <li><a href="shop.html?cat=Necklaces">Necklaces</a></li>
-        <li><a href="shop.html?cat=Earrings">Earrings</a></li>
-        <li><a href="shop.html?cat=Rings">Rings</a></li>
+        <li><a href="/shop">Shop All</a></li>
+        <li><a href="/shop?cat=Necklaces">Necklaces</a></li>
+        <li><a href="/shop?cat=Earrings">Earrings</a></li>
+        <li><a href="/shop?cat=Rings">Rings</a></li>
       </ul>
     </div>
     
-    <a href="index.html" class="nav-center nav-logo">
+    <a href="/" class="nav-center nav-logo">
       <img src="https://wearparts.norework.in/wp-content/uploads/2023/09/Hira-1.png" alt="The Hira Store" />
     </a>
     
@@ -374,11 +381,17 @@
       <button class="nav-icon" id="searchBtn" aria-label="Search">
         <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="22" y2="22"/></svg>
       </button>
-      <a href="login.html" class="nav-icon" id="accountNavBtn" aria-label="Account">
+      <a href="/login" class="nav-icon" id="accountNavBtn" aria-label="Account">
         <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
       </a>
       <div class="cart-wrap">
-        <a href="cart.html" class="nav-icon" aria-label="Cart">
+        <a href="/wishlist" class="nav-icon" aria-label="Wishlist">
+          <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+        </a>
+        <span class="cart-badge" id="wishBadge" style="display:none"></span>
+      </div>
+      <div class="cart-wrap">
+        <a href="/cart" class="nav-icon" aria-label="Cart">
           <svg viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
         </a>
         <span class="cart-badge" id="cartBadge"></span>
@@ -397,11 +410,12 @@
         </button>
       </div>
       <ul class="mobile-nav-links">
-        <li><a href="shop.html">Shop All</a></li>
-        <li><a href="shop.html?cat=Necklaces">Necklaces</a></li>
-        <li><a href="shop.html?cat=Earrings">Earrings</a></li>
-        <li><a href="shop.html?cat=Rings">Rings</a></li>
-        <li><a href="shop.html?cat=Bracelets">Bracelets</a></li>
+        <li><a href="/shop">Shop All</a></li>
+        <li><a href="/shop?cat=Necklaces">Necklaces</a></li>
+        <li><a href="/shop?cat=Earrings">Earrings</a></li>
+        <li><a href="/shop?cat=Rings">Rings</a></li>
+        <li><a href="/shop?cat=Bracelets">Bracelets</a></li>
+        <li><a href="/wishlist">Wishlist</a></li>
       </ul>
     </div>
   </div>
@@ -410,7 +424,7 @@
   <div class="page-header">
     <div class="page-header-left">
       <nav class="breadcrumb" aria-label="Breadcrumb">
-        <a href="index.html">Home</a>
+        <a href="/">Home</a>
         <span class="breadcrumb-sep">›</span>
         <span>All Products</span>
       </nav>
@@ -490,6 +504,18 @@
 
   </div>
 
+  <!-- ── OUR STORY ── -->
+  <section class="heritage-section">
+    <div class="heritage-img-wrap">
+      <img src="https://images.unsplash.com/photo-1613945407943-59cd755fd69e?w=1000&q=85" alt="Handcrafted Jewelry from Rajasthan" />
+    </div>
+    <div class="heritage-content">
+      <h2 class="heritage-title">Roots in Rajasthan,<br/>Crafted for the World</h2>
+      <p class="heritage-desc">Every piece of Hira jewelry carries the legacy of expert artisans from Rajasthan. We blend generations of traditional craftsmanship with modern design to create demi-fine jewelry that elevates your everyday style.</p>
+      <a href="/about" class="btn-story">Discover Our Story</a>
+    </div>
+  </section>
+
   <!-- ── FOOTER ── -->
   <footer role="contentinfo">
     <div class="footer-grid">
@@ -504,12 +530,12 @@
       <div class="footer-col">
         <h4>Shop</h4>
         <ul>
-          <li><a href="shop.html?cat=Rings">Rings</a></li>
-          <li><a href="shop.html?cat=Necklaces">Necklaces</a></li>
-          <li><a href="shop.html?cat=Earrings">Earrings</a></li>
-          <li><a href="shop.html?cat=Bracelets">Bracelets</a></li>
-          <li><a href="shop.html?cat=Pendants">Pendants</a></li>
-          <li><a href="shop.html">Gift Sets</a></li>
+          <li><a href="/shop?cat=Rings">Rings</a></li>
+          <li><a href="/shop?cat=Necklaces">Necklaces</a></li>
+          <li><a href="/shop?cat=Earrings">Earrings</a></li>
+          <li><a href="/shop?cat=Bracelets">Bracelets</a></li>
+          <li><a href="/shop?cat=Pendants">Pendants</a></li>
+          <li><a href="/shop">Gift Sets</a></li>
         </ul>
       </div>
       <div class="footer-col">
@@ -527,7 +553,7 @@
         <h4>Company</h4>
         <ul>
           <li><a href="#">About Us</a></li>
-          <li><a href="#">Our Story</a></li>
+          <li><a href="/about">Our Story</a></li>
           <li><a href="#">BIS Certification</a></li>
           <li><a href="#">Blog</a></li>
           <li><a href="#">Contact Us</a></li>
@@ -595,7 +621,7 @@
     (function() {
       const btn = document.getElementById('accountNavBtn');
       if (!btn) return;
-      btn.href = localStorage.getItem('hs_session_token') ? 'account.html' : 'login.html';
+      btn.href = localStorage.getItem('hs_session_token') ? '/account' : '/login';
     })();
 
     function updateCartBadge() {
@@ -603,10 +629,11 @@
         const cart = JSON.parse(localStorage.getItem('hirastore_cart') || '[]');
         const total = cart.reduce((s, c) => s + (c.qty || 1), 0);
         const badge = document.getElementById('cartBadge');
-        if (badge) badge.textContent = total > 0 ? total : '';
+        if (badge) { if (total > 0) { badge.textContent = total; badge.style.display = 'flex'; } else badge.style.display = 'none'; }
       } catch(e) {}
     }
     updateCartBadge();
+    updateWishBadge();
 
     /* ══════════════════════════════════════════════
        CATEGORY NORMALIZATION
@@ -720,7 +747,7 @@
             : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#ccc;font-size:12px;">No image</div>`
           }
           ${badge ? `<span class="product-badge">${badge}</span>` : ''}
-          <button class="product-wish" aria-label="Add ${p.name} to wishlist">
+          <button class="product-wish${getWishlist().some(x=>x.id===p.product_id)?' wished':''}" data-id="${p.product_id}" aria-label="Add ${p.name} to wishlist">
             <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
           </button>
           <div class="product-actions">
@@ -740,6 +767,30 @@
     /* ══════════════════════════════════════════════
        BIND PRODUCT INTERACTIONS
     ══════════════════════════════════════════════ */
+    /* ══════════════════════════════════════════════
+       WISHLIST HELPERS
+    ══════════════════════════════════════════════ */
+    function getWishlist() {
+      try { return JSON.parse(localStorage.getItem('hs_wishlist') || '[]'); } catch(e) { return []; }
+    }
+    function saveWishlist(list) {
+      localStorage.setItem('hs_wishlist', JSON.stringify(list));
+    }
+    function updateWishBadge() {
+      const count = getWishlist().length;
+      const badge = document.getElementById('wishBadge');
+      if (badge) {
+        badge.textContent = count > 0 ? count : '';
+        badge.style.display = count > 0 ? 'flex' : 'none';
+      }
+    }
+    function syncWishButtons(container) {
+      const list = getWishlist();
+      (container || document).querySelectorAll('.product-wish[data-id]').forEach(btn => {
+        btn.classList.toggle('wished', list.some(x => x.id === btn.dataset.id));
+      });
+    }
+
     function bindProductInteractions(container) {
       // Wishlist toggle
       container.querySelectorAll('.product-wish').forEach(btn => {
@@ -747,7 +798,19 @@
         btn._bound = true;
         btn.addEventListener('click', e => {
           e.stopPropagation();
-          btn.classList.toggle('wished');
+          const pid = btn.dataset.id;
+          const p = allProducts.find(x => x.product_id === pid);
+          const list = getWishlist();
+          const idx  = list.findIndex(x => x.id === pid);
+          if (idx >= 0) {
+            list.splice(idx, 1);
+            btn.classList.remove('wished');
+          } else {
+            if (p) list.push({ id: p.product_id, name: p.name, price: p.price, currency: p.currency, image: p.image, category: p.category });
+            btn.classList.add('wished');
+          }
+          saveWishlist(list);
+          updateWishBadge();
         });
       });
 
@@ -1200,21 +1263,22 @@
   </script>
 
   <!-- Quick View Modal -->
-  <div id="qvOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,26,32,.55);z-index:800;align-items:center;justify-content:center;padding:24px">
-    <div id="qvBox" style="background:#fff;border-radius:14px;max-width:760px;width:100%;max-height:90vh;overflow:auto;box-shadow:0 24px 64px rgba(0,0,0,.18);position:relative;display:grid;grid-template-columns:1fr 1fr">
-      <button onclick="closeQuickView()" style="position:absolute;top:14px;right:14px;background:rgba(0,26,32,.07);border:none;width:34px;height:34px;border-radius:50%;cursor:pointer;font-size:18px;color:#334d52;z-index:2;display:flex;align-items:center;justify-content:center">&#x2715;</button>
+  <div id="qvOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(5px);z-index:1000;align-items:center;justify-content:center;padding:16px">
+    <div id="qvBox" style="background:#fff;max-width:900px;width:100%;max-height:90vh;overflow-y:auto;position:relative;display:grid;grid-template-columns:1fr 1fr">
+      <button onclick="closeQuickView()" style="position:absolute;top:16px;right:16px;background:rgba(255,255,255,0.9);border:none;width:32px;height:32px;border-radius:50%;cursor:pointer;z-index:10;display:flex;align-items:center;justify-content:center;transition:background 0.2s" onmouseover="this.style.background='#eaeaea'" onmouseout="this.style.background='rgba(255,255,255,0.9)'"><svg viewBox="0 0 24 24" width="16" height="16" stroke="#2c2c2c" stroke-width="2" fill="none"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
       <!-- image -->
-      <div id="qvImg" style="background:#f0f8f9;border-radius:14px 0 0 14px;min-height:340px;display:flex;align-items:center;justify-content:center;overflow:hidden"></div>
+      <div id="qvImg" style="aspect-ratio:4/5;background:#faf9f7;overflow:hidden;display:flex;align-items:center;justify-content:center;min-height:340px"></div>
       <!-- info -->
-      <div style="padding:36px 32px;display:flex;flex-direction:column;gap:14px">
-        <div id="qvCategory" style="font-size:11px;font-weight:500;color:#6b8b91;text-transform:uppercase;letter-spacing:.09em"></div>
-        <h2 id="qvName" style="font-family:'Playfair Display',serif;font-size:1.45rem;color:#005969;font-weight:400;line-height:1.3"></h2>
-        <div id="qvPrice" style="font-family:'Cormorant Garamond',serif;font-size:1.8rem;color:#005969;font-weight:500"></div>
-        <div id="qvMeta" style="font-size:13px;color:#6b8b91"></div>
-        <div style="display:flex;gap:4px;color:#c8a45a;font-size:15px">★★★★★</div>
-        <div style="flex:1"></div>
-        <button id="qvAddBtn" style="width:100%;padding:13px;background:#005969;color:#fff;border:none;border-radius:6px;font-size:15px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;transition:background .2s" onmouseover="this.style.background='#003d4a'" onmouseout="this.style.background='#005969'">Add to Cart</button>
-        <a href="cart.html" style="display:block;text-align:center;font-size:13px;color:#005969;text-decoration:none;padding:8px">View Cart →</a>
+      <div style="padding:40px;display:flex;flex-direction:column;justify-content:center;gap:0">
+        <div id="qvCategory" style="font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:#737373;margin-bottom:12px"></div>
+        <h2 id="qvName" style="font-family:'Playfair Display',serif;font-size:28px;font-weight:400;color:#2c2c2c;margin-bottom:8px;line-height:1.2"></h2>
+        <div id="qvPrice" style="font-size:20px;font-weight:600;color:#2c2c2c;margin:16px 0"></div>
+        <div id="qvMeta" style="font-size:12px;color:#737373;margin-bottom:8px"></div>
+        <div style="display:flex;flex-direction:column;gap:12px;margin-top:24px;margin-bottom:24px">
+          <button id="qvAddBtn" style="background:#2c2c2c;color:#fff;padding:16px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;border:none;cursor:pointer;transition:background 0.3s;font-family:'DM Sans',sans-serif" onmouseover="this.style.background='#c8a97e'" onmouseout="this.style.background='#2c2c2c'">Add to Cart</button>
+          <a href="/cart" style="border:1px solid #2c2c2c;color:#2c2c2c;padding:16px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;text-align:center;text-decoration:none;display:block;transition:background 0.3s" onmouseover="this.style.background='#faf9f7'" onmouseout="this.style.background='transparent'">View Cart</a>
+        </div>
+        <a id="qvFullLink" href="#" style="font-size:12px;color:#737373;text-decoration:underline;text-underline-offset:4px;text-align:center">View Full Details</a>
       </div>
     </div>
   </div>
@@ -1229,8 +1293,8 @@
 
     const imgEl = document.getElementById('qvImg');
     imgEl.innerHTML = p.image
-      ? `<img src="${p.image}" alt="${p.name}" style="width:100%;height:100%;object-fit:cover;border-radius:14px 0 0 14px">`
-      : `<div style="color:#c8e0e4;font-size:13px">No image</div>`;
+      ? `<img src="${p.image}" alt="${p.name}" style="width:100%;height:100%;object-fit:cover">`
+      : `<div style="color:#737373;font-size:13px">No image</div>`;
 
     const addBtn = document.getElementById('qvAddBtn');
     addBtn.textContent = 'Add to Cart';
@@ -1250,18 +1314,10 @@
     };
 
     // View full details link
-    let detailBtn = document.getElementById('qvDetailBtn');
-    if (!detailBtn) {
-      detailBtn = document.createElement('a');
-      detailBtn.id = 'qvDetailBtn';
-      detailBtn.style.cssText = 'display:block;text-align:center;margin-top:10px;font-size:13px;color:var(--brand);text-decoration:none;';
-      addBtn.parentNode.appendChild(detailBtn);
-    }
-    detailBtn.textContent = 'View Full Details →';
-    detailBtn.onclick = function(e) {
-      e.preventDefault();
+    const fullLink = document.getElementById('qvFullLink');
+    fullLink.href = '/product?id=' + encodeURIComponent(p.product_id);
+    fullLink.onclick = function() {
       sessionStorage.setItem('hs_product_view', JSON.stringify(p));
-      window.location.href = 'product.html?id=' + encodeURIComponent(p.product_id);
     };
 
     const overlay = document.getElementById('qvOverlay');
