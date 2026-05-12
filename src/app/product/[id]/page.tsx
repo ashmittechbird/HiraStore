@@ -1,0 +1,261 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
+import { useParams, useRouter } from 'next/navigation';
+import { useCart } from '@/store/cart';
+import { fetchItem, itemImage, itemPrice, itemName, itemCategory } from '@/lib/api';
+
+interface Product {
+  name?: string; item_name?: string; item_group?: string; category?: string;
+  standard_rate?: number; price_usd?: number; price?: number;
+  image?: string; product_id?: string; description?: string;
+  custom_material?: string; custom_short_description?: string;
+  weight_per_unit?: number; weight?: string | number;
+  [key: string]: unknown;
+}
+
+export default function ProductPage() {
+  const { id } = useParams<{ id: string }>();
+  const router = useRouter();
+  const [item, setItem] = useState<Product | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [qty, setQty] = useState(1);
+  const [added, setAdded] = useState(false);
+  const [wishlisted, setWishlisted] = useState(false);
+  const [toast, setToast] = useState('');
+  const addItem = useCart(s => s.addItem);
+
+  useEffect(() => {
+    (async () => {
+      setLoading(true);
+      try {
+        const product = await fetchItem(decodeURIComponent(id));
+        setItem(product);
+        // Check wishlist
+        const wl: string[] = JSON.parse(localStorage.getItem('hs_wishlist') || '[]');
+        setWishlisted(wl.includes(decodeURIComponent(id)));
+      } catch {
+        setItem(null);
+      }
+      setLoading(false);
+    })();
+  }, [id]);
+
+  function showToast(msg: string) {
+    setToast(msg);
+    setTimeout(() => setToast(''), 2500);
+  }
+
+  function handleAdd() {
+    if (!item) return;
+    addItem({
+      id: item.name || item.product_id || decodeURIComponent(id),
+      name: itemName(item as Parameters<typeof itemName>[0]),
+      category: itemCategory(item as Parameters<typeof itemCategory>[0]),
+      price: itemPrice(item as Parameters<typeof itemPrice>[0]),
+      image: itemImage(item as Parameters<typeof itemImage>[0]),
+    });
+    // override qty if > 1
+    if (qty > 1) {
+      // update qty in store
+      const store = useCart.getState();
+      store.updateQty(item.name || item.product_id || decodeURIComponent(id), qty);
+    }
+    setAdded(true);
+    showToast('Added to cart!');
+    setTimeout(() => setAdded(false), 2000);
+  }
+
+  function toggleWishlist() {
+    const itemId = item?.name || item?.product_id || decodeURIComponent(id);
+    let wl: string[] = JSON.parse(localStorage.getItem('hs_wishlist') || '[]');
+    if (wishlisted) {
+      wl = wl.filter(x => x !== itemId);
+      setWishlisted(false);
+      showToast('Removed from wishlist');
+    } else {
+      wl.push(itemId);
+      setWishlisted(true);
+      showToast('Added to wishlist!');
+    }
+    localStorage.setItem('hs_wishlist', JSON.stringify(wl));
+  }
+
+  if (loading) return (
+    <div className="product-page">
+      <div className="product-wrap">
+        <div className="gallery">
+          <div className="main-img-wrap skel" style={{ height: '400px' }} />
+        </div>
+        <div className="product-info">
+          <div className="skel" style={{ height: '32px', width: '70%', marginBottom: '16px', borderRadius: '6px' }} />
+          <div className="skel" style={{ height: '24px', width: '30%', borderRadius: '6px' }} />
+        </div>
+      </div>
+    </div>
+  );
+
+  if (!item) return (
+    <div style={{ textAlign: 'center', padding: '80px 24px' }}>
+      <h2>Product not found</h2>
+      <Link href="/shop" style={{ color: '#005969', marginTop: '16px', display: 'inline-block' }}>← Back to Shop</Link>
+    </div>
+  );
+
+  const imgSrc = itemImage(item as Parameters<typeof itemImage>[0]);
+  const price = itemPrice(item as Parameters<typeof itemPrice>[0]);
+  const name = itemName(item as Parameters<typeof itemName>[0]);
+  const category = itemCategory(item as Parameters<typeof itemCategory>[0]);
+
+  return (
+    <div className="product-page">
+      {/* Breadcrumb */}
+      <div className="breadcrumb">
+        <Link href="/">Home</Link> ›
+        <Link href="/shop">Shop</Link> ›
+        <span>{name}</span>
+      </div>
+
+      <div className="product-wrap">
+        {/* Gallery */}
+        <div className="gallery">
+          <div className="main-img-wrap">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={imgSrc} alt={name} className="main-img" />
+          </div>
+          <div className="thumb-row">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <div className="thumb active"><img src={imgSrc} alt={name} /></div>
+          </div>
+        </div>
+
+        {/* Info */}
+        <div className="product-info">
+          <div className="product-badge-row">
+            {category && <span className="badge badge-cat">{category}</span>}
+            {!!item.custom_is_featured && <span className="badge badge-featured">Featured</span>}
+          </div>
+
+          <h1 className="product-name">{name}</h1>
+          <div className="product-price">
+            ${Number(price).toLocaleString('en-US')}
+          </div>
+
+          <div className="divider" />
+
+          {item.custom_short_description && (
+            <p className="product-desc">{item.custom_short_description}</p>
+          )}
+          {item.description && (
+            <p className="product-desc" dangerouslySetInnerHTML={{ __html: item.description as string }} />
+          )}
+
+          {(item.custom_material || item.weight_per_unit || item.weight) && (
+            <>
+              {item.custom_material && (
+                <div className="detail-row">
+                  <span className="detail-label">Material</span>
+                  <span className="detail-val">{item.custom_material as string}</span>
+                </div>
+              )}
+              {(item.weight_per_unit || item.weight) && (
+                <div className="detail-row">
+                  <span className="detail-label">Weight</span>
+                  <span className="detail-val">{item.weight_per_unit || item.weight} g</span>
+                </div>
+              )}
+            </>
+          )}
+
+          <div className="divider" />
+
+          {/* Qty */}
+          <div className="qty-row">
+            <span className="qty-label">Qty</span>
+            <div className="qty-ctrl">
+              <button className="qty-btn" onClick={() => setQty(q => Math.max(1, q - 1))}>−</button>
+              <span className="qty-num">{qty}</span>
+              <button className="qty-btn" onClick={() => setQty(q => Math.min(10, q + 1))}>+</button>
+            </div>
+          </div>
+
+          <button className={`btn-add${added ? ' added' : ''}`} onClick={handleAdd}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 001.98 1.61h9.72a2 2 0 001.98-1.61L23 6H6"/></svg>
+            {added ? 'Added to Cart ✓' : 'Add to Cart'}
+          </button>
+
+          <button className={`btn-wish${wishlisted ? ' wishlisted' : ''}`} onClick={toggleWishlist}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill={wishlisted ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+            {wishlisted ? 'In Wishlist' : 'Add to Wishlist'}
+          </button>
+
+          {/* Trust */}
+          <div className="trust-row">
+            {[
+              { icon: '🛡️', text: 'BIS Hallmarked Silver' },
+              { icon: '🚚', text: 'Free shipping over $15' },
+              { icon: '↩️', text: '30-day returns' },
+              { icon: '✓', text: '1 year warranty' },
+            ].map(t => (
+              <div key={t.text} className="trust-item">
+                <span>{t.icon}</span>
+                <span>{t.text}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Toast */}
+      <div className={`toast${toast ? ' show' : ''}`}>{toast}</div>
+
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap');
+        .product-page { background:#f8fbfc;min-height:60vh; }
+        .breadcrumb { max-width:1100px;margin:0 auto;padding:16px 24px 0;font-size:12px;color:#6b8b91;display:flex;align-items:center;gap:6px; }
+        .breadcrumb a { color:#6b8b91;transition:color .2s; }
+        .breadcrumb a:hover { color:#005969; }
+        .product-wrap { max-width:1100px;margin:0 auto;padding:32px 24px 64px;display:grid;grid-template-columns:1fr 480px;gap:48px;align-items:start; }
+        .gallery { position:sticky;top:80px; }
+        .main-img-wrap { aspect-ratio:1;border-radius:12px;overflow:hidden;background:#f0f8f9;border:1px solid #ddeef1;margin-bottom:12px; }
+        .main-img { width:100%;height:100%;object-fit:cover;transition:transform .4s; }
+        .main-img:hover { transform:scale(1.03); }
+        .thumb-row { display:flex;gap:8px;flex-wrap:wrap; }
+        .thumb { width:72px;height:72px;border-radius:8px;border:2px solid transparent;overflow:hidden;cursor:pointer;background:#f0f8f9;transition:border-color .2s; }
+        .thumb.active,.thumb:hover { border-color:#005969; }
+        .thumb img { width:100%;height:100%;object-fit:cover; }
+        .product-badge-row { display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap; }
+        .badge { display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:500; }
+        .badge-cat { background:#e0f2f4;color:#005969; }
+        .badge-featured { background:#fef9ec;color:#c9a84c;border:1px solid #f5e4a8; }
+        .product-name { font-family:'Playfair Display',Georgia,serif;font-size:2rem;font-weight:400;color:#005969;line-height:1.25;margin-bottom:12px; }
+        .product-price { font-family:'Cormorant Garamond',Georgia,serif;font-size:2rem;color:#005969;font-weight:500;margin-bottom:20px; }
+        .divider { height:1px;background:#ddeef1;margin:20px 0; }
+        .detail-row { display:flex;gap:8px;align-items:flex-start;margin-bottom:10px;font-size:14px; }
+        .detail-label { font-weight:500;color:#6b8b91;min-width:80px;font-size:12px;text-transform:uppercase;letter-spacing:.05em;padding-top:1px; }
+        .detail-val { color:#334d52;line-height:1.5; }
+        .product-desc { font-size:14px;color:#6b8b91;line-height:1.7;margin-bottom:24px; }
+        .qty-row { display:flex;align-items:center;gap:16px;margin-bottom:16px; }
+        .qty-label { font-size:12px;font-weight:500;color:#6b8b91;text-transform:uppercase;letter-spacing:.05em; }
+        .qty-ctrl { display:flex;align-items:center;border:1.5px solid #c8e0e4;border-radius:6px;overflow:hidden; }
+        .qty-btn { width:36px;height:36px;display:flex;align-items:center;justify-content:center;background:none;border:none;cursor:pointer;color:#6b8b91;font-size:18px;transition:background .15s; }
+        .qty-btn:hover { background:#f0f8f9;color:#005969; }
+        .qty-num { width:40px;text-align:center;font-size:14px;font-weight:500;color:#334d52; }
+        .btn-add { width:100%;padding:15px 24px;background:#005969;color:#fff;font-size:15px;font-weight:500;border:none;border-radius:8px;cursor:pointer;transition:background .2s;display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:12px; }
+        .btn-add:hover { background:#003d4a; }
+        .btn-add.added { background:#16a34a; }
+        .btn-wish { width:100%;padding:12px 24px;background:transparent;color:#334d52;font-size:14px;border:1.5px solid #c8e0e4;border-radius:8px;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px; }
+        .btn-wish:hover { border-color:#005969;color:#005969;background:#f0f8f9; }
+        .btn-wish.wishlisted { border-color:#005969;color:#005969;background:#e0f2f4; }
+        .trust-row { display:flex;flex-direction:column;gap:10px;margin-top:20px;padding:16px;background:#f0f8f9;border-radius:8px;border:1px solid #ddeef1; }
+        .trust-item { display:flex;align-items:center;gap:10px;font-size:12px;color:#6b8b91; }
+        .toast { position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:#005969;color:#fff;padding:12px 24px;border-radius:8px;font-size:13px;font-weight:500;opacity:0;transition:all .3s;z-index:9999;pointer-events:none;white-space:nowrap; }
+        .toast.show { opacity:1;transform:translateX(-50%) translateY(0); }
+        .skel { background:linear-gradient(90deg,#ddeef1 25%,#f0f8f9 50%,#ddeef1 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:12px; }
+        @keyframes shimmer { 0%{background-position:200% 0}100%{background-position:-200% 0} }
+        @media(max-width:860px) { .product-wrap{grid-template-columns:1fr;gap:32px;padding:24px 16px 48px} .gallery{position:static} }
+      `}</style>
+    </div>
+  );
+}
