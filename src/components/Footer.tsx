@@ -1,13 +1,10 @@
-'use client';
-
-import Link from 'next/link';
+import { Link } from 'react-router-dom';
 
 export default function Footer() {
   return (
     <footer>
       <div className="footer-grid">
         <div className="footer-brand">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="https://wearparts.norework.in/wp-content/uploads/2023/09/Hira-1.png" alt="The Hira Store" />
           <p className="footer-text">Handcrafted fine jewelry designed for every day. Each piece tells a story of elegance and artistry.</p>
           <div className="footer-social">
@@ -20,20 +17,20 @@ export default function Footer() {
         <div className="footer-col">
           <h4>Shop</h4>
           <ul>
-            <li><Link href="/shop">All Jewelry</Link></li>
-            <li><Link href="/shop?cat=Necklaces">Necklaces</Link></li>
-            <li><Link href="/shop?cat=Earrings">Earrings</Link></li>
-            <li><Link href="/shop?cat=Rings">Rings</Link></li>
-            <li><Link href="/shop?cat=Bracelets">Bracelets</Link></li>
-            <li><Link href="/shop?cat=GiftSets">Gift Sets</Link></li>
+            <li><Link to="/shop">All Jewelry</Link></li>
+            <li><Link to="/shop?cat=Necklaces">Necklaces</Link></li>
+            <li><Link to="/shop?cat=Earrings">Earrings</Link></li>
+            <li><Link to="/shop?cat=Rings">Rings</Link></li>
+            <li><Link to="/shop?cat=Bracelets">Bracelets</Link></li>
+            <li><Link to="/shop?cat=GiftSets">Gift Sets</Link></li>
           </ul>
         </div>
 
         <div className="footer-col">
           <h4>Help</h4>
           <ul>
-            <li><Link href="/about">Our Story</Link></li>
-            <li><Link href="/account">My Account</Link></li>
+            <li><Link to="/about">Our Story</Link></li>
+            <li><Link to="/account">My Account</Link></li>
             <li><a href="#">Shipping Info</a></li>
             <li><a href="#">Returns</a></li>
             <li><a href="#">Size Guide</a></li>

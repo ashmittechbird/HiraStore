@@ -1,163 +1,930 @@
-'use client';
+import { useEffect, useState, useRef } from 'react';
+import './admin.css';
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { fetchItems, itemName, itemPrice, itemImage, itemCategory, itemId } from '@/lib/api';
+// ─── TYPES ───────────────────────────────────────────────────────────
+interface Cfg { url: string; key: string; secret: string; group: string; company: string; }
+interface Item { name: string; item_name?: string; item_group?: string; standard_rate?: number; image?: string; custom_is_featured?: number|boolean; custom_material?: string; custom_short_description?: string; description?: string; weight_per_unit?: number; }
+interface SalesOrder { name: string; customer?: string; transaction_date?: string; grand_total?: number; status?: string; contact_phone?: string; contact_mobile?: string; contact_email?: string; shipping_address_name?: string; per_delivered?: number; remarks?: string; items?: OItem[]; }
+interface OItem { item_name?: string; item_code?: string; qty: number; rate: number; amount: number; }
+interface Customer { name: string; customer_name?: string; customer_type?: string; email_id?: string; mobile_no?: string; creation?: string; }
+interface Coupon { name: string; coupon_code?: string; minimum_amount?: number; valid_from?: string; valid_upto?: string; description?: string; discount_percentage?: number; }
+interface Addr { address_line1?: string; address_line2?: string; city?: string; state?: string; pincode?: string; country?: string; phone?: string; email_id?: string; address_type?: string; }
+interface Toasty { id: number; msg: string; type: 'success'|'error'|'info'; }
+type PageId = 'dashboard'|'products'|'orders'|'customers'|'homepage'|'offers'|'settings';
 
-interface Product { name?: string; item_name?: string; item_group?: string; standard_rate?: number; image?: string; disabled?: boolean; [key: string]: unknown; }
-interface Order { name: string; customer_name: string; grand_total: number; status: string; transaction_date: string; }
+// ─── CONSTANTS ────────────────────────────────────────────────────────
+const DEFAULTS: Cfg = { url:'http://127.0.0.1:8001', key:'df4ffcff00dcb5d', secret:'054316891a5f19f', group:'Jewelry', company:'' };
+const STATUSES = ['Draft','To Deliver and Bill','To Bill','To Deliver','Completed','Cancelled'];
+const PAGE_TITLES: Record<PageId,string> = { dashboard:'Dashboard', products:'Products', orders:'Orders', customers:'Customers', homepage:'Homepage Sections', offers:'Offers & Coupons', settings:'Settings' };
 
-const ADMIN_PW = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || 'hirastore123';
+// ─── HELPERS ──────────────────────────────────────────────────────────
+function loadCfg(): Cfg {
+  if (typeof window === 'undefined') return { ...DEFAULTS };
+  try { const s = localStorage.getItem('hs_admin_cfg'); if (s) return { ...DEFAULTS, ...JSON.parse(s) }; } catch {}
+  return { ...DEFAULTS };
+}
+function saveCfg(c: Cfg) { localStorage.setItem('hs_admin_cfg', JSON.stringify(c)); }
+function iUrl(cfg: Cfg, img?: string): string {
+  if (!img) return `data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'><rect fill='%23f5f0ea' width='200' height='200'/><text x='50%25' y='50%25' text-anchor='middle' dominant-baseline='middle' fill='%23a89580' font-size='32'>✦</text></svg>`;
+  if (img.startsWith('http')) return img;
+  return cfg.url + img;
+}
+function fmtDate(d?: string) { if (!d) return '—'; return new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}); }
+function sBadgeCls(s?: string) { const m: Record<string,string> = {'Completed':'badge-green','Draft':'badge-gray','To Deliver and Bill':'badge-amber','To Bill':'badge-blue','To Deliver':'badge-blue','Cancelled':'badge-red'}; return m[s||'']||'badge-gray'; }
+function parseRemarks(r?: string) {
+  if (!r) return {};
+  const pay = r.match(/Square Payment ID:\s*([^\s|]+)/i);
+  const coup = r.match(/Coupon:\s*([^|]+)/i);
+  return { paymentId: pay?.[1], coupon: coup?.[1]?.trim() };
+}
 
-export default function AdminPage() {
-  const router = useRouter();
-  const [authed, setAuthed] = useState(false);
-  const [pw, setPw] = useState('');
-  const [pwError, setPwError] = useState('');
-  const [tab, setTab] = useState<'orders' | 'items' | 'homepage'>('orders');
-  const [items, setItems] = useState<Product[]>([]);
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(false);
+// ─── API ──────────────────────────────────────────────────────────────
+async function erpCall(cfg: Cfg, method: string, ep: string, body?: object): Promise<any> {
+  const r = await fetch(cfg.url + ep, {
+    method,
+    headers: { 'Authorization': `token ${cfg.key}:${cfg.secret}`, 'Content-Type': 'application/json' },
+    ...(body ? { body: JSON.stringify(body) } : {}),
+  });
+  if (!r.ok) { const e = await r.json().catch(() => ({})); throw new Error((e as any).message || (e as any).exc || r.statusText); }
+  return r.json();
+}
+async function erpUpload(cfg: Cfg, file: File): Promise<string|null> {
+  const fd = new FormData(); fd.append('file', file, file.name); fd.append('is_private', '0');
+  const r = await fetch(`${cfg.url}/api/method/upload_file`, { method:'POST', headers:{ 'Authorization': `token ${cfg.key}:${cfg.secret}` }, body: fd });
+  const d = await r.json(); return (d as any).message?.file_url || (d as any).file_url || null;
+}
 
-  useEffect(() => {
-    if (sessionStorage.getItem('hs_admin') === '1') setAuthed(true);
-  }, []);
+// ─── ICONS ────────────────────────────────────────────────────────────
+const I = {
+  grid: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>,
+  tag: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><circle cx="7" cy="7" r="1.5" fill="currentColor"/></svg>,
+  home: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>,
+  order: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg>,
+  users: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>,
+  offer: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><circle cx="7" cy="7" r="1.5" fill="currentColor"/></svg>,
+  settings: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>,
+  logout: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>,
+  plus: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>,
+  search: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>,
+  refresh: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>,
+  eye: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>,
+  truck: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>,
+  edit: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>,
+  trash: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>,
+  close: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>,
+  check: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>,
+  upload: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0018 9h-1.26A8 8 0 103 16.3"/></svg>,
+  save: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>,
+  list: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>,
+  ext: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>,
+  clock: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>,
+  dollar: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>,
+  ok: <svg viewBox="0 0 24 24" fill="none" stroke="#4ade80" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>,
+  err: <svg viewBox="0 0 24 24" fill="none" stroke="#f87171" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>,
+  info2: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>,
+};
 
-  function handleLogin(e: React.FormEvent) {
-    e.preventDefault();
-    if (pw === ADMIN_PW) {
-      sessionStorage.setItem('hs_admin', '1');
-      setAuthed(true);
-    } else {
-      setPwError('Incorrect password');
-    }
-  }
-
-  useEffect(() => {
-    if (!authed) return;
-    if (tab === 'items') {
-      setLoading(true);
-      fetchItems([], 100).then(d => { setItems(d); setLoading(false); });
-    }
-    if (tab === 'orders') {
-      setLoading(true);
-      fetch('/api/customer/orders', { headers: {} }).then(r => r.json()).then(d => {
-        setOrders(d.orders || []);
-        setLoading(false);
-      }).catch(() => setLoading(false));
-    }
-  }, [authed, tab]);
-
-  if (!authed) return (
-    <div className="admin-login">
-      <form onSubmit={handleLogin} className="admin-login-card">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="https://wearparts.norework.in/wp-content/uploads/2023/09/Hira-1.png" alt="Hira" style={{ height: '48px', margin: '0 auto 24px', display: 'block', filter: 'contrast(1.2)' }} />
-        <h2 style={{ fontFamily: 'var(--font-head)', fontSize: '24px', fontWeight: 400, textAlign: 'center', marginBottom: '24px' }}>Admin Panel</h2>
-        <label style={{ fontSize: '12px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.06em', display: 'block', marginBottom: '8px' }}>Password</label>
-        <input type="password" value={pw} onChange={e => setPw(e.target.value)} placeholder="••••••••" className="admin-input" autoFocus />
-        {pwError && <div style={{ color: '#dc2626', fontSize: '13px', marginTop: '8px' }}>{pwError}</div>}
-        <button type="submit" className="admin-btn" style={{ marginTop: '20px' }}>Enter Admin</button>
-      </form>
-      <style>{adminStyles}</style>
-    </div>
-  );
-
+// ─── SUB-COMPONENTS ───────────────────────────────────────────────────
+function SbItem({ icon, label, active, badge, onClick }: { icon: React.ReactNode; label: string; active: boolean; badge?: number; onClick: () => void }) {
   return (
-    <div className="admin-page">
-      <div className="admin-topbar">
-        <span style={{ fontFamily: 'var(--font-head)', fontSize: '20px' }}>Admin Panel</span>
-        <button className="admin-btn-sm" onClick={() => { sessionStorage.removeItem('hs_admin'); setAuthed(false); }}>Sign Out</button>
-      </div>
-
-      <div className="admin-tabs">
-        {(['orders', 'items', 'homepage'] as const).map(t => (
-          <button key={t} className={`admin-tab${tab === t ? ' active' : ''}`} onClick={() => setTab(t)}>
-            {t.charAt(0).toUpperCase() + t.slice(1)}
-          </button>
-        ))}
-      </div>
-
-      <div className="admin-content">
-        {loading && <div className="admin-loading">Loading…</div>}
-
-        {tab === 'orders' && !loading && (
-          orders.length === 0 ? <div className="admin-empty">No orders yet.</div> : (
-            <table className="admin-table">
-              <thead><tr><th>Order ID</th><th>Customer</th><th>Total</th><th>Status</th><th>Date</th></tr></thead>
-              <tbody>
-                {orders.map(o => (
-                  <tr key={o.name}>
-                    <td className="mono">{o.name}</td>
-                    <td>{o.customer_name}</td>
-                    <td>${Number(o.grand_total).toFixed(2)}</td>
-                    <td><span className="status-badge">{o.status}</span></td>
-                    <td>{new Date(o.transaction_date).toLocaleDateString()}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )
-        )}
-
-        {tab === 'items' && !loading && (
-          <div className="admin-items-grid">
-            {items.map(item => (
-              <div key={itemId(item as Parameters<typeof itemId>[0])} className="admin-item-card">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={itemImage(item as Parameters<typeof itemImage>[0])} alt={itemName(item as Parameters<typeof itemName>[0])} className="admin-item-img" />
-                <div className="admin-item-info">
-                  <div className="admin-item-name">{itemName(item as Parameters<typeof itemName>[0])}</div>
-                  <div className="admin-item-cat">{itemCategory(item as Parameters<typeof itemCategory>[0])}</div>
-                  <div className="admin-item-price">${Number(itemPrice(item as Parameters<typeof itemPrice>[0])).toFixed(2)}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {tab === 'homepage' && !loading && (
-          <div style={{ padding: '24px', color: 'var(--text-light)' }}>
-            <p>Homepage curation is managed via the server API.</p>
-            <p style={{ marginTop: '8px' }}>Use the <code>/api/homepage/sections</code> endpoint to curate featured products.</p>
-          </div>
-        )}
-      </div>
-
-      <style>{adminStyles}</style>
+    <div className={`sb-item${active?' active':''}`} onClick={onClick}>
+      <span style={{ width:16,height:16,display:'flex',alignItems:'center',justifyContent:'center' }}>{icon}</span>
+      {label}
+      {badge ? <span className="sb-badge">{badge}</span> : null}
     </div>
   );
 }
 
-const adminStyles = `
-  .admin-login { min-height:80vh;display:flex;align-items:center;justify-content:center;background:var(--surface); }
-  .admin-login-card { background:#fff;border-radius:16px;padding:48px 40px;width:100%;max-width:380px;box-shadow:0 4px 40px rgba(0,0,0,.08); }
-  .admin-input { width:100%;padding:12px 16px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;outline:none;font-family:var(--font-body); }
-  .admin-input:focus { border-color:var(--accent-gold); }
-  .admin-btn { width:100%;padding:13px;background:var(--text-main);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;transition:background .2s;text-transform:uppercase;letter-spacing:.06em; }
-  .admin-btn:hover { background:var(--accent-gold); }
-  .admin-page { min-height:80vh; }
-  .admin-topbar { display:flex;justify-content:space-between;align-items:center;padding:16px 32px;background:#fff;border-bottom:1px solid var(--border); }
-  .admin-btn-sm { padding:8px 16px;background:none;border:1.5px solid var(--border);border-radius:6px;font-size:13px;cursor:pointer;transition:all .2s; }
-  .admin-btn-sm:hover { border-color:#dc2626;color:#dc2626; }
-  .admin-tabs { display:flex;gap:0;padding:0 32px;background:#fff;border-bottom:1px solid var(--border); }
-  .admin-tab { padding:14px 24px;font-size:14px;font-weight:500;border:none;background:none;cursor:pointer;color:var(--text-light);border-bottom:2px solid transparent;transition:all .2s; }
-  .admin-tab.active { color:var(--text-main);border-bottom-color:var(--accent-gold); }
-  .admin-content { padding:32px; }
-  .admin-loading { color:var(--text-light);padding:40px;text-align:center; }
-  .admin-empty { color:var(--text-light);padding:40px;text-align:center; }
-  .admin-table { width:100%;border-collapse:collapse;font-size:14px; }
-  .admin-table th { text-align:left;padding:12px 16px;background:var(--surface);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-light);border-bottom:1px solid var(--border); }
-  .admin-table td { padding:14px 16px;border-bottom:1px solid var(--surface); }
-  .admin-table tr:hover td { background:#fafafa; }
-  .mono { font-family:monospace;font-size:12px; }
-  .status-badge { display:inline-flex;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;background:#e0f2f4;color:#005969; }
-  .admin-items-grid { display:grid;grid-template-columns:repeat(5,1fr);gap:16px; }
-  .admin-item-card { border:1px solid var(--border);border-radius:8px;overflow:hidden;background:#fff; }
-  .admin-item-img { width:100%;aspect-ratio:1;object-fit:cover; }
-  .admin-item-info { padding:12px; }
-  .admin-item-name { font-size:12px;font-weight:600;color:var(--text-main);margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
-  .admin-item-cat { font-size:11px;color:var(--text-light);margin-bottom:4px; }
-  .admin-item-price { font-size:13px;font-weight:700;color:var(--accent-gold); }
-  @media(max-width:768px) { .admin-items-grid{grid-template-columns:repeat(3,1fr)} .admin-content{padding:16px} }
-`;
+function StatCard({ icon, label, value, meta }: { icon: React.ReactNode; label: string; value: string|number; meta: string }) {
+  return (
+    <div className="stat-card">
+      <div className="stat-icon">{icon}</div>
+      <div className="stat-label">{label}</div>
+      <div className="stat-val">{value}</div>
+      <div className="stat-meta">{meta}</div>
+    </div>
+  );
+}
+
+function HpSection({ items, selected, cfg, onToggle }: { items: Item[]; selected: string[]; cfg: Cfg; onToggle: (id:string)=>void }) {
+  const sorted = [...items.filter(i => selected.includes(i.name)), ...items.filter(i => !selected.includes(i.name))];
+  return (
+    <div style={{ display:'flex', flexDirection:'column', gap:8, maxHeight:400, overflowY:'auto' }}>
+      {sorted.map(item => {
+        const checked = selected.includes(item.name);
+        const img = iUrl(cfg, item.image);
+        return (
+          <label key={item.name} style={{ display:'flex', alignItems:'center', gap:12, padding:'8px 10px', borderRadius:8, cursor:'pointer', border:`1.5px solid ${checked?'var(--gold)':'var(--border)'}`, background:checked?'var(--gold-xl)':'transparent', transition:'all .15s' }}>
+            <input type="checkbox" checked={checked} onChange={() => onToggle(item.name)} style={{ display:'none' }} />
+            <img src={img} alt="" style={{ width:44, height:44, objectFit:'cover', borderRadius:6, flexShrink:0, border:'1px solid var(--border)' }} />
+            <div style={{ flex:1, minWidth:0 }}>
+              <div style={{ fontSize:13, fontWeight:500, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{item.item_name||item.name}</div>
+              <div style={{ fontSize:11, color:'var(--text2)' }}>{item.item_group||''}{item.standard_rate?' · $'+Number(item.standard_rate).toLocaleString('en-US'):''}</div>
+            </div>
+            <div style={{ width:20, height:20, borderRadius:'50%', border:`2px solid ${checked?'var(--gold)':'var(--border)'}`, background:checked?'var(--gold)':'transparent', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+              {checked && <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="#fff" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>}
+            </div>
+          </label>
+        );
+      })}
+    </div>
+  );
+}
+
+function OrderDetailBody({ order, addr }: { order: SalesOrder; addr: Addr|null }) {
+  const { paymentId, coupon } = parseRemarks(order.remarks);
+  const items = order.items || [];
+  return (
+    <div>
+      <div style={{ marginBottom:16, paddingBottom:16, borderBottom:'1px solid var(--border)' }}>
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, fontSize:13 }}>
+          <div><span style={{ color:'var(--text3)', fontSize:11, textTransform:'uppercase', letterSpacing:'.08em' }}>Customer</span><div style={{ fontWeight:500, marginTop:2 }}>{order.customer||'—'}</div></div>
+          <div><span style={{ color:'var(--text3)', fontSize:11, textTransform:'uppercase', letterSpacing:'.08em' }}>Date</span><div style={{ marginTop:2 }}>{fmtDate(order.transaction_date)}</div></div>
+          {order.contact_email && <div><span style={{ color:'var(--text3)', fontSize:11, textTransform:'uppercase', letterSpacing:'.08em' }}>Email</span><div style={{ marginTop:2 }}>{order.contact_email}</div></div>}
+          {order.contact_mobile && <div><span style={{ color:'var(--text3)', fontSize:11, textTransform:'uppercase', letterSpacing:'.08em' }}>Phone</span><div style={{ marginTop:2 }}>{order.contact_mobile}</div></div>}
+        </div>
+      </div>
+      {addr && (
+        <div style={{ marginBottom:16, paddingBottom:16, borderBottom:'1px solid var(--border)' }}>
+          <div style={{ fontSize:11, fontWeight:600, textTransform:'uppercase', letterSpacing:'.1em', color:'var(--text3)', marginBottom:8 }}>Shipping Address</div>
+          <div style={{ background:'var(--surface2)', border:'1px solid var(--border)', borderRadius:8, padding:'12px 14px', fontSize:13 }}>
+            <div style={{ fontWeight:500 }}>{order.customer}</div>
+            {addr.address_line1 && <div style={{ color:'var(--text2)', marginTop:2 }}>{addr.address_line1}</div>}
+            {addr.address_line2 && <div style={{ color:'var(--text2)' }}>{addr.address_line2}</div>}
+            <div style={{ color:'var(--text2)' }}>{[addr.city, addr.state, addr.pincode].filter(Boolean).join(', ')}</div>
+            <div style={{ color:'var(--text2)' }}>{addr.country||''}</div>
+            {addr.phone && <div style={{ color:'var(--text3)', fontSize:12, marginTop:4 }}>📞 {addr.phone}</div>}
+          </div>
+        </div>
+      )}
+      {(paymentId || coupon) && (
+        <div style={{ marginBottom:16, paddingBottom:16, borderBottom:'1px solid var(--border)' }}>
+          <div style={{ fontSize:11, fontWeight:600, textTransform:'uppercase', letterSpacing:'.1em', color:'var(--text3)', marginBottom:8 }}>Payment</div>
+          <div style={{ display:'flex', flexWrap:'wrap', gap:8 }}>
+            {paymentId && <span style={{ background:'var(--green-bg)', color:'var(--green)', padding:'4px 10px', borderRadius:6, fontSize:12, fontWeight:500 }}>Square — {paymentId}</span>}
+            {coupon && <span style={{ background:'var(--amber-bg)', color:'var(--amber)', padding:'4px 10px', borderRadius:6, fontSize:12, fontWeight:500 }}>Coupon: {coupon}</span>}
+          </div>
+        </div>
+      )}
+      <table style={{ width:'100%', borderCollapse:'collapse' }}>
+        <thead><tr>
+          {['Item','Qty','Rate','Total'].map(h => <th key={h} style={{ textAlign:h==='Item'?'left':'right' as any, padding:'8px 10px', fontSize:11, color:'var(--text3)', textTransform:'uppercase', background:'var(--surface2)', borderBottom:'1px solid var(--border)' }}>{h}</th>)}
+        </tr></thead>
+        <tbody>
+          {items.map((item, i) => (
+            <tr key={i} style={{ borderBottom:'1px solid var(--border)' }}>
+              <td style={{ padding:10, fontWeight:500, fontSize:13 }}>{item.item_name||item.item_code}</td>
+              <td style={{ padding:10, textAlign:'center', color:'var(--text2)' }}>{item.qty}</td>
+              <td style={{ padding:10, textAlign:'right', fontFamily:'Cormorant Garamond,serif' }}>${(item.rate||0).toFixed(2)}</td>
+              <td style={{ padding:10, textAlign:'right', fontFamily:'Cormorant Garamond,serif', fontWeight:600 }}>${(item.amount||0).toFixed(2)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <div style={{ textAlign:'right', padding:'14px 10px 0', fontFamily:'Cormorant Garamond,serif', fontSize:20, fontWeight:600, borderTop:'2px solid var(--border)', marginTop:4 }}>
+        Total: ${(order.grand_total||0).toFixed(2)}
+      </div>
+    </div>
+  );
+}
+
+function CustomerDetailBody({ data }: { data: { name:string; email:string; orders:SalesOrder[]; addresses:Addr[]; } }) {
+  const totalSpent = data.orders.reduce((s,o) => s+(o.grand_total||0), 0);
+  const completed = data.orders.filter(o => o.status==='Completed').length;
+  return (
+    <div>
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:12, marginBottom:20 }}>
+        {[['Total Orders',data.orders.length],['Total Spent','$'+totalSpent.toFixed(0)],['Completed',completed]].map(([l,v]) => (
+          <div key={l as string} style={{ background:'var(--surface2)', border:'1px solid var(--border)', borderRadius:10, padding:14, textAlign:'center' }}>
+            <div style={{ fontFamily:'Cormorant Garamond,serif', fontSize:26, fontWeight:600 }}>{v}</div>
+            <div style={{ fontSize:11, color:'var(--text3)', textTransform:'uppercase', letterSpacing:'.08em' }}>{l}</div>
+          </div>
+        ))}
+      </div>
+      {(data.email || data.orders[0]?.contact_mobile) && (
+        <div style={{ marginBottom:18 }}>
+          <div style={{ fontSize:12, fontWeight:600, textTransform:'uppercase', letterSpacing:'.1em', color:'var(--text3)', marginBottom:10 }}>Contact Info</div>
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8, fontSize:13 }}>
+            {data.email && <div style={{ background:'var(--surface2)', border:'1px solid var(--border)', borderRadius:8, padding:'10px 12px' }}><div style={{ fontSize:10, color:'var(--text3)', textTransform:'uppercase', letterSpacing:'.08em', marginBottom:2 }}>Email</div><div style={{ fontWeight:500 }}>{data.email}</div></div>}
+            {data.orders[0]?.contact_mobile && <div style={{ background:'var(--surface2)', border:'1px solid var(--border)', borderRadius:8, padding:'10px 12px' }}><div style={{ fontSize:10, color:'var(--text3)', textTransform:'uppercase', letterSpacing:'.08em', marginBottom:2 }}>Phone</div><div style={{ fontWeight:500 }}>{data.orders[0].contact_mobile}</div></div>}
+          </div>
+        </div>
+      )}
+      {data.addresses.length > 0 && (
+        <div style={{ marginBottom:18 }}>
+          <div style={{ fontSize:12, fontWeight:600, textTransform:'uppercase', letterSpacing:'.1em', color:'var(--text3)', marginBottom:10 }}>Shipping Address{data.addresses.length>1?'es':''}</div>
+          {data.addresses.map((a,i) => (
+            <div key={i} style={{ background:'var(--surface2)', border:'1px solid var(--border)', borderRadius:8, padding:'12px 14px', fontSize:13, marginBottom:8 }}>
+              <div style={{ fontSize:10, color:'var(--text3)', textTransform:'uppercase', letterSpacing:'.08em', marginBottom:4 }}>{a.address_type||'Shipping'}</div>
+              <div style={{ fontWeight:500 }}>{[a.address_line1,a.address_line2].filter(Boolean).join(', ')}</div>
+              <div style={{ color:'var(--text2)' }}>{[a.city,a.state,a.pincode].filter(Boolean).join(', ')}</div>
+              <div style={{ color:'var(--text2)' }}>{a.country||''}</div>
+              {a.phone && <div style={{ color:'var(--text3)', fontSize:12, marginTop:4 }}>📞 {a.phone}</div>}
+            </div>
+          ))}
+        </div>
+      )}
+      {data.orders.length > 0 && (
+        <div>
+          <div style={{ fontSize:12, fontWeight:600, textTransform:'uppercase', letterSpacing:'.1em', color:'var(--text3)', marginBottom:10 }}>Order History</div>
+          {data.orders.map(o => {
+            const p = parseRemarks(o.remarks);
+            return (
+              <div key={o.name} style={{ background:'var(--surface2)', border:'1px solid var(--border)', borderRadius:8, padding:'12px 14px', marginBottom:8 }}>
+                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:6 }}>
+                  <span style={{ fontWeight:600, fontSize:13 }}>{o.name}</span>
+                  <span className={`badge ${sBadgeCls(o.status)}`}>{o.status||'—'}</span>
+                </div>
+                <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:6, fontSize:12, color:'var(--text2)' }}>
+                  <div>Date: {fmtDate(o.transaction_date)}</div>
+                  <div style={{ fontFamily:'Cormorant Garamond,serif', fontSize:15, color:'var(--text)', fontWeight:600 }}>${(o.grand_total||0).toFixed(2)}</div>
+                  {p.paymentId && <div style={{ gridColumn:'1/-1' }}><span style={{ background:'var(--green-bg)', color:'var(--green)', padding:'2px 8px', borderRadius:4, fontSize:11, fontWeight:500 }}>Square — {p.paymentId}</span></div>}
+                  {p.coupon && <div style={{ gridColumn:'1/-1' }}>Coupon: {p.coupon}</div>}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── MAIN COMPONENT ───────────────────────────────────────────────────
+export default function AdminPage() {
+  const [cfg, setCfg] = useState<Cfg>(DEFAULTS);
+  const [loginErr, setLoginErr] = useState('');
+  const [loginLoading, setLoginLoading] = useState(false);
+  const [authed, setAuthed] = useState(false);
+  const [page, setPage] = useState<PageId>('dashboard');
+  const [sbOpen, setSbOpen] = useState(false);
+  const [connOk, setConnOk] = useState(false);
+  const [toasts, setToasts] = useState<Toasty[]>([]);
+
+  const [stats, setStats] = useState({ products:0, orders:0, pending:0, revenue:0 });
+  const [recentOrders, setRecentOrders] = useState<SalesOrder[]>([]);
+  const [dashLoading, setDashLoading] = useState(false);
+
+  const [allProducts, setAllProducts] = useState<Item[]>([]);
+  const [prodSearch, setProdSearch] = useState('');
+  const [prodCat, setProdCat] = useState('');
+  const [prodView, setProdView] = useState<'grid'|'list'>('grid');
+  const [prodLoading, setProdLoading] = useState(false);
+
+  const [prodModal, setProdModal] = useState(false);
+  const [editingId, setEditingId] = useState<string|null>(null);
+  const defaultPf = { name:'', price:'', weight:'', category:'', material:'', desc:'', featured:false, imageUrl:'', imageFile:null as File|null, imagePreview:'' };
+  const [pf, setPf] = useState(defaultPf);
+  const [prodSaving, setProdSaving] = useState(false);
+
+  const [allOrders, setAllOrders] = useState<SalesOrder[]>([]);
+  const [orderSearch, setOrderSearch] = useState('');
+  const [orderStatusF, setOrderStatusF] = useState('');
+  const [ordersLoading, setOrdersLoading] = useState(false);
+  const [orderModal, setOrderModal] = useState<{ order:SalesOrder; addr:Addr|null }|null>(null);
+  const [orderModalLoading, setOrderModalLoading] = useState(false);
+
+  const [allCustomers, setAllCustomers] = useState<Customer[]>([]);
+  const [custSearch, setCustSearch] = useState('');
+  const [custLoading, setCustLoading] = useState(false);
+  const [custModal, setCustModal] = useState<{ name:string; email:string; orders:SalesOrder[]; addresses:Addr[] }|null>(null);
+  const [custModalLoading, setCustModalLoading] = useState(false);
+
+  const [hpItems, setHpItems] = useState<Item[]>([]);
+  const [hpML, setHpML] = useState<string[]>([]);
+  const [hpNA, setHpNA] = useState<string[]>([]);
+  const [hpLoading, setHpLoading] = useState(false);
+  const [hpSaving, setHpSaving] = useState(false);
+
+  const [allOffers, setAllOffers] = useState<Coupon[]>([]);
+  const [offersLoading, setOffersLoading] = useState(false);
+  const [ofCode,setOfCode] = useState(''); const [ofPct,setOfPct] = useState(''); const [ofMin,setOfMin] = useState('');
+  const [ofFrom,setOfFrom] = useState(''); const [ofUpto,setOfUpto] = useState(''); const [ofDesc,setOfDesc] = useState('');
+
+  const [confirmDlg, setConfirmDlg] = useState<{ title:string; msg:string; onOk:()=>void }|null>(null);
+
+  const cfgRef = useRef(cfg);
+  cfgRef.current = cfg;
+
+  function toast(msg: string, type: 'success'|'error'|'info' = 'info') {
+    const id = Date.now() + Math.random();
+    setToasts(p => [...p, { id, msg, type }]);
+    setTimeout(() => setToasts(p => p.filter(t => t.id !== id)), 3500);
+  }
+  function erp(method: string, ep: string, body?: object) { return erpCall(cfgRef.current, method, ep, body); }
+
+  useEffect(() => {
+    const saved = loadCfg(); setCfg(saved); cfgRef.current = saved;
+    erpCall(saved, 'GET', '/api/resource/Item?limit=1').then(() => { setAuthed(true); setConnOk(true); }).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (!authed) return;
+    loadDashboard(); loadProducts(); loadOrders(); loadCustomers(); loadOffers(); loadHomepage();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authed]);
+
+  async function loadDashboard() {
+    setDashLoading(true);
+    try {
+      const [ir, or2] = await Promise.all([
+        erp('GET', '/api/resource/Item?fields=["name"]&limit=500'),
+        erp('GET', '/api/resource/Sales Order?fields=["name","status","grand_total"]&limit=500'),
+      ]);
+      const orders: SalesOrder[] = or2.data || [];
+      const pending = orders.filter(o => !['Completed','Cancelled'].includes(o.status||''));
+      const rev = orders.reduce((s,o) => s+(o.grand_total||0), 0);
+      setStats({ products: (ir.data||[]).length, orders: orders.length, pending: pending.length, revenue: rev });
+      setRecentOrders(orders.slice(0,8));
+    } catch(e: any) { toast('Dashboard load failed: '+e.message, 'error'); }
+    setDashLoading(false);
+  }
+
+  async function loadProducts() {
+    setProdLoading(true);
+    try {
+      const fields = JSON.stringify(["name","item_name","standard_rate","item_group","image","custom_is_featured","custom_material","custom_short_description","description"]);
+      const r = await erp('GET', `/api/resource/Item?fields=${encodeURIComponent(fields)}&limit=500`);
+      setAllProducts(r.data || []);
+    } catch(e: any) { toast('Products load failed: '+e.message, 'error'); }
+    setProdLoading(false);
+  }
+
+  async function loadOrders() {
+    setOrdersLoading(true);
+    try {
+      const fields = JSON.stringify(["name","customer","transaction_date","grand_total","status","contact_phone","shipping_address_name","per_delivered"]);
+      const r = await erp('GET', `/api/resource/Sales Order?fields=${encodeURIComponent(fields)}&limit=500&order_by=transaction_date desc`);
+      setAllOrders(r.data || []);
+    } catch(e: any) { toast('Orders load failed: '+e.message, 'error'); }
+    setOrdersLoading(false);
+  }
+
+  async function loadCustomers() {
+    setCustLoading(true);
+    try {
+      const fields = JSON.stringify(["name","customer_name","customer_type","email_id","mobile_no","creation"]);
+      const r = await erp('GET', `/api/resource/Customer?fields=${encodeURIComponent(fields)}&limit=200&order_by=creation desc`);
+      setAllCustomers(r.data || []);
+    } catch(e: any) { toast('Customers load failed: '+e.message, 'error'); }
+    setCustLoading(false);
+  }
+
+  async function loadHomepage() {
+    setHpLoading(true);
+    try {
+      const fields = encodeURIComponent(JSON.stringify(["name","item_name","image","standard_rate","item_group"]));
+      const filters = encodeURIComponent(JSON.stringify([["disabled","=",0]]));
+      const r = await erp('GET', `/api/resource/Item?fields=${fields}&filters=${filters}&limit=200&order_by=item_name asc`);
+      setHpItems(r.data || []);
+    } catch {}
+    try {
+      const r = await fetch('/api/homepage/sections');
+      const d = await r.json(); setHpML(d.most_loved||[]); setHpNA(d.new_arrivals||[]);
+    } catch {}
+    setHpLoading(false);
+  }
+
+  async function saveHomepage() {
+    setHpSaving(true);
+    try {
+      const r = await fetch('/api/homepage/sections', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ most_loved:hpML, new_arrivals:hpNA }) });
+      if (!r.ok) throw new Error(await r.text());
+      toast('Homepage sections saved!', 'success');
+    } catch(e: any) { toast('Failed to save: '+e.message, 'error'); }
+    setHpSaving(false);
+  }
+
+  async function loadOffers() {
+    setOffersLoading(true);
+    try {
+      const fields = JSON.stringify(["name","coupon_code","minimum_amount","valid_from","valid_upto","description"]);
+      const r = await erp('GET', `/api/resource/Coupon Code?fields=${encodeURIComponent(fields)}&limit=50&order_by=creation desc`);
+      const list: Coupon[] = r.data || [];
+      const full = await Promise.all(list.map(c => erp('GET', `/api/resource/Coupon Code/${encodeURIComponent(c.name)}`).then(d => d.data||c).catch(()=>c)));
+      setAllOffers(full);
+    } catch(e: any) { toast('Offers load failed: '+e.message, 'error'); }
+    setOffersLoading(false);
+  }
+
+  async function createCoupon(e: React.FormEvent) {
+    e.preventDefault();
+    if (!ofCode||!ofPct||!ofUpto) { toast('Code, discount % and valid until required','error'); return; }
+    try {
+      const r = await fetch('/api/coupon/create', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ coupon_code:ofCode, discount_percentage:parseFloat(ofPct), minimum_amount:ofMin?parseFloat(ofMin):0, valid_from:ofFrom||new Date().toISOString().split('T')[0], valid_upto:ofUpto, description:ofDesc||`${ofPct}% discount` }) });
+      const d = await r.json(); if (!r.ok) throw new Error((d as any).error||'Failed');
+      toast('Coupon created: '+ofCode, 'success');
+      setOfCode(''); setOfPct(''); setOfMin(''); setOfFrom(''); setOfUpto(''); setOfDesc('');
+      loadOffers();
+    } catch(e: any) { toast('Failed: '+e.message, 'error'); }
+  }
+
+  function delCoupon(name: string) {
+    setConfirmDlg({ title:'Delete Coupon?', msg:`Delete "${name}"? Cannot be undone.`, onOk: async () => {
+      setConfirmDlg(null);
+      try {
+        const r = await fetch('/api/coupon/delete', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ name }) });
+        const d = await r.json(); if (!r.ok) throw new Error((d as any).error||'Failed');
+        toast('Coupon deleted','success'); loadOffers();
+      } catch(e: any) { toast('Failed: '+e.message,'error'); }
+    }});
+  }
+
+  async function doLogin(e: React.FormEvent) {
+    e.preventDefault(); setLoginErr(''); setLoginLoading(true);
+    try {
+      await erpCall(cfg, 'GET', '/api/resource/Item?limit=1');
+      saveCfg(cfg); setAuthed(true); setConnOk(true);
+    } catch { setLoginErr('Connection failed. Check your credentials or URL.'); }
+    setLoginLoading(false);
+  }
+
+  function logout() { localStorage.removeItem('hs_admin_cfg'); window.location.reload(); }
+
+  function openAdd() { setEditingId(null); setPf(defaultPf); setProdModal(true); }
+  function openEdit(item: Item) {
+    setEditingId(item.name);
+    setPf({ name:item.item_name||item.name, price:String(item.standard_rate||''), weight:String(item.weight_per_unit||''), category:item.item_group||'', material:item.custom_material||'', desc:item.custom_short_description||item.description||'', featured:!!item.custom_is_featured, imageUrl:item.image||'', imageFile:null, imagePreview:item.image?iUrl(cfg,item.image):'' });
+    setProdModal(true);
+  }
+
+  async function saveProd() {
+    if (!pf.name||!pf.category) { toast('Name and category are required','error'); return; }
+    setProdSaving(true);
+    try {
+      let imageUrl = pf.imageUrl;
+      if (pf.imageFile) { toast('Uploading image…','info'); imageUrl = (await erpUpload(cfg, pf.imageFile)) || imageUrl; }
+      const payload: any = { item_name:pf.name, item_group:pf.category||cfg.group, standard_rate:parseFloat(pf.price)||0, custom_material:pf.material, custom_short_description:pf.desc, custom_is_featured:pf.featured?1:0, image:imageUrl||null, is_sales_item:1 };
+      if (editingId) { await erp('PUT', '/api/resource/Item/'+encodeURIComponent(editingId), payload); toast('Product updated','success'); }
+      else { payload.item_code = pf.name.replace(/[^a-zA-Z0-9]/g,'-').toUpperCase()+'-'+Date.now().toString().slice(-5); await erp('POST', '/api/resource/Item', payload); toast('Product added','success'); }
+      setProdModal(false); loadProducts(); loadDashboard();
+    } catch(e: any) { toast('Error: '+e.message,'error'); }
+    setProdSaving(false);
+  }
+
+  function delProd(item: Item) {
+    setConfirmDlg({ title:`Delete "${item.item_name||item.name}"?`, msg:'This will permanently remove the product from ERPNext.', onOk: async () => {
+      setConfirmDlg(null);
+      try { await erp('DELETE', '/api/resource/Item/'+encodeURIComponent(item.name)); toast('Product deleted','success'); loadProducts(); loadDashboard(); }
+      catch(e: any) { toast('Delete failed: '+e.message,'error'); }
+    }});
+  }
+
+  async function viewOrder(name: string) {
+    setOrderModal({ order:{ name }, addr:null }); setOrderModalLoading(true);
+    try {
+      const res = await erp('GET', '/api/resource/Sales Order/'+encodeURIComponent(name));
+      const o: SalesOrder = res.data;
+      let addr: Addr|null = null;
+      if (o.shipping_address_name) addr = await erp('GET', '/api/resource/Address/'+encodeURIComponent(o.shipping_address_name)).then(r=>r.data).catch(()=>null);
+      setOrderModal({ order:o, addr });
+    } catch(e: any) { toast('Failed to load order: '+e.message,'error'); }
+    setOrderModalLoading(false);
+  }
+
+  async function updateStatus(id: string, status: string) {
+    try {
+      await erp('PUT', '/api/resource/Sales Order/'+encodeURIComponent(id), { status });
+      setAllOrders(p => p.map(o => o.name===id?{...o,status}:o));
+      toast('Order status updated','success'); loadDashboard();
+    } catch(e: any) { toast('Failed: '+e.message,'error'); loadOrders(); }
+  }
+
+  async function shipOrder(name: string) {
+    if (!window.confirm(`Create Delivery Note for ${name} and deduct stock?`)) return;
+    try {
+      const makeRes = await erp('POST', '/api/method/erpnext.selling.doctype.sales_order.sales_order.make_delivery_note', { source_name:name });
+      const dn = makeRes.message; if (!dn) throw new Error('No Delivery Note returned');
+      const saveRes = await erp('POST', '/api/resource/Delivery Note', dn);
+      const dnName = saveRes.data?.name; if (!dnName) throw new Error('Failed to save Delivery Note');
+      await erp('PUT', '/api/resource/Delivery Note/'+encodeURIComponent(dnName), { docstatus:1 });
+      toast('Stock deducted! DN: '+dnName,'success'); loadOrders(); loadDashboard();
+    } catch(e: any) { toast('Ship failed: '+e.message,'error'); }
+  }
+
+  async function viewCust(customerName: string, email: string) {
+    setCustModal({ name:customerName, email, orders:[], addresses:[] }); setCustModalLoading(true);
+    try {
+      const af = encodeURIComponent(JSON.stringify([["Dynamic Link","link_doctype","=","Customer"],["Dynamic Link","link_name","=",customerName]]));
+      const afl = encodeURIComponent(JSON.stringify(["address_line1","address_line2","city","state","pincode","country","phone","email_id","address_type"]));
+      const of2 = encodeURIComponent(JSON.stringify([["customer","=",customerName]]));
+      const ofl = encodeURIComponent(JSON.stringify(["name","transaction_date","grand_total","status","remarks","contact_email","contact_mobile","per_delivered"]));
+      const [ar, or2] = await Promise.all([
+        erp('GET', `/api/resource/Address?filters=${af}&fields=${afl}&limit=10`).catch(()=>({data:[]})),
+        erp('GET', `/api/resource/Sales Order?filters=${of2}&fields=${ofl}&limit=20&order_by=creation desc`).catch(()=>({data:[]})),
+      ]);
+      setCustModal({ name:customerName, email, orders:or2.data||[], addresses:ar.data||[] });
+    } catch(e: any) { toast('Failed to load customer: '+e.message,'error'); }
+    setCustModalLoading(false);
+  }
+
+  async function testConn() {
+    try { await erp('GET', '/api/resource/Item?limit=1'); toast('Connection successful!','success'); setConnOk(true); }
+    catch(e: any) { toast('Connection failed: '+e.message,'error'); setConnOk(false); }
+  }
+
+  function saveSettings(e: React.FormEvent) { e.preventDefault(); saveCfg(cfg); toast('Settings saved','success'); setConnOk(true); }
+
+  const filteredProducts = allProducts.filter(p => { const q=prodSearch.toLowerCase(); return (p.item_name||p.name||'').toLowerCase().includes(q) && (!prodCat||p.item_group===prodCat); });
+  const filteredOrders = allOrders.filter(o => { const q=orderSearch.toLowerCase(); return ((o.name||'').toLowerCase().includes(q)||(o.customer||'').toLowerCase().includes(q)) && (!orderStatusF||o.status===orderStatusF); });
+  const filteredCusts = allCustomers.filter(c => { const q=custSearch.toLowerCase(); return (c.customer_name||'').toLowerCase().includes(q)||(c.email_id||'').toLowerCase().includes(q)||(c.mobile_no||'').toLowerCase().includes(q); });
+  const categories = Array.from(new Set(allProducts.map(p=>p.item_group).filter(Boolean))).sort() as string[];
+  const pendingCount = allOrders.filter(o => !['Completed','Cancelled'].includes(o.status||'')).length;
+
+  const nav = (p: PageId) => { setPage(p); setSbOpen(false); };
+
+  return (
+    <div className="adm-root">
+      {/* LOGIN */}
+      {!authed && (
+        <div className="adm-login">
+          <form className="adm-login-box" onSubmit={doLogin}>
+            <div className="adm-login-logo">
+              <img src="https://wearparts.norework.in/wp-content/uploads/2023/09/Hira-1.png" alt="Hira Store" style={{ height:60, filter:'brightness(0) invert(1)', margin:'0 auto 10px', display:'block' }} />
+              <div className="adm-login-sub">Admin Dashboard</div>
+            </div>
+            <div className="adm-login-field"><label>ERPNext URL</label><input type="url" value={cfg.url} onChange={e=>setCfg(p=>({...p,url:e.target.value}))} placeholder="https://your-site.erpnext.com" autoComplete="off" /></div>
+            <div className="adm-login-field"><label>API Key</label><input type="text" value={cfg.key} onChange={e=>setCfg(p=>({...p,key:e.target.value}))} placeholder="Your API Key" autoComplete="off" /></div>
+            <div className="adm-login-field"><label>API Secret</label><input type="password" value={cfg.secret} onChange={e=>setCfg(p=>({...p,secret:e.target.value}))} placeholder="Your API Secret" /></div>
+            <button className="adm-login-btn" type="submit" disabled={loginLoading}>{loginLoading?'Connecting…':'Connect to ERPNext'}</button>
+            {loginErr && <div className="adm-login-err">{loginErr}</div>}
+          </form>
+        </div>
+      )}
+
+      {/* APP */}
+      {authed && (
+        <div className="adm-app">
+          {sbOpen && <div className="sb-overlay" onClick={()=>setSbOpen(false)} />}
+
+          {/* SIDEBAR */}
+          <aside className={`sidebar${sbOpen?' open':''}`}>
+            <div className="sb-header">
+              <img src="https://wearparts.norework.in/wp-content/uploads/2023/09/Hira-1.png" alt="Hira Store" style={{ height:44, filter:'brightness(0) invert(1)' }} />
+              <div className="sb-sub">Admin Panel</div>
+            </div>
+            <nav className="sb-nav">
+              <div className="sb-section">Main</div>
+              <SbItem icon={I.grid} label="Dashboard" active={page==='dashboard'} onClick={()=>nav('dashboard')} />
+              <div className="sb-section">Catalog</div>
+              <SbItem icon={I.tag} label="Products" active={page==='products'} onClick={()=>nav('products')} />
+              <SbItem icon={I.home} label="Homepage" active={page==='homepage'} onClick={()=>nav('homepage')} />
+              <SbItem icon={I.order} label="Orders" active={page==='orders'} badge={pendingCount||undefined} onClick={()=>nav('orders')} />
+              <div className="sb-section">CRM</div>
+              <SbItem icon={I.users} label="Customers" active={page==='customers'} onClick={()=>nav('customers')} />
+              <SbItem icon={I.offer} label="Offers" active={page==='offers'} onClick={()=>nav('offers')} />
+              <div className="sb-section">System</div>
+              <SbItem icon={I.settings} label="Settings" active={page==='settings'} onClick={()=>nav('settings')} />
+            </nav>
+            <div className="sb-footer">
+              <button className="sb-logout" onClick={logout}>{I.logout} Sign Out</button>
+            </div>
+          </aside>
+
+          {/* MAIN */}
+          <main className="adm-main">
+            <header className="topbar">
+              <div style={{ display:'flex', alignItems:'center', gap:14 }}>
+                <button className="sb-toggle" onClick={()=>setSbOpen(v=>!v)}>
+                  <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" width="20" height="20"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+                </button>
+                <div className="topbar-title">{PAGE_TITLES[page]}</div>
+              </div>
+              <div className="topbar-right">
+                <div className="topbar-erp">
+                  <span className={`dot${connOk?' green':' red'}`} />
+                  <span>{connOk?cfg.url.replace(/https?:\/\//,''):'Disconnected'}</span>
+                </div>
+                <a href="/" target="_blank" className="btn btn-outline btn-sm">{I.ext} View Site</a>
+              </div>
+            </header>
+
+            <div className="page-content">
+
+              {/* ── DASHBOARD ── */}
+              {page==='dashboard' && <>
+                <div className="stats-grid">
+                  <StatCard icon={I.tag} label="Total Products" value={dashLoading?'…':stats.products} meta="in catalog" />
+                  <StatCard icon={I.order} label="Total Orders" value={dashLoading?'…':stats.orders} meta="all time" />
+                  <StatCard icon={I.clock} label="Pending Orders" value={dashLoading?'…':stats.pending} meta="need action" />
+                  <StatCard icon={I.dollar} label="Total Revenue" value={dashLoading?'…':'$'+stats.revenue.toLocaleString('en-US',{maximumFractionDigits:0})} meta="USD" />
+                </div>
+                <div className="two-col">
+                  <div className="card">
+                    <div className="card-hd"><h2>Recent Orders</h2><button className="btn btn-ghost btn-sm" onClick={()=>setPage('orders')}>View all</button></div>
+                    {dashLoading?<div className="loading-overlay"><div className="spin"/><p>Loading…</p></div>:recentOrders.length===0?<div className="empty"><div className="empty-icon">{I.order}</div><h3>No orders yet</h3></div>:(
+                      <div className="tbl-wrap"><table><thead><tr><th>Order</th><th>Status</th><th>Amount</th></tr></thead><tbody>
+                        {recentOrders.map(o=><tr key={o.name}><td className="td-name" style={{fontSize:12}}>{o.name}</td><td><span className={`badge ${sBadgeCls(o.status)}`}>{o.status||'—'}</span></td><td style={{fontFamily:'Cormorant Garamond,serif',fontSize:15}}>${(o.grand_total||0).toFixed(2)}</td></tr>)}
+                      </tbody></table></div>
+                    )}
+                  </div>
+                  <div className="card">
+                    <div className="card-hd"><h2>Quick Add Product</h2></div>
+                    <div className="card-body"><p style={{fontSize:13,color:'var(--text3)',marginBottom:18}}>Add a new product to your catalog — it will appear on the shop immediately.</p><button className="btn btn-gold" onClick={openAdd}>{I.plus} Add New Product</button></div>
+                  </div>
+                </div>
+              </>}
+
+              {/* ── PRODUCTS ── */}
+              {page==='products' && <>
+                <div className="toolbar">
+                  <div className="search-wrap">{I.search}<input className="search-input" type="text" placeholder="Search products…" value={prodSearch} onChange={e=>setProdSearch(e.target.value)} /></div>
+                  <select className="filter-select" value={prodCat} onChange={e=>setProdCat(e.target.value)}><option value="">All Categories</option>{categories.map(c=><option key={c}>{c}</option>)}</select>
+                  <div className="view-toggle"><button className={prodView==='grid'?'active':''} onClick={()=>setProdView('grid')}>{I.grid}</button><button className={prodView==='list'?'active':''} onClick={()=>setProdView('list')}>{I.list}</button></div>
+                  <button className="btn btn-gold" onClick={openAdd}>{I.plus} Add Product</button>
+                </div>
+                {prodLoading?<div className="loading-overlay"><div className="spin"/><p>Loading products…</p></div>:filteredProducts.length===0?(
+                  <div className="empty"><div className="empty-icon">{I.tag}</div><h3>No products found</h3><p>Try a different search or add your first product.</p><button className="btn btn-gold" onClick={openAdd}>Add Product</button></div>
+                ):prodView==='grid'?(
+                  <div className="product-grid">
+                    {filteredProducts.map(p=>(
+                      <div key={p.name} className="prod-card">
+                        <img className="prod-img" src={iUrl(cfg,p.image)} alt={p.item_name||''} loading="lazy" onError={e=>{(e.target as HTMLImageElement).src=iUrl(cfg);}} />
+                        <div className="prod-info">
+                          <div className="prod-name">{p.item_name||p.name}</div>
+                          <div className="prod-meta">{p.item_group||''}{p.custom_material?' · '+p.custom_material:''}</div>
+                          <div className="prod-footer">
+                            <div className="prod-price">${(p.standard_rate||0).toFixed(2)}</div>
+                            <div className="prod-actions">
+                              {p.custom_is_featured?<span style={{fontSize:14,padding:'4px 6px',background:'var(--amber-bg)',borderRadius:'var(--r-sm)',color:'var(--amber)'}}>★</span>:null}
+                              <button className="edit-btn" onClick={()=>openEdit(p)}>{I.edit}</button>
+                              <button className="del-btn" onClick={()=>delProd(p)}>{I.trash}</button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ):(
+                  <div className="card"><div className="tbl-wrap"><table>
+                    <thead><tr><th>Image</th><th>Name</th><th>Category</th><th>Price</th><th>Featured</th><th>Actions</th></tr></thead>
+                    <tbody>{filteredProducts.map(p=>(
+                      <tr key={p.name}>
+                        <td><img className="td-img" src={iUrl(cfg,p.image)} alt="" onError={e=>{(e.target as HTMLImageElement).src=iUrl(cfg);}} /></td>
+                        <td><div className="td-name">{p.item_name||p.name}</div><div className="td-sub">{p.custom_material||''}</div></td>
+                        <td><span className="badge badge-gray">{p.item_group||'—'}</span></td>
+                        <td style={{fontFamily:'Cormorant Garamond,serif',fontSize:15}}>${(p.standard_rate||0).toFixed(2)}</td>
+                        <td>{p.custom_is_featured?<span className="badge badge-amber">★ Featured</span>:<span className="badge badge-gray">Standard</span>}</td>
+                        <td><div style={{display:'flex',gap:6}}><button className="btn btn-outline btn-sm" onClick={()=>openEdit(p)}>Edit</button><button className="btn btn-danger btn-sm" onClick={()=>delProd(p)}>Delete</button></div></td>
+                      </tr>
+                    ))}</tbody>
+                  </table></div></div>
+                )}
+              </>}
+
+              {/* ── ORDERS ── */}
+              {page==='orders' && <>
+                <div className="toolbar">
+                  <div className="search-wrap">{I.search}<input className="search-input" type="text" placeholder="Search by order ID or customer…" value={orderSearch} onChange={e=>setOrderSearch(e.target.value)} /></div>
+                  <select className="filter-select" value={orderStatusF} onChange={e=>setOrderStatusF(e.target.value)}><option value="">All Statuses</option>{STATUSES.map(s=><option key={s} value={s}>{s}</option>)}</select>
+                  <button className="btn btn-outline btn-sm" onClick={loadOrders}>{I.refresh} Refresh</button>
+                </div>
+                <div className="card"><div className="tbl-wrap">
+                  {ordersLoading?<div className="loading-overlay"><div className="spin"/><p>Loading orders…</p></div>:filteredOrders.length===0?<div className="empty"><div className="empty-icon">{I.order}</div><h3>No orders found</h3></div>:(
+                    <table><thead><tr><th>Order ID</th><th>Customer</th><th>Date</th><th>Amount</th><th>Status</th><th>Items</th><th>Stock</th><th>Update</th></tr></thead>
+                    <tbody>{filteredOrders.map(o=>{
+                      const delivered=(o.per_delivered||0)>=100;
+                      return <tr key={o.name}>
+                        <td className="td-name" style={{fontSize:12}}>{o.name}</td>
+                        <td><div style={{fontWeight:500,fontSize:13}}>{o.customer||'—'}</div>{o.contact_phone&&<div style={{fontSize:11,color:'var(--text3)'}}>{o.contact_phone}</div>}</td>
+                        <td style={{color:'var(--text3)',fontSize:12}}>{fmtDate(o.transaction_date)}</td>
+                        <td style={{fontFamily:'Cormorant Garamond,serif',fontSize:15}}>${(o.grand_total||0).toFixed(2)}</td>
+                        <td><span className={`badge ${sBadgeCls(o.status)}`}>{o.status||'—'}</span></td>
+                        <td><button className="btn btn-outline btn-sm" onClick={()=>viewOrder(o.name)}>{I.eye} View Items</button></td>
+                        <td>{delivered?<span className="badge badge-green">Shipped</span>:o.status==='Cancelled'?<span className="badge badge-red">Cancelled</span>:<button className="btn btn-gold btn-sm" onClick={()=>shipOrder(o.name)}>{I.truck} Ship</button>}</td>
+                        <td><select className="status-select" value={o.status||''} onChange={e=>updateStatus(o.name,e.target.value)}>{STATUSES.map(s=><option key={s} value={s}>{s}</option>)}</select></td>
+                      </tr>;
+                    })}</tbody></table>
+                  )}
+                </div></div>
+              </>}
+
+              {/* ── CUSTOMERS ── */}
+              {page==='customers' && <>
+                <div className="toolbar">
+                  <div className="search-wrap">{I.search}<input className="search-input" type="text" placeholder="Search customers…" value={custSearch} onChange={e=>setCustSearch(e.target.value)} /></div>
+                  <button className="btn btn-gold btn-sm" onClick={loadCustomers}>{I.refresh} Refresh</button>
+                </div>
+                <div className="card">
+                  <div className="card-hd"><h2>All Customers</h2></div>
+                  {custLoading?<div className="loading-overlay"><div className="spin"/><p>Loading customers…</p></div>:filteredCusts.length===0?<div className="empty"><div className="empty-icon">{I.users}</div><h3>No customers found</h3><p>Customers are created automatically when orders are placed.</p></div>:(
+                    <div className="tbl-wrap"><table><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Type</th><th>Joined</th><th>Details</th></tr></thead>
+                    <tbody>{filteredCusts.map(c=>(
+                      <tr key={c.name}>
+                        <td className="td-name">{c.customer_name||c.name}</td>
+                        <td style={{fontSize:12,color:'var(--text2)'}}>{c.email_id||'—'}</td>
+                        <td style={{fontSize:12,color:'var(--text2)'}}>{c.mobile_no||'—'}</td>
+                        <td><span style={{fontSize:11,background:'var(--blue-bg)',color:'var(--blue)',padding:'2px 8px',borderRadius:99}}>{c.customer_type||'Individual'}</span></td>
+                        <td style={{fontSize:12,color:'var(--text3)'}}>{c.creation?new Date(c.creation).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}):'—'}</td>
+                        <td><button className="btn btn-outline btn-sm" onClick={()=>viewCust(c.customer_name||c.name,c.email_id||'')}>{I.eye} View</button></td>
+                      </tr>
+                    ))}</tbody></table></div>
+                  )}
+                </div>
+              </>}
+
+              {/* ── HOMEPAGE ── */}
+              {page==='homepage' && <>
+                <div className="toolbar" style={{justifyContent:'space-between'}}>
+                  <div style={{fontSize:13,color:'var(--text2)'}}>Select which products appear in each section on the home page</div>
+                  <div style={{display:'flex',gap:10}}>
+                    <button className="btn btn-ghost btn-sm" onClick={loadHomepage}>{I.refresh} Refresh</button>
+                    <button className="btn btn-gold btn-sm" onClick={saveHomepage} disabled={hpSaving}>{I.save} {hpSaving?'Saving…':'Save Homepage'}</button>
+                  </div>
+                </div>
+                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:20}}>
+                  <div className="card"><div className="card-hd"><h2>Most Loved Pieces</h2><span style={{fontSize:12,color:'var(--text2)',fontWeight:400}}>{hpML.length} selected</span></div>
+                    <div className="card-body" style={{padding:12}}><div style={{fontSize:12,color:'var(--text2)',marginBottom:12,padding:'0 4px'}}>Check the products you want to show in this section</div>
+                    {hpLoading?<div className="loading-overlay"><div className="spin"/></div>:<HpSection items={hpItems} selected={hpML} cfg={cfg} onToggle={id=>setHpML(p=>p.includes(id)?p.filter(x=>x!==id):[...p,id])} />}</div>
+                  </div>
+                  <div className="card"><div className="card-hd"><h2>New Arrivals</h2><span style={{fontSize:12,color:'var(--text2)',fontWeight:400}}>{hpNA.length} selected</span></div>
+                    <div className="card-body" style={{padding:12}}><div style={{fontSize:12,color:'var(--text2)',marginBottom:12,padding:'0 4px'}}>Check the products you want to show in this section</div>
+                    {hpLoading?<div className="loading-overlay"><div className="spin"/></div>:<HpSection items={hpItems} selected={hpNA} cfg={cfg} onToggle={id=>setHpNA(p=>p.includes(id)?p.filter(x=>x!==id):[...p,id])} />}</div>
+                  </div>
+                </div>
+              </>}
+
+              {/* ── OFFERS ── */}
+              {page==='offers' && <>
+                <div className="toolbar" style={{justifyContent:'space-between'}}>
+                  <div style={{fontSize:13,color:'var(--text2)'}}>Manage coupon codes in ERPNext → Accounts → Coupon Code</div>
+                  <button className="btn btn-gold btn-sm" onClick={loadOffers}>{I.refresh} Refresh</button>
+                </div>
+                <div className="card" style={{marginBottom:20}}>
+                  <div className="card-hd"><h2>Create Coupon Code</h2></div>
+                  <div className="card-body">
+                    <form onSubmit={createCoupon}>
+                      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:16,marginBottom:16}}>
+                        <div className="form-group"><label className="form-label">Coupon Code <span className="req">*</span></label><input className="form-input" type="text" placeholder="SAVE20" value={ofCode} onChange={e=>setOfCode(e.target.value.toUpperCase())} /></div>
+                        <div className="form-group"><label className="form-label">Discount % <span className="req">*</span></label><input className="form-input" type="number" min="1" max="100" placeholder="20" value={ofPct} onChange={e=>setOfPct(e.target.value)} /></div>
+                        <div className="form-group"><label className="form-label">Min. Order ($)</label><input className="form-input" type="number" min="0" step="0.01" placeholder="0" value={ofMin} onChange={e=>setOfMin(e.target.value)} /></div>
+                      </div>
+                      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,marginBottom:16}}>
+                        <div className="form-group"><label className="form-label">Valid From</label><input className="form-input" type="date" value={ofFrom} onChange={e=>setOfFrom(e.target.value)} /></div>
+                        <div className="form-group"><label className="form-label">Valid Until <span className="req">*</span></label><input className="form-input" type="date" value={ofUpto} onChange={e=>setOfUpto(e.target.value)} /></div>
+                      </div>
+                      <div className="form-group" style={{marginBottom:16}}><label className="form-label">Description</label><input className="form-input" type="text" placeholder="e.g. 20% off all orders" value={ofDesc} onChange={e=>setOfDesc(e.target.value)} /></div>
+                      <button className="btn btn-gold" type="submit">Create Coupon Code</button>
+                    </form>
+                  </div>
+                </div>
+                <div className="card"><div className="card-hd"><h2>Active Coupon Codes</h2></div>
+                  {offersLoading?<div className="loading-overlay"><div className="spin"/><p>Loading…</p></div>:allOffers.length===0?<div className="empty"><div className="empty-icon">{I.offer}</div><h3>No coupon codes yet</h3><p>Create your first coupon above.</p></div>:(
+                    <div className="tbl-wrap"><table><thead><tr><th>Code</th><th>Discount</th><th>Min. Order</th><th>Valid Until</th><th>Status</th><th>Actions</th></tr></thead>
+                    <tbody>{allOffers.map(o=>{const today=new Date().toISOString().split('T')[0]; const expired=!!(o.valid_upto&&o.valid_upto<today);return(
+                      <tr key={o.name}>
+                        <td><span style={{fontFamily:'monospace',fontSize:14,fontWeight:700,color:'var(--gold)',background:'var(--gold-xl)',padding:'3px 10px',borderRadius:6}}>{o.coupon_code}</span></td>
+                        <td style={{fontWeight:600}}>{o.discount_percentage?o.discount_percentage+'%':'—'}</td>
+                        <td>{o.minimum_amount?'$'+o.minimum_amount:'Any'}</td>
+                        <td style={{fontSize:12,color:'var(--text2)'}}>{o.valid_upto||'—'}</td>
+                        <td><span style={{fontSize:11,padding:'2px 8px',borderRadius:99,background:expired?'var(--red-bg)':'var(--green-bg)',color:expired?'var(--red)':'var(--green)'}}>{expired?'Expired':'Active'}</span></td>
+                        <td><button style={{display:'flex',alignItems:'center',gap:4,padding:'4px 8px',fontSize:12,borderRadius:6,background:'var(--red-bg)',color:'var(--red)',border:'none',cursor:'pointer'}} onClick={()=>delCoupon(o.name)}>{I.trash} Delete</button></td>
+                      </tr>);
+                    })}</tbody></table></div>
+                  )}
+                </div>
+              </>}
+
+              {/* ── SETTINGS ── */}
+              {page==='settings' && <>
+                <div className="settings-section">
+                  <h2>ERPNext Connection</h2>
+                  <p className="desc">Your current ERPNext connection details. Changes take effect immediately.</p>
+                  <form onSubmit={saveSettings}>
+                    <div className="form-grid">
+                      <div className="form-group full"><label className="form-label">ERPNext URL</label><input className="form-input" type="url" value={cfg.url} onChange={e=>setCfg(p=>({...p,url:e.target.value}))} /></div>
+                      <div className="form-group"><label className="form-label">API Key</label><input className="form-input" type="text" value={cfg.key} onChange={e=>setCfg(p=>({...p,key:e.target.value}))} /></div>
+                      <div className="form-group"><label className="form-label">API Secret</label><input className="form-input" type="password" value={cfg.secret} onChange={e=>setCfg(p=>({...p,secret:e.target.value}))} /></div>
+                      <div className="form-group"><label className="form-label">Item Group</label><input className="form-input" type="text" value={cfg.group} onChange={e=>setCfg(p=>({...p,group:e.target.value}))} /></div>
+                      <div className="form-group"><label className="form-label">Company Name</label><input className="form-input" type="text" value={cfg.company} onChange={e=>setCfg(p=>({...p,company:e.target.value}))} /></div>
+                    </div>
+                    <div style={{marginTop:20,display:'flex',gap:10}}>
+                      <button className="btn btn-gold" type="submit">Save Changes</button>
+                      <button className="btn btn-outline" type="button" onClick={testConn}>Test Connection</button>
+                    </div>
+                  </form>
+                </div>
+                <div className="settings-section">
+                  <h2>Quick Help</h2>
+                  <p className="desc">How to set up ERPNext API access</p>
+                  <ol style={{fontSize:13,color:'var(--text2)',paddingLeft:18,lineHeight:2}}>
+                    <li>Log in to your ERPNext instance</li>
+                    <li>Click your name (top-right) → <strong>My Settings</strong></li>
+                    <li>Scroll to <strong>API Access</strong> section</li>
+                    <li>Click <strong>Generate Keys</strong></li>
+                    <li>Copy the API Key and API Secret here</li>
+                  </ol>
+                  <p style={{fontSize:12,color:'var(--text3)',marginTop:12}}>Custom fields needed on Item DocType: <code>custom_is_featured</code> (Check), <code>custom_material</code> (Data), <code>custom_short_description</code> (Small Text)</p>
+                </div>
+              </>}
+
+            </div>
+          </main>
+        </div>
+      )}
+
+      {/* PRODUCT MODAL */}
+      {prodModal && (
+        <div className="modal-bg open" onClick={e=>{if(e.target===e.currentTarget)setProdModal(false);}}>
+          <div className="modal">
+            <div className="modal-hd"><h3>{editingId?'Edit Product':'Add New Product'}</h3><button className="modal-close" onClick={()=>setProdModal(false)}>{I.close}</button></div>
+            <div className="modal-body">
+              <div className="form-grid">
+                <div className="form-group full"><label className="form-label">Product Name <span className="req">*</span></label><input className="form-input" type="text" placeholder="e.g. Silver Meenakari Earrings" value={pf.name} onChange={e=>setPf(p=>({...p,name:e.target.value}))} /></div>
+                <div className="form-group"><label className="form-label">Price (USD) <span className="req">*</span></label><input className="form-input" type="number" min="0" step="0.01" placeholder="0.00" value={pf.price} onChange={e=>setPf(p=>({...p,price:e.target.value}))} /></div>
+                <div className="form-group"><label className="form-label">Weight</label><input className="form-input" type="text" placeholder="e.g. 22 grams" value={pf.weight} onChange={e=>setPf(p=>({...p,weight:e.target.value}))} /></div>
+                <div className="form-group"><label className="form-label">Category <span className="req">*</span></label>
+                  <select className="form-select" value={pf.category} onChange={e=>setPf(p=>({...p,category:e.target.value}))}>
+                    <option value="">Select category…</option>
+                    {['Earrings','Necklaces','Rings','Bracelets','Anklets','Sets','Pendants','Other'].map(c=><option key={c}>{c}</option>)}
+                  </select>
+                </div>
+                <div className="form-group"><label className="form-label">Material</label><input className="form-input" type="text" placeholder="e.g. 925 Silver" value={pf.material} onChange={e=>setPf(p=>({...p,material:e.target.value}))} /></div>
+                <div className="form-group full"><label className="form-label">Short Description</label><textarea className="form-textarea" placeholder="Brief description…" value={pf.desc} onChange={e=>setPf(p=>({...p,desc:e.target.value}))} /></div>
+                <div className="form-group full">
+                  <label className="form-label">Product Image</label>
+                  <div className="img-upload-zone"
+                    onClick={()=>document.getElementById('adm-img-in')?.click()}
+                    onDragOver={e=>{e.preventDefault();(e.currentTarget as HTMLElement).style.borderColor='var(--gold)';}}
+                    onDragLeave={e=>{(e.currentTarget as HTMLElement).style.borderColor='';}}
+                    onDrop={e=>{e.preventDefault();(e.currentTarget as HTMLElement).style.borderColor='';const file=e.dataTransfer.files[0];if(file&&file.type.startsWith('image/')){const r2=new FileReader();r2.onload=ev=>setPf(p=>({...p,imageFile:file,imagePreview:ev.target?.result as string}));r2.readAsDataURL(file);}}}>
+                    {pf.imagePreview
+                      ? <img src={pf.imagePreview} alt="Preview" className="img-preview" style={{display:'block'}} />
+                      : <div><div className="upload-icon">{I.upload}</div><p><strong>Click to upload</strong> or drag and drop</p><p style={{fontSize:11,marginTop:4}}>JPG, PNG, WebP — max 5MB</p></div>
+                    }
+                  </div>
+                  <input type="file" id="adm-img-in" accept="image/*" style={{display:'none'}} onChange={e=>{const file=e.target.files?.[0];if(!file)return;const r2=new FileReader();r2.onload=ev=>setPf(p=>({...p,imageFile:file,imagePreview:ev.target?.result as string}));r2.readAsDataURL(file);}} />
+                </div>
+                <div className="form-group full">
+                  <label className="toggle-wrap" style={{cursor:'pointer'}}>
+                    <span className="toggle"><input type="checkbox" checked={pf.featured} onChange={e=>setPf(p=>({...p,featured:e.target.checked}))} /><span className="toggle-track"/><span className="toggle-thumb"/></span>
+                    <span style={{fontSize:13,fontWeight:500}}>Featured on Homepage</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button className="btn btn-outline" onClick={()=>setProdModal(false)}>Cancel</button>
+              <button className="btn btn-gold" onClick={saveProd} disabled={prodSaving}>
+                {prodSaving?<><div className="spin" style={{width:16,height:16}}/> Saving…</>:<>{I.check} {editingId?'Save Changes':'Add Product'}</>}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ORDER DETAIL MODAL */}
+      {orderModal && (
+        <div className="modal-bg open" onClick={e=>{if(e.target===e.currentTarget)setOrderModal(null);}}>
+          <div className="modal" style={{maxWidth:640}}>
+            <div className="modal-hd"><h3>{orderModal.order.name}</h3><button className="modal-close" onClick={()=>setOrderModal(null)}>{I.close}</button></div>
+            <div className="modal-body" style={{maxHeight:'70vh',overflowY:'auto'}}>
+              {orderModalLoading?<div className="loading-overlay"><div className="spin"/></div>:<OrderDetailBody order={orderModal.order} addr={orderModal.addr} />}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* CUSTOMER DETAIL MODAL */}
+      {custModal && (
+        <div className="modal-bg open" onClick={e=>{if(e.target===e.currentTarget)setCustModal(null);}}>
+          <div className="modal" style={{maxWidth:660}}>
+            <div className="modal-hd"><h3>{custModal.name}</h3><button className="modal-close" onClick={()=>setCustModal(null)}>{I.close}</button></div>
+            <div className="modal-body" style={{maxHeight:'70vh',overflowY:'auto'}}>
+              {custModalLoading?<div className="loading-overlay"><div className="spin"/></div>:<CustomerDetailBody data={custModal} />}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* CONFIRM MODAL */}
+      {confirmDlg && (
+        <div className="modal-bg open" onClick={e=>{if(e.target===e.currentTarget)setConfirmDlg(null);}}>
+          <div className="modal confirm-modal">
+            <div className="modal-body" style={{textAlign:'center',padding:'32px 26px'}}>
+              <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#c03838" strokeWidth="1.5" style={{margin:'0 auto'}}><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              <h3 style={{fontFamily:'Cormorant Garamond,serif',fontSize:20,marginTop:12}}>{confirmDlg.title}</h3>
+              <p style={{fontSize:14,color:'var(--text2)',marginTop:8}}>{confirmDlg.msg}</p>
+            </div>
+            <div className="modal-footer">
+              <button className="btn btn-outline" onClick={()=>setConfirmDlg(null)}>Cancel</button>
+              <button className="btn btn-danger" onClick={confirmDlg.onOk}>Delete</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* TOASTS */}
+      <div className="toast-container">
+        {toasts.map(t=>(
+          <div key={t.id} className={`toast ${t.type}`}>
+            {t.type==='success'?I.ok:t.type==='error'?I.err:I.info2}
+            <span>{t.msg}</span>
+          </div>
+        ))}
+      </div>
+
+    </div>
+  );
+}
+

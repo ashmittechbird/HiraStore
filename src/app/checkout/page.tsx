@@ -1,14 +1,11 @@
-'use client';
-
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '@/store/cart';
 import { getMe, validateCoupon } from '@/lib/api';
 
 export default function CheckoutPage() {
   const { items, totalPrice } = useCart();
-  const router = useRouter();
+  const navigate = useNavigate();
   const [form, setForm] = useState({ fullName: '', email: '', phone: '', address: '', city: '', state: '', zip: '' });
   const [coupon, setCoupon] = useState('');
   const [discount, setDiscount] = useState(0);
@@ -23,7 +20,7 @@ export default function CheckoutPage() {
   useEffect(() => {
     // Auth guard
     getMe().then(me => {
-      if (!me) router.push('/login?return=/checkout');
+      if (!me) navigate('/login?return=/checkout');
       else {
         setForm(f => ({
           ...f,
@@ -42,7 +39,7 @@ export default function CheckoutPage() {
       const c = JSON.parse(sessionStorage.getItem('hs_coupon') || 'null');
       if (c) { setCoupon(c.code); setDiscount(c.discount); }
     } catch { /* ok */ }
-  }, [router]);
+  }, []);
 
   function update(field: string, value: string) {
     setForm(f => ({ ...f, [field]: value }));
@@ -72,14 +69,14 @@ export default function CheckoutPage() {
     localStorage.setItem('hs_saved_address', JSON.stringify({ address, city, state, zip, phone }));
     // Save checkout data for payment page
     sessionStorage.setItem('hs_checkout', JSON.stringify({ customer: form, cart: items, couponCode: coupon, discount }));
-    router.push('/payment');
+    navigate('/payment');
   }
 
   if (items.length === 0) {
     return (
       <div style={{ textAlign: 'center', padding: '80px 24px' }}>
         <h2>Your cart is empty</h2>
-        <Link href="/shop" style={{ color: '#005969', marginTop: '16px', display: 'inline-block' }}>← Continue Shopping</Link>
+        <Link to="/shop" style={{ color: '#005969', marginTop: '16px', display: 'inline-block' }}>← Continue Shopping</Link>
       </div>
     );
   }
@@ -151,7 +148,6 @@ export default function CheckoutPage() {
               {items.map(item => (
                 <div key={item.id} className="sum-item">
                   <div className="sum-img">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={item.image} alt={item.name} />
                     <span className="sum-qty">{item.qty}</span>
                   </div>

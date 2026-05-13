@@ -1,9 +1,7 @@
-'use client';
-
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
-import { useParams, useRouter } from 'next/navigation';
+import { Link, useParams, useNavigate } from 'react-router-dom';
 import { useCart } from '@/store/cart';
+import { useWishlist } from '@/store/wishlist';
 import { fetchItem, itemImage, itemPrice, itemName, itemCategory } from '@/lib/api';
 
 interface Product {
@@ -16,13 +14,14 @@ interface Product {
 }
 
 export default function ProductPage() {
-  const { id } = useParams<{ id: string }>();
-  const router = useRouter();
+  const { id = '' } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const [item, setItem] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);
-  const [wishlisted, setWishlisted] = useState(false);
+  const wishToggle = useWishlist(s => s.toggle);
+  const wishHas = useWishlist(s => s.has);
   const [toast, setToast] = useState('');
   const addItem = useCart(s => s.addItem);
 
@@ -32,9 +31,6 @@ export default function ProductPage() {
       try {
         const product = await fetchItem(decodeURIComponent(id));
         setItem(product);
-        // Check wishlist
-        const wl: string[] = JSON.parse(localStorage.getItem('hs_wishlist') || '[]');
-        setWishlisted(wl.includes(decodeURIComponent(id)));
       } catch {
         setItem(null);
       }
@@ -68,18 +64,17 @@ export default function ProductPage() {
   }
 
   function toggleWishlist() {
-    const itemId = item?.name || item?.product_id || decodeURIComponent(id);
-    let wl: string[] = JSON.parse(localStorage.getItem('hs_wishlist') || '[]');
-    if (wishlisted) {
-      wl = wl.filter(x => x !== itemId);
-      setWishlisted(false);
-      showToast('Removed from wishlist');
-    } else {
-      wl.push(itemId);
-      setWishlisted(true);
-      showToast('Added to wishlist!');
-    }
-    localStorage.setItem('hs_wishlist', JSON.stringify(wl));
+    if (!item) return;
+    const itemId = item.name || item.product_id || decodeURIComponent(id);
+    const wasWished = wishHas(itemId);
+    wishToggle({
+      id: itemId,
+      name: itemName(item as Parameters<typeof itemName>[0]),
+      category: itemCategory(item as Parameters<typeof itemCategory>[0]),
+      price: itemPrice(item as Parameters<typeof itemPrice>[0]),
+      image: itemImage(item as Parameters<typeof itemImage>[0]),
+    });
+    showToast(wasWished ? 'Removed from wishlist' : 'Added to wishlist!');
   }
 
   if (loading) return (
@@ -99,7 +94,7 @@ export default function ProductPage() {
   if (!item) return (
     <div style={{ textAlign: 'center', padding: '80px 24px' }}>
       <h2>Product not found</h2>
-      <Link href="/shop" style={{ color: '#005969', marginTop: '16px', display: 'inline-block' }}>← Back to Shop</Link>
+      <Link to="/shop" style={{ color: '#005969', marginTop: '16px', display: 'inline-block' }}>← Back to Shop</Link>
     </div>
   );
 
@@ -112,8 +107,8 @@ export default function ProductPage() {
     <div className="product-page">
       {/* Breadcrumb */}
       <div className="breadcrumb">
-        <Link href="/">Home</Link> ›
-        <Link href="/shop">Shop</Link> ›
+        <Link to="/">Home</Link> ›
+        <Link to="/shop">Shop</Link> ›
         <span>{name}</span>
       </div>
 
@@ -121,11 +116,9 @@ export default function ProductPage() {
         {/* Gallery */}
         <div className="gallery">
           <div className="main-img-wrap">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={imgSrc} alt={name} className="main-img" />
           </div>
           <div className="thumb-row">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
             <div className="thumb active"><img src={imgSrc} alt={name} /></div>
           </div>
         </div>
@@ -185,9 +178,9 @@ export default function ProductPage() {
             {added ? 'Added to Cart ✓' : 'Add to Cart'}
           </button>
 
-          <button className={`btn-wish${wishlisted ? ' wishlisted' : ''}`} onClick={toggleWishlist}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill={wishlisted ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
-            {wishlisted ? 'In Wishlist' : 'Add to Wishlist'}
+          <button className={`btn-wish${wishHas(item?.name || item?.product_id || decodeURIComponent(id)) ? ' wishlisted' : ''}`} onClick={toggleWishlist}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill={wishHas(item?.name || item?.product_id || decodeURIComponent(id)) ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+            {wishHas(item?.name || item?.product_id || decodeURIComponent(id)) ? 'In Wishlist' : 'Add to Wishlist'}
           </button>
 
           {/* Trust */}

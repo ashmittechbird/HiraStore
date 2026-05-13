@@ -1,13 +1,13 @@
-'use client';
-
-import Link from 'next/link';
+import { Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { useCart } from '@/store/cart';
+import { useWishlist } from '@/store/wishlist';
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const totalItems = useCart(s => s.totalItems());
+  const wishCount = useWishlist(s => s.items.length);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10);
@@ -35,25 +35,32 @@ export default function Navbar() {
             <svg viewBox="0 0 24 24"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
           </button>
           <ul className="nav-links">
-            <li><Link href="/shop">Shop All</Link></li>
-            <li><Link href="/shop?cat=Necklaces">Necklaces</Link></li>
-            <li><Link href="/shop?cat=Earrings">Earrings</Link></li>
-            <li><Link href="/shop?cat=Rings">Rings</Link></li>
-            <li><Link href="/about">Our Story</Link></li>
+            <li><Link to="/shop">Shop All</Link></li>
+            <li><Link to="/shop?cat=Necklaces">Necklaces</Link></li>
+            <li><Link to="/shop?cat=Earrings">Earrings</Link></li>
+            <li><Link to="/shop?cat=Rings">Rings</Link></li>
+            <li><Link to="/about">Our Story</Link></li>
           </ul>
         </div>
 
-        <Link href="/" className="nav-center nav-logo">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
+        <Link to="/" className="nav-center nav-logo">
           <img src="https://wearparts.norework.in/wp-content/uploads/2023/09/Hira-1.png" alt="The Hira Store" />
         </Link>
 
         <div className="nav-right">
-          <Link href="/account" className="nav-icon" aria-label="Account">
+          <Link to="/account" className="nav-icon" aria-label="Account">
             <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
           </Link>
           <div className="cart-wrap">
-            <Link href="/cart" className="nav-icon" aria-label="Cart">
+            <Link to="/wishlist" className={`nav-icon${wishCount > 0 ? ' wish-active' : ''}`} aria-label="Wishlist">
+              <svg viewBox="0 0 24 24" fill={wishCount > 0 ? 'currentColor' : 'none'}><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+            </Link>
+            {wishCount > 0 && (
+              <span className="cart-badge wish-badge" style={{ display: 'flex' }}>{wishCount}</span>
+            )}
+          </div>
+          <div className="cart-wrap">
+            <Link to="/cart" className="nav-icon" aria-label="Cart">
               <svg viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
             </Link>
             {totalItems > 0 && (
@@ -68,19 +75,18 @@ export default function Navbar() {
         <div className="mobile-nav-overlay" onClick={() => setMobileOpen(false)} />
         <div className="mobile-nav-drawer">
           <div className="mobile-nav-header">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="https://wearparts.norework.in/wp-content/uploads/2023/09/Hira-1.png" alt="Hira" style={{ height: '24px' }} />
             <button className="mobile-nav-close" onClick={() => setMobileOpen(false)}>
               <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
           </div>
           <ul className="mobile-nav-links" onClick={() => setMobileOpen(false)}>
-            <li><Link href="/shop">Shop All</Link></li>
-            <li><Link href="/shop?cat=Necklaces">Necklaces</Link></li>
-            <li><Link href="/shop?cat=Earrings">Earrings</Link></li>
-            <li><Link href="/shop?cat=Rings">Rings</Link></li>
-            <li><Link href="/shop?cat=Bracelets">Bracelets</Link></li>
-            <li><Link href="/about">Our Story</Link></li>
+            <li><Link to="/shop">Shop All</Link></li>
+            <li><Link to="/shop?cat=Necklaces">Necklaces</Link></li>
+            <li><Link to="/shop?cat=Earrings">Earrings</Link></li>
+            <li><Link to="/shop?cat=Rings">Rings</Link></li>
+            <li><Link to="/shop?cat=Bracelets">Bracelets</Link></li>
+            <li><Link to="/about">Our Story</Link></li>
           </ul>
         </div>
       </div>
@@ -106,6 +112,9 @@ export default function Navbar() {
         .nav-icon svg { width: 20px; height: 20px; stroke-width: 1.5; fill: none; stroke: currentColor; }
         .cart-wrap { position: relative; }
         .cart-badge { position: absolute; top: 6px; right: 4px; background: var(--accent-gold); color: #fff; font-size: 9px; font-weight: 600; width: 14px; height: 14px; align-items: center; justify-content: center; border-radius: 50%; pointer-events: none; }
+        .wish-badge { background: #e11d48; }
+        .nav-icon.wish-active { color: #e11d48; }
+        .nav-icon.wish-active:hover { color: #be123c; }
 
         .hamburger { display: none; width: 40px; height: 40px; align-items: center; justify-content: center; }
         .hamburger svg { width: 24px; height: 24px; stroke: var(--text-main); stroke-width: 1.5; fill: none; }

@@ -1,13 +1,10 @@
-'use client';
-
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '@/store/cart';
 import { createOrder } from '@/lib/api';
 
 export default function PaymentPage() {
-  const router = useRouter();
+  const navigate = useNavigate();
   const { clearCart } = useCart();
   const [checkoutData, setCheckoutData] = useState<{ customer: Record<string, string>; cart: unknown[]; couponCode?: string; discount?: number } | null>(null);
   const [loading, setLoading] = useState(false);
@@ -17,14 +14,14 @@ export default function PaymentPage() {
     try {
       const data = JSON.parse(sessionStorage.getItem('hs_checkout') || 'null');
       if (!data || !data.cart || data.cart.length === 0) {
-        router.push('/cart');
+        navigate('/cart');
         return;
       }
       setCheckoutData(data);
     } catch {
-      router.push('/cart');
+      navigate('/cart');
     }
-  }, [router]);
+  }, []);
 
   async function handlePlaceOrder() {
     if (!checkoutData) return;
@@ -48,7 +45,7 @@ export default function PaymentPage() {
         customer: checkoutData.customer,
         total: (checkoutData.cart as Array<{ price: number; qty: number }>).reduce((s, i) => s + i.price * i.qty, 0) - (checkoutData.discount || 0),
       }));
-      router.push('/order-success');
+      navigate('/order-success');
     } catch (e: unknown) {
       setError((e as Error).message || 'Order failed. Please try again.');
     }
@@ -120,7 +117,7 @@ export default function PaymentPage() {
             </div>
           </div>
 
-          <Link href="/checkout" className="back-link">← Back to Shipping</Link>
+          <Link to="/checkout" className="back-link">← Back to Shipping</Link>
         </div>
 
         {/* Summary */}
@@ -131,7 +128,6 @@ export default function PaymentPage() {
               {(checkoutData.cart as Array<{ id: string; name: string; image: string; price: number; qty: number; category?: string }>).map(item => (
                 <div key={item.id} className="sum-item">
                   <div className="sum-img">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={item.image} alt={item.name} />
                     <span className="sum-qty">{item.qty}</span>
                   </div>
