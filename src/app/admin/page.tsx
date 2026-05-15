@@ -3,7 +3,7 @@ import './admin.css';
 
 // ─── TYPES ───────────────────────────────────────────────────────────
 interface Cfg { url: string; key: string; secret: string; group: string; company: string; }
-interface Item { name: string; item_name?: string; item_group?: string; standard_rate?: number; image?: string; custom_is_featured?: number|boolean; custom_material?: string; custom_short_description?: string; description?: string; weight_per_unit?: number; }
+interface Item { name: string; item_name?: string; item_group?: string; standard_rate?: number; image?: string; custom_item_images?: string; custom_is_featured?: number|boolean; custom_material?: string; custom_short_description?: string; description?: string; weight_per_unit?: number; }
 interface SalesOrder { name: string; customer?: string; transaction_date?: string; grand_total?: number; status?: string; contact_phone?: string; contact_mobile?: string; contact_email?: string; shipping_address_name?: string; per_delivered?: number; remarks?: string; items?: OItem[]; }
 interface OItem { item_name?: string; item_code?: string; qty: number; rate: number; amount: number; }
 interface Customer { name: string; customer_name?: string; customer_type?: string; email_id?: string; mobile_no?: string; creation?: string; }
@@ -273,7 +273,8 @@ export default function AdminPage() {
 
   const [prodModal, setProdModal] = useState(false);
   const [editingId, setEditingId] = useState<string|null>(null);
-  const defaultPf = { name:'', price:'', weight:'', category:'', material:'', desc:'', featured:false, imageUrl:'', imageFile:null as File|null, imagePreview:'' };
+  const emptyExtraImg = () => ({ url:'', file:null as File|null, preview:'' });
+  const defaultPf = { name:'', price:'', weight:'', category:'', material:'', desc:'', featured:false, imageUrl:'', imageFile:null as File|null, imagePreview:'', extraImgs:[emptyExtraImg(),emptyExtraImg(),emptyExtraImg(),emptyExtraImg()] };
   const [pf, setPf] = useState(defaultPf);
   const [prodSaving, setProdSaving] = useState(false);
 
@@ -343,7 +344,7 @@ export default function AdminPage() {
   async function loadProducts() {
     setProdLoading(true);
     try {
-      const fields = JSON.stringify(["name","item_name","standard_rate","item_group","image","custom_is_featured","custom_material","custom_short_description","description"]);
+      const fields = JSON.stringify(["name","item_name","standard_rate","item_group","image","custom_item_images","custom_is_featured","custom_material","custom_short_description","description"]);
       const r = await erp('GET', `/api/resource/Item?fields=${encodeURIComponent(fields)}&limit=500`);
       setAllProducts(r.data || []);
     } catch(e: any) { toast('Products load failed: '+e.message, 'error'); }
@@ -444,7 +445,18 @@ export default function AdminPage() {
   function openAdd() { setEditingId(null); setPf(defaultPf); setProdModal(true); }
   function openEdit(item: Item) {
     setEditingId(item.name);
-    setPf({ name:item.item_name||item.name, price:String(item.standard_rate||''), weight:String(item.weight_per_unit||''), category:item.item_group||'', material:item.custom_material||'', desc:item.custom_short_description||item.description||'', featured:!!item.custom_is_featured, imageUrl:item.image||'', imageFile:null, imagePreview:item.image?iUrl(cfg,item.image):'' });
+    let extraImgs = [emptyExtraImg(),emptyExtraImg(),emptyExtraImg(),emptyExtraImg()];
+    if (item.custom_item_images) {
+      try {
+        const arr: string[] = JSON.parse(item.custom_item_images);
+        if (Array.isArray(arr)) {
+          arr.slice(0, 4).forEach((url, i) => {
+            extraImgs[i] = { url, file:null, preview: url.startsWith('http') ? url : iUrl(cfg, url) };
+          });
+        }
+      } catch {}
+    }
+    setPf({ name:item.item_name||item.name, price:String(item.standard_rate||''), weight:String(item.weight_per_unit||''), category:item.item_group||'', material:item.custom_material||'', desc:item.custom_short_description||item.description||'', featured:!!item.custom_is_featured, imageUrl:item.image||'', imageFile:null, imagePreview:item.image?iUrl(cfg,item.image):'', extraImgs });
     setProdModal(true);
   }
 
@@ -454,7 +466,13 @@ export default function AdminPage() {
     try {
       let imageUrl = pf.imageUrl;
       if (pf.imageFile) { toast('Uploading image…','info'); imageUrl = (await erpUpload(cfg, pf.imageFile)) || imageUrl; }
-      const payload: any = { item_name:pf.name, item_group:pf.category||cfg.group, standard_rate:parseFloat(pf.price)||0, custom_material:pf.material, custom_short_description:pf.desc, custom_is_featured:pf.featured?1:0, image:imageUrl||null, is_sales_item:1 };
+      const extraUrls: string[] = [];
+      for (let i = 0; i < pf.extraImgs.length; i++) {
+        const ei = pf.extraImgs[i];
+        if (ei.file) { toast(`Uploading image ${i+2}…`,'info'); const u = await erpUpload(cfg, ei.file); if (u) extraUrls.push(u); }
+        else if (ei.url) { extraUrls.push(ei.url); }
+      }
+      const payload: any = { item_name:pf.name, item_group:pf.category||cfg.group, standard_rate:parseFloat(pf.price)||0, custom_material:pf.material, custom_short_description:pf.desc, custom_is_featured:pf.featured?1:0, image:imageUrl||null, custom_item_images: extraUrls.length ? JSON.stringify(extraUrls) : null, is_sales_item:1 };
       if (editingId) { await erp('PUT', '/api/resource/Item/'+encodeURIComponent(editingId), payload); toast('Product updated','success'); }
       else { payload.item_code = pf.name.replace(/[^a-zA-Z0-9]/g,'-').toUpperCase()+'-'+Date.now().toString().slice(-5); await erp('POST', '/api/resource/Item', payload); toast('Product added','success'); }
       setProdModal(false); loadProducts(); loadDashboard();
@@ -854,6 +872,25 @@ export default function AdminPage() {
                     }
                   </div>
                   <input type="file" id="adm-img-in" accept="image/*" style={{display:'none'}} onChange={e=>{const file=e.target.files?.[0];if(!file)return;const r2=new FileReader();r2.onload=ev=>setPf(p=>({...p,imageFile:file,imagePreview:ev.target?.result as string}));r2.readAsDataURL(file);}} />
+                </div>
+                <div className="form-group full">
+                  <label className="form-label">Additional Images (up to 4)</label>
+                  <div style={{display:'flex',gap:'10px',flexWrap:'wrap'}}>
+                    {pf.extraImgs.map((ei, i) => (
+                      <div key={i} style={{position:'relative',width:'88px',height:'88px',border:'2px dashed #e0d8d0',borderRadius:'8px',overflow:'hidden',cursor:'pointer',background:'#faf9f7',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}
+                        onClick={()=>document.getElementById(`adm-ximg-${i}`)?.click()}>
+                        {ei.preview
+                          ? <>
+                              <img src={ei.preview} style={{width:'100%',height:'100%',objectFit:'cover'}} alt="" />
+                              <button onClick={e=>{e.stopPropagation();setPf(p=>{const a=[...p.extraImgs];a[i]={url:'',file:null,preview:''};return{...p,extraImgs:a};})}} style={{position:'absolute',top:3,right:3,background:'rgba(0,0,0,0.6)',border:'none',borderRadius:'50%',width:18,height:18,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',color:'#fff',fontSize:11,padding:0}}>✕</button>
+                            </>
+                          : <div style={{textAlign:'center',color:'#a89580',pointerEvents:'none'}}><div style={{fontSize:22,lineHeight:1}}>+</div><div style={{fontSize:10,marginTop:2}}>Add</div></div>
+                        }
+                        <input type="file" id={`adm-ximg-${i}`} accept="image/*" style={{display:'none'}} onChange={e=>{const file=e.target.files?.[0];if(!file)return;const r2=new FileReader();r2.onload=ev=>setPf(p=>{const a=[...p.extraImgs];a[i]={url:'',file,preview:ev.target?.result as string};return{...p,extraImgs:a};});r2.readAsDataURL(file);}} />
+                      </div>
+                    ))}
+                  </div>
+                  <p style={{fontSize:11,color:'#a89580',marginTop:6}}>These appear in the product gallery and quick view thumbnails.</p>
                 </div>
                 <div className="form-group full">
                   <label className="toggle-wrap" style={{cursor:'pointer'}}>
