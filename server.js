@@ -14,8 +14,8 @@ const crypto  = require('crypto');
 const PORT        = process.env.PORT        || 5500;
 const ERP_HOST    = process.env.ERP_HOST    || '127.0.0.1';
 const ERP_PORT    = process.env.ERP_PORT    || 8001;
-const API_KEY     = process.env.ERP_API_KEY    || 'df4ffcff00dcb5d';
-const API_SECRET  = process.env.ERP_API_SECRET || '054316891a5f19f';
+const API_KEY     = process.env.ERP_API_KEY    || '';
+const API_SECRET  = process.env.ERP_API_SECRET || '';
 const AUTH_HEADER = `token ${API_KEY}:${API_SECRET}`;
 
 // ─── HELPERS ─────────────────────────────────────────────────────────────────
