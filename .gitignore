@@ -5,8 +5,8 @@ node_modules
 *.log
 sessions.json
 .env.local.example
-AGENTS.md
-CLAUDE.md
+*AGENTS.md
+*CLAUDE.md
 .agents/skills
 .claude
 .trae/skills
