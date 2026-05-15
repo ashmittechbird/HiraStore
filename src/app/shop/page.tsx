@@ -2,12 +2,12 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useCart } from '@/store/cart';
 import { useWishlist } from '@/store/wishlist';
-import { fetchItems, itemImage, itemPrice, itemName, itemCategory, itemId } from '@/lib/api';
+import { fetchItems, itemImage, itemImages, itemPrice, itemName, itemCategory, itemId } from '@/lib/api';
 
 interface Product {
   name?: string; item_name?: string; item_group?: string; category?: string;
   standard_rate?: number; price_usd?: number; price?: number;
-  image?: string; product_id?: string; disabled?: boolean; status?: string;
+  image?: string; custom_item_images?: string; product_id?: string; disabled?: boolean; status?: string;
   weight_per_unit?: number; weight?: string; custom_material?: string;
   [key: string]: unknown;
 }
@@ -59,6 +59,7 @@ function ShopContent() {
   const [backTop, setBackTop] = useState(false);
   const [qvProduct, setQvProduct] = useState<Product | null>(null);
   const [qvAdded, setQvAdded] = useState(false);
+  const [qvIdx, setQvIdx] = useState(0);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const searchTimer = useRef<ReturnType<typeof setTimeout>>();
   const addItem = useCart(s => s.addItem);
@@ -215,7 +216,7 @@ function ShopContent() {
     });
   }
 
-  function openQV(item: Product) { setQvProduct(item); setQvAdded(false); }
+  function openQV(item: Product) { setQvProduct(item); setQvAdded(false); setQvIdx(0); }
   function closeQV() { setQvProduct(null); }
 
   function handleQVAdd() {
@@ -393,7 +394,7 @@ function ShopContent() {
         const id = itemId(qvProduct as Parameters<typeof itemId>[0]);
         const name = itemName(qvProduct as Parameters<typeof itemName>[0]);
         const price = itemPrice(qvProduct as Parameters<typeof itemPrice>[0]);
-        const img = itemImage(qvProduct as Parameters<typeof itemImage>[0]);
+        const imgs = itemImages(qvProduct as Parameters<typeof itemImages>[0], 4);
         const cat = itemCategory(qvProduct as Parameters<typeof itemCategory>[0]);
         const weight = itemWeight(qvProduct);
         const priceStr = price > 0 ? `$${price.toLocaleString('en-US')}` : 'Price on request';
@@ -404,8 +405,19 @@ function ShopContent() {
               <button onClick={closeQV} style={{ position:'absolute',top:'16px',right:'16px',background:'rgba(255,255,255,0.9)',border:'none',width:'32px',height:'32px',borderRadius:'50%',cursor:'pointer',zIndex:10,display:'flex',alignItems:'center',justifyContent:'center' }}>
                 <svg viewBox="0 0 24 24" width="16" height="16" stroke="#2c2c2c" strokeWidth="2" fill="none"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
               </button>
-              <div style={{ aspectRatio:'4/5',background:'#faf9f7',overflow:'hidden',display:'flex',alignItems:'center',justifyContent:'center',minHeight:'340px' }}>
-                <img src={img} alt={name} style={{ width:'100%',height:'100%',objectFit:'cover' }} />
+              <div style={{ display:'flex',flexDirection:'column',background:'#faf9f7',minHeight:'340px' }}>
+                <div style={{ flex:1,overflow:'hidden',display:'flex',alignItems:'center',justifyContent:'center' }}>
+                  <img src={imgs[qvIdx]} alt={name} style={{ width:'100%',height:'100%',objectFit:'cover',transition:'opacity 0.2s' }} key={qvIdx} />
+                </div>
+                {imgs.length > 1 && (
+                  <div style={{ display:'flex',gap:'6px',padding:'10px',background:'#fff',borderTop:'1px solid #f0f0f0' }}>
+                    {imgs.map((src, i) => (
+                      <div key={i} onClick={() => setQvIdx(i)} style={{ width:'52px',height:'52px',flexShrink:0,cursor:'pointer',overflow:'hidden',border:`2px solid ${i === qvIdx ? '#2c2c2c' : 'transparent'}`,transition:'border-color 0.2s',background:'#faf9f7' }}>
+                        <img src={src} alt={`${name} ${i+1}`} style={{ width:'100%',height:'100%',objectFit:'cover' }} />
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
               <div style={{ padding:'40px',display:'flex',flexDirection:'column',justifyContent:'center',gap:0 }}>
                 <div style={{ fontSize:'10px',letterSpacing:'0.2em',textTransform:'uppercase',color:'#737373',marginBottom:'12px' }}>{cat}</div>
