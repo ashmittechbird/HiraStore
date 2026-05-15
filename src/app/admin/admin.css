@@ -52,6 +52,7 @@
 .sb-footer{padding:16px 12px;border-top:1px solid rgba(255,255,255,.06)}
 .sb-logout{display:flex;align-items:center;gap:10px;padding:10px;border-radius:8px;font-size:13px;color:rgba(255,255,255,.4);transition:.15s;cursor:pointer;background:none;border:none;font-family:inherit;width:100%}
 .sb-logout:hover{background:rgba(255,255,255,.06);color:#f87171}
+.sb-logout svg{width:18px;height:18px;flex-shrink:0}
 .sb-toggle{display:none;width:40px;height:40px;align-items:center;justify-content:center;background:none;border:none;cursor:pointer;border-radius:8px;color:var(--text);padding:0}
 
 /* MAIN */
