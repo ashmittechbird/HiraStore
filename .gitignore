@@ -8,5 +8,5 @@ sessions.json
 *AGENTS.md
 *CLAUDE.md
 .agents/skills
-.claude
+*.claude
 .trae/skills
