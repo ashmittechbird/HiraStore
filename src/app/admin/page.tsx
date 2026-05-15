@@ -316,7 +316,9 @@ export default function AdminPage() {
 
   useEffect(() => {
     const saved = loadCfg(); setCfg(saved); cfgRef.current = saved;
-    erpCall(saved, 'GET', '/api/resource/Item?limit=1').then(() => { setAuthed(true); setConnOk(true); }).catch(() => {});
+    if (localStorage.getItem('hs_admin_cfg')) {
+      erpCall(saved, 'GET', '/api/resource/Item?limit=1').then(() => { setAuthed(true); setConnOk(true); }).catch(() => {});
+    }
   }, []);
 
   useEffect(() => {
@@ -440,7 +442,7 @@ export default function AdminPage() {
     setLoginLoading(false);
   }
 
-  function logout() { localStorage.removeItem('hs_admin_cfg'); window.location.reload(); }
+  function logout() { localStorage.removeItem('hs_admin_cfg'); setAuthed(false); setConnOk(false); }
 
   function openAdd() { setEditingId(null); setPf(defaultPf); setProdModal(true); }
   function openEdit(item: Item) {
