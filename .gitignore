@@ -7,6 +7,6 @@ sessions.json
 .env.local.example
 *AGENTS.md
 *CLAUDE.md
-.agents/skills
-*.claude
-.trae/skills
+.agents/
+.claude/
+.trae/
