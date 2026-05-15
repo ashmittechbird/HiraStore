@@ -1,4 +1,7 @@
 const BASE = '';
+// Catalog images base — override at build time for Frappe deployment
+// e.g. VITE_CATALOG_BASE=/assets/hira/catalog_images npm run build:frappe
+const CATALOG_BASE = (import.meta.env.VITE_CATALOG_BASE as string) || '/catalog_images';
 
 function getToken() {
   if (typeof window === 'undefined') return null;
@@ -128,7 +131,7 @@ export async function fetchItems(filters: unknown[][] = [], limit = 20, orderBy 
     return data.data || [];
   } catch {
     // Fallback to local JSON
-    const res = await fetch('/catalog_images/products.json');
+    const res = await fetch(`${CATALOG_BASE}/products.json`);
     if (!res.ok) return [];
     const items = await res.json();
     return items.filter((p: { status?: string; disabled?: boolean }) =>
@@ -146,7 +149,7 @@ export async function fetchItem(name: string) {
     const data = await res.json();
     return data.data;
   } catch {
-    const res = await fetch('/catalog_images/products.json');
+    const res = await fetch(`${CATALOG_BASE}/products.json`);
     if (!res.ok) return null;
     const items = await res.json();
     return items.find((p: { product_id?: string; name?: string }) =>
@@ -159,7 +162,7 @@ export function itemImage(item: { image?: string }) {
   if (!item.image) return 'https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=700&q=85';
   if (item.image.startsWith('http')) return item.image;
   if (item.image.startsWith('/files/')) return `${ERP_BASE}${item.image}`;
-  return `/catalog_images/${item.image}`;
+  return `${CATALOG_BASE}/${item.image}`;
 }
 
 export function itemPrice(item: { standard_rate?: number; price_usd?: number; price?: number }) {

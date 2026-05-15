@@ -1,6 +1,9 @@
 // HiraStore local dev server
 // Serves static files + proxies /erp/* to ERPNext + customer auth API
-// Run: node server.js   then open http://localhost:5500
+// Run: node server.js   then open http://localhost:5500/hirastore
+// Base path: /hirastore  (all SPA routes under /hirastore/*)
+// API routes stay at /api/* (no prefix)
+// catalog_images served at /catalog_images/* (no prefix)
 
 const http    = require('http');
 const fs      = require('fs');
@@ -642,24 +645,61 @@ const server = http.createServer((req, res) => {
   }
 
   // ── STATIC FILES ──
-  const mime = { '.html': 'text/html', '.css': 'text/css', '.js': 'application/javascript', '.json': 'application/json', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.svg': 'image/svg+xml', '.webp': 'image/webp' };
-  let filePath = path.join(__dirname, pathname === '/' ? 'index.html' : pathname);
-  fs.readFile(filePath, (err, data) => {
-    if (err && !path.extname(pathname)) {
-      // Clean URL fallback: /shop → shop.html (matches Frappe routing)
-      const htmlPath = path.join(__dirname, pathname + '.html');
-      fs.readFile(htmlPath, (err2, data2) => {
-        if (err2) { res.writeHead(404); res.end('Not found'); return; }
-        res.writeHead(200, { 'Content-Type': 'text/html' });
-        res.end(data2);
-      });
-      return;
-    }
-    if (err) { res.writeHead(404); res.end('Not found'); return; }
-    const ext = path.extname(filePath);
-    res.writeHead(200, { 'Content-Type': mime[ext] || 'text/plain' });
-    res.end(data);
-  });
+  const MIME = { '.html': 'text/html', '.css': 'text/css', '.js': 'application/javascript', '.mjs': 'application/javascript', '.json': 'application/json', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.svg': 'image/svg+xml', '.webp': 'image/webp', '.woff': 'font/woff', '.woff2': 'font/woff2', '.ttf': 'font/ttf', '.ico': 'image/x-icon' };
+  const DIST_DIR = path.join(__dirname, 'dist');
+  const BASE_PATH = '/store';
+
+  function serveStatic(filePath, res) {
+    fs.readFile(filePath, (err, data) => {
+      if (err) { res.writeHead(404); res.end('Not found'); return; }
+      const ext = path.extname(filePath).toLowerCase();
+      res.writeHead(200, { 'Content-Type': MIME[ext] || 'application/octet-stream' });
+      res.end(data);
+    });
+  }
+
+  function serveSPA(res) {
+    serveStatic(path.join(DIST_DIR, 'index.html'), res);
+  }
+
+  // Root → redirect to /hirastore
+  if (pathname === '/') {
+    res.writeHead(302, { Location: BASE_PATH });
+    res.end();
+    return;
+  }
+
+  // /catalog_images/* → serve from project root (no basepath prefix)
+  if (pathname.startsWith('/catalog_images/')) {
+    serveStatic(path.join(__dirname, pathname), res);
+    return;
+  }
+
+  // /hirastore or /hirastore/ → SPA entry
+  if (pathname === BASE_PATH || pathname === BASE_PATH + '/') {
+    serveSPA(res);
+    return;
+  }
+
+  // /hirastore/* → try static asset first, then fall back to SPA index
+  if (pathname.startsWith(BASE_PATH + '/')) {
+    const sub = pathname.slice(BASE_PATH.length); // e.g. /assets/main.abc.js
+    const filePath = path.join(DIST_DIR, sub);
+    fs.readFile(filePath, (err, data) => {
+      if (err) {
+        // Not an asset → SPA route (/shop, /cart, etc.) → serve index.html
+        serveSPA(res);
+        return;
+      }
+      const ext = path.extname(filePath).toLowerCase();
+      res.writeHead(200, { 'Content-Type': MIME[ext] || 'application/octet-stream' });
+      res.end(data);
+    });
+    return;
+  }
+
+  // Anything else not matched → 404
+  res.writeHead(404); res.end('Not found');
 });
 
 server.listen(PORT, () => {

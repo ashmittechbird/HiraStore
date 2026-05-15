@@ -2,7 +2,22 @@
   "permissions": {
     "allow": [
       "WebFetch(domain:www.pngjewellers.com)",
-      "Bash(python .agents/skills/ui-ux-pro-max/scripts/search.py \"luxury silver gold jewelry ecommerce India premium\" --design-system -p \"HiraStore\" -f markdown)"
+      "Bash(python .agents/skills/ui-ux-pro-max/scripts/search.py \"luxury silver gold jewelry ecommerce India premium\" --design-system -p \"HiraStore\" -f markdown)",
+      "Bash(wsl:*)",
+      "Read(//mnt/c/Users/**)",
+      "Bash(find /mnt -name \"hira-store.localhost\" -type d)",
+      "WebFetch(domain:palmonas.com)",
+      "Read(//c/Users/ashmi/.agents/skills/ui-ux-pro-max/**)",
+      "Bash(python scripts/search.py \"luxury jewelry silver ecommerce minimalist premium editorial dark\" --design-system -p \"HiraStore\" -f markdown)",
+      "Bash(curl:*)",
+      "Bash(ls:*)",
+      "Bash(npm -v)",
+      "Bash(npm run:*)",
+      "Bash(for f:*)",
+      "Bash(do)",
+      "Bash(sed -i '/eslint-disable-next-line @next\\\\/next\\\\/no-img-element/d' \"C:/Users/ashmi/OneDrive/Desktop/HiraStore/$f\")",
+      "Bash(done)",
+      "Bash(npx vite:*)"
     ]
   }
 }

@@ -17,7 +17,7 @@ import Admin from './app/admin/page'
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename="/store">
       <Navbar />
       <main>
         <Routes>

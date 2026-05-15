@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:frappe": "VITE_CATALOG_BASE=/assets/hira/catalog_images vite build --base /assets/hira/hirastore/",
     "preview": "vite preview",
     "server": "node server.js",
     "dev:all": "concurrently \"node server.js\" \"vite\""
