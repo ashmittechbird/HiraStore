@@ -113,7 +113,7 @@ export async function getHomepageSections() {
 // ─── PRODUCTS (direct ERPNext via proxy) ───────────────────────────────────────
 
 const ERP_BASE = '/erp';
-const FIELDS = ['name','item_name','item_group','description','standard_rate','custom_short_description','custom_material','custom_is_featured','image','disabled'];
+const FIELDS = ['name','item_name','item_group','description','standard_rate','custom_short_description','custom_material','custom_is_featured','image','custom_item_images','disabled'];
 
 export async function fetchItems(filters: unknown[][] = [], limit = 20, orderBy = 'modified desc') {
   const params = new URLSearchParams({
@@ -163,6 +163,25 @@ export function itemImage(item: { image?: string }) {
   if (item.image.startsWith('http')) return item.image;
   if (item.image.startsWith('/files/')) return `${ERP_BASE}${item.image}`;
   return `${CATALOG_BASE}/${item.image}`;
+}
+
+// Returns array of all product images.
+// Uses custom_item_images (JSON array) from ERPNext if set, else repeats main image 4x.
+export function itemImages(item: { image?: string; custom_item_images?: string }, count = 4): string[] {
+  if (item.custom_item_images) {
+    try {
+      const arr = JSON.parse(item.custom_item_images);
+      if (Array.isArray(arr) && arr.length > 0) {
+        return arr.map((img: string) => {
+          if (!img) return itemImage(item);
+          if (img.startsWith('http')) return img;
+          if (img.startsWith('/files/')) return `${ERP_BASE}${img}`;
+          return `${CATALOG_BASE}/${img}`;
+        });
+      }
+    } catch {}
+  }
+  return Array(count).fill(itemImage(item));
 }
 
 export function itemPrice(item: { standard_rate?: number; price_usd?: number; price?: number }) {

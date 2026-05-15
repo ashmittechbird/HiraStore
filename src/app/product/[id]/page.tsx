@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react';
-import { Link, useParams, useNavigate } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { useCart } from '@/store/cart';
 import { useWishlist } from '@/store/wishlist';
-import { fetchItem, itemImage, itemPrice, itemName, itemCategory } from '@/lib/api';
+import { fetchItem, itemImage, itemImages, itemPrice, itemName, itemCategory } from '@/lib/api';
 
 interface Product {
   name?: string; item_name?: string; item_group?: string; category?: string;
   standard_rate?: number; price_usd?: number; price?: number;
-  image?: string; product_id?: string; description?: string;
+  image?: string; custom_item_images?: string; product_id?: string; description?: string;
   custom_material?: string; custom_short_description?: string;
   weight_per_unit?: number; weight?: string | number;
   [key: string]: unknown;
@@ -15,19 +15,21 @@ interface Product {
 
 export default function ProductPage() {
   const { id = '' } = useParams<{ id: string }>();
-  const navigate = useNavigate();
   const [item, setItem] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
+  const [activeIdx, setActiveIdx] = useState(0);
+  const [zoomed, setZoomed] = useState(false);
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);
+  const [toast, setToast] = useState('');
   const wishToggle = useWishlist(s => s.toggle);
   const wishHas = useWishlist(s => s.has);
-  const [toast, setToast] = useState('');
   const addItem = useCart(s => s.addItem);
 
   useEffect(() => {
     (async () => {
       setLoading(true);
+      setActiveIdx(0);
       try {
         const product = await fetchItem(decodeURIComponent(id));
         setItem(product);
@@ -45,19 +47,15 @@ export default function ProductPage() {
 
   function handleAdd() {
     if (!item) return;
+    const itemId = item.name || item.product_id || decodeURIComponent(id);
     addItem({
-      id: item.name || item.product_id || decodeURIComponent(id),
+      id: itemId,
       name: itemName(item as Parameters<typeof itemName>[0]),
       category: itemCategory(item as Parameters<typeof itemCategory>[0]),
       price: itemPrice(item as Parameters<typeof itemPrice>[0]),
       image: itemImage(item as Parameters<typeof itemImage>[0]),
     });
-    // override qty if > 1
-    if (qty > 1) {
-      // update qty in store
-      const store = useCart.getState();
-      store.updateQty(item.name || item.product_id || decodeURIComponent(id), qty);
-    }
+    if (qty > 1) useCart.getState().updateQty(itemId, qty);
     setAdded(true);
     showToast('Added to cart!');
     setTimeout(() => setAdded(false), 2000);
@@ -81,7 +79,10 @@ export default function ProductPage() {
     <div className="product-page">
       <div className="product-wrap">
         <div className="gallery">
-          <div className="main-img-wrap skel" style={{ height: '400px' }} />
+          <div className="main-img-wrap skel" style={{ height: '460px' }} />
+          <div className="thumb-row" style={{ marginTop: '12px' }}>
+            {[0,1,2,3].map(i => <div key={i} className="thumb skel" />)}
+          </div>
         </div>
         <div className="product-info">
           <div className="skel" style={{ height: '32px', width: '70%', marginBottom: '16px', borderRadius: '6px' }} />
@@ -98,10 +99,12 @@ export default function ProductPage() {
     </div>
   );
 
-  const imgSrc = itemImage(item as Parameters<typeof itemImage>[0]);
+  const images = itemImages(item as Parameters<typeof itemImages>[0], 4);
   const price = itemPrice(item as Parameters<typeof itemPrice>[0]);
   const name = itemName(item as Parameters<typeof itemName>[0]);
   const category = itemCategory(item as Parameters<typeof itemCategory>[0]);
+  const itemId = item.name || item.product_id || decodeURIComponent(id);
+  const wished = wishHas(itemId);
 
   return (
     <div className="product-page">
@@ -115,11 +118,32 @@ export default function ProductPage() {
       <div className="product-wrap">
         {/* Gallery */}
         <div className="gallery">
-          <div className="main-img-wrap">
-            <img src={imgSrc} alt={name} className="main-img" />
+          {/* Main image */}
+          <div
+            className={`main-img-wrap${zoomed ? ' zoomed' : ''}`}
+            onClick={() => setZoomed(z => !z)}
+            title={zoomed ? 'Click to zoom out' : 'Click to zoom in'}
+          >
+            <img
+              src={images[activeIdx]}
+              alt={name}
+              className="main-img"
+              key={images[activeIdx]}
+            />
+            <span className="zoom-hint">{zoomed ? '🔍−' : '🔍+'}</span>
           </div>
+
+          {/* Thumbnails */}
           <div className="thumb-row">
-            <div className="thumb active"><img src={imgSrc} alt={name} /></div>
+            {images.map((src, i) => (
+              <div
+                key={i}
+                className={`thumb${i === activeIdx ? ' active' : ''}`}
+                onClick={() => setActiveIdx(i)}
+              >
+                <img src={src} alt={`${name} view ${i + 1}`} />
+              </div>
+            ))}
           </div>
         </div>
 
@@ -131,14 +155,12 @@ export default function ProductPage() {
           </div>
 
           <h1 className="product-name">{name}</h1>
-          <div className="product-price">
-            ${Number(price).toLocaleString('en-US')}
-          </div>
+          <div className="product-price">${Number(price).toLocaleString('en-US')}</div>
 
           <div className="divider" />
 
           {item.custom_short_description && (
-            <p className="product-desc">{item.custom_short_description}</p>
+            <p className="product-desc">{item.custom_short_description as string}</p>
           )}
           {item.description && (
             <p className="product-desc" dangerouslySetInnerHTML={{ __html: item.description as string }} />
@@ -178,9 +200,9 @@ export default function ProductPage() {
             {added ? 'Added to Cart ✓' : 'Add to Cart'}
           </button>
 
-          <button className={`btn-wish${wishHas(item?.name || item?.product_id || decodeURIComponent(id)) ? ' wishlisted' : ''}`} onClick={toggleWishlist}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill={wishHas(item?.name || item?.product_id || decodeURIComponent(id)) ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
-            {wishHas(item?.name || item?.product_id || decodeURIComponent(id)) ? 'In Wishlist' : 'Add to Wishlist'}
+          <button className={`btn-wish${wished ? ' wishlisted' : ''}`} onClick={toggleWishlist}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill={wished ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+            {wished ? 'In Wishlist' : 'Add to Wishlist'}
           </button>
 
           {/* Trust */}
@@ -210,14 +232,24 @@ export default function ProductPage() {
         .breadcrumb a { color:#6b8b91;transition:color .2s; }
         .breadcrumb a:hover { color:#005969; }
         .product-wrap { max-width:1100px;margin:0 auto;padding:32px 24px 64px;display:grid;grid-template-columns:1fr 480px;gap:48px;align-items:start; }
+
+        /* Gallery */
         .gallery { position:sticky;top:80px; }
-        .main-img-wrap { aspect-ratio:1;border-radius:12px;overflow:hidden;background:#f0f8f9;border:1px solid #ddeef1;margin-bottom:12px; }
-        .main-img { width:100%;height:100%;object-fit:cover;transition:transform .4s; }
-        .main-img:hover { transform:scale(1.03); }
+        .main-img-wrap { aspect-ratio:1;border-radius:12px;overflow:hidden;background:#f0f8f9;border:1px solid #ddeef1;margin-bottom:12px;cursor:zoom-in;position:relative; }
+        .main-img-wrap.zoomed { cursor:zoom-out; }
+        .main-img { width:100%;height:100%;object-fit:cover;transition:transform .5s ease; }
+        .main-img-wrap:hover .main-img { transform:scale(1.04); }
+        .main-img-wrap.zoomed .main-img { transform:scale(1.55); }
+        .zoom-hint { position:absolute;bottom:10px;right:12px;font-size:13px;background:rgba(255,255,255,.75);backdrop-filter:blur(4px);border-radius:6px;padding:3px 8px;pointer-events:none;opacity:.7; }
+
+        /* Thumbnails */
         .thumb-row { display:flex;gap:8px;flex-wrap:wrap; }
-        .thumb { width:72px;height:72px;border-radius:8px;border:2px solid transparent;overflow:hidden;cursor:pointer;background:#f0f8f9;transition:border-color .2s; }
-        .thumb.active,.thumb:hover { border-color:#005969; }
-        .thumb img { width:100%;height:100%;object-fit:cover; }
+        .thumb { width:72px;height:72px;border-radius:8px;border:2px solid transparent;overflow:hidden;cursor:pointer;background:#f0f8f9;transition:border-color .2s,transform .2s;flex-shrink:0; }
+        .thumb:hover { border-color:#a8cfd5;transform:translateY(-2px); }
+        .thumb.active { border-color:#005969;box-shadow:0 0 0 1px #005969; }
+        .thumb img { width:100%;height:100%;object-fit:cover;transition:transform .3s; }
+        .thumb:hover img { transform:scale(1.08); }
+
         .product-badge-row { display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap; }
         .badge { display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:500; }
         .badge-cat { background:#e0f2f4;color:#005969; }
