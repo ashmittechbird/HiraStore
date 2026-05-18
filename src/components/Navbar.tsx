@@ -6,7 +6,7 @@ import { useWishlist } from '@/store/wishlist';
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const totalItems = useCart(s => s.totalItems());
+  const totalItems = useCart(s => s.items.reduce((sum, item) => sum + item.qty, 0));
   const wishCount = useWishlist(s => s.items.length);
 
   useEffect(() => {
@@ -56,7 +56,7 @@ export default function Navbar() {
               <svg viewBox="0 0 24 24" fill={wishCount > 0 ? 'currentColor' : 'none'}><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
             </Link>
             {wishCount > 0 && (
-              <span className="cart-badge wish-badge" style={{ display: 'flex' }}>{wishCount}</span>
+              <span className="cart-badge wish-badge" >{wishCount}</span>
             )}
           </div>
           <div className="cart-wrap">
@@ -64,7 +64,7 @@ export default function Navbar() {
               <svg viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
             </Link>
             {totalItems > 0 && (
-              <span className="cart-badge" style={{ display: 'flex' }}>{totalItems}</span>
+              <span className="cart-badge" >{totalItems}</span>
             )}
           </div>
         </div>
@@ -111,7 +111,7 @@ export default function Navbar() {
         .nav-icon:hover { transform: scale(1.1); color: var(--accent-gold); }
         .nav-icon svg { width: 20px; height: 20px; stroke-width: 1.5; fill: none; stroke: currentColor; }
         .cart-wrap { position: relative; }
-        .cart-badge { position: absolute; top: 6px; right: 4px; background: var(--accent-gold); color: #fff; font-size: 9px; font-weight: 600; width: 14px; height: 14px; align-items: center; justify-content: center; border-radius: 50%; pointer-events: none; }
+        .cart-badge { position: absolute; top: -4px; right: -4px; background: #005969; color: #fff; font-size: 10px; font-weight: 700; min-width: 18px; height: 18px; padding: 0 4px; display: flex; align-items: center; justify-content: center; border-radius: 99px; pointer-events: none; border: 2px solid #fff; line-height: 1; }
         .wish-badge { background: #e11d48; }
         .nav-icon.wish-active { color: #e11d48; }
         .nav-icon.wish-active:hover { color: #be123c; }
