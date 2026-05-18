@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { login, getMe } from '@/lib/api';
+import { useFrappeAuth } from 'frappe-react-sdk';
 import { useWishlist } from '@/store/wishlist';
 
 export default function LoginPage() {
@@ -10,10 +10,11 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const setWishlistUser = useWishlist(s => s.setUser);
+  const { login, currentUser } = useFrappeAuth();
 
   useEffect(() => {
-    getMe().then(me => { if (me) navigate('/account', { replace: true }); });
-  }, []);
+    if (currentUser) navigate('/account', { replace: true });
+  }, [currentUser]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -21,11 +22,11 @@ export default function LoginPage() {
     if (!email || !password) { setError('Email and password required'); return; }
     setLoading(true);
     try {
-      await login(email, password);
+      await login({ username: email, password });
       setWishlistUser(email);
       navigate('/account');
     } catch (err: unknown) {
-      setError((err as Error).message || 'Login failed');
+      setError((err as Error).message || 'Invalid email or password');
     }
     setLoading(false);
   }

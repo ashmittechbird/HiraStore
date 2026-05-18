@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { signup, login } from '@/lib/api';
+import { useFrappeAuth } from 'frappe-react-sdk';
+import { signup } from '@/lib/api';
 
 export default function SignupPage() {
   const [fullName, setFullName] = useState('');
@@ -9,6 +10,7 @@ export default function SignupPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { login } = useFrappeAuth();
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -18,7 +20,7 @@ export default function SignupPage() {
     setLoading(true);
     try {
       await signup(fullName, email, password);
-      await login(email, password);
+      await login({ username: email, password });
       navigate('/account');
     } catch (err: unknown) {
       setError((err as Error).message || 'Signup failed');

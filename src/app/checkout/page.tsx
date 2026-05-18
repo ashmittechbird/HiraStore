@@ -1,7 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useFrappeAuth, useFrappeGetDoc } from 'frappe-react-sdk';
 import { useCart } from '@/store/cart';
-import { getMe, validateCoupon } from '@/lib/api';
+import { validateCoupon } from '@/lib/api';
+
+interface FrappeUser { full_name?: string; email?: string; }
 
 export default function CheckoutPage() {
   const { items, totalPrice } = useCart();
@@ -13,22 +16,21 @@ export default function CheckoutPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  const { currentUser, isLoading: authLoading } = useFrappeAuth();
+  const { data: userDoc } = useFrappeGetDoc<FrappeUser>('User', currentUser ?? undefined);
+
   const subtotal = totalPrice();
-  const shipping = 0;
   const total = subtotal - discount;
 
   useEffect(() => {
-    // Auth guard
-    getMe().then(me => {
-      if (!me) navigate('/login?return=/checkout');
-      else {
-        setForm(f => ({
-          ...f,
-          fullName: me.fullName || '',
-          email: me.email || '',
-        }));
-      }
-    });
+    if (!authLoading && !currentUser) { navigate('/login?return=/checkout'); return; }
+    if (currentUser) {
+      setForm(f => ({
+        ...f,
+        fullName: userDoc?.full_name || f.fullName,
+        email: currentUser,
+      }));
+    }
     // Pre-fill saved address
     try {
       const saved = JSON.parse(localStorage.getItem('hs_saved_address') || '{}');

@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { FrappeProvider } from 'frappe-react-sdk'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
 import Home from './app/page'
@@ -15,8 +16,12 @@ import OrderSuccess from './app/order-success/page'
 import Product from './app/product/[id]/page'
 import Admin from './app/admin/page'
 
+// Empty string = same origin (works in Frappe context and with Vite proxy in dev)
+const FRAPPE_URL = (import.meta.env.VITE_FRAPPE_URL as string) || ''
+
 export default function App() {
   return (
+    <FrappeProvider url={FRAPPE_URL} enableSocket={false}>
     <BrowserRouter basename="/store">
       <Navbar />
       <main>
@@ -38,5 +43,6 @@ export default function App() {
       </main>
       <Footer />
     </BrowserRouter>
+    </FrappeProvider>
   )
 }

@@ -1,34 +1,12 @@
-const BASE = '';
 // Catalog images base — override at build time for Frappe deployment
 // e.g. VITE_CATALOG_BASE=/assets/hira/catalog_images npm run build:frappe
 const CATALOG_BASE = (import.meta.env.VITE_CATALOG_BASE as string) || '/catalog_images';
 
-function getToken() {
-  if (typeof window === 'undefined') return null;
-  return localStorage.getItem('hs_session_token');
-}
-
-function authHeaders() {
-  const token = getToken();
-  return token ? { 'X-Session-Token': token } : {};
-}
-
 // ─── AUTH ──────────────────────────────────────────────────────────────────────
-
-export async function login(email: string, password: string) {
-  const res = await fetch(`${BASE}/api/auth/login`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password }),
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error || 'Login failed');
-  if (data.token) localStorage.setItem('hs_session_token', data.token);
-  return data;
-}
+// Login/logout/currentUser handled by frappe-react-sdk (useFrappeAuth)
 
 export async function signup(fullName: string, email: string, password: string) {
-  const res = await fetch(`${BASE}/api/auth/signup`, {
+  const res = await fetch(`/api/auth/signup`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ fullName, email, password }),
@@ -38,57 +16,24 @@ export async function signup(fullName: string, email: string, password: string) 
   return data;
 }
 
-export async function logout() {
-  const token = getToken();
-  if (token) {
-    await fetch(`${BASE}/api/auth/logout`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-Session-Token': token },
-    });
-  }
-  localStorage.removeItem('hs_session_token');
-}
-
-export async function getMe() {
-  const res = await fetch(`${BASE}/api/auth/me`, { headers: authHeaders() as HeadersInit });
-  if (!res.ok) return null;
-  return res.json();
-}
-
 // ─── ORDERS ────────────────────────────────────────────────────────────────────
 
 export async function createOrder(payload: object) {
-  const res = await fetch(`${BASE}/api/orders/create`, {
+  const res = await fetch(`/api/orders/create`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...(authHeaders() as object) },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
+    credentials: 'include',
   });
   const data = await res.json();
   if (!res.ok) throw new Error(data.error || 'Order failed');
   return data;
 }
 
-export async function getCustomerOrders() {
-  const res = await fetch(`${BASE}/api/customer/orders`, { headers: authHeaders() as HeadersInit });
-  if (!res.ok) throw new Error('Failed to fetch orders');
-  return res.json();
-}
-
-export async function updateProfile(payload: object) {
-  const res = await fetch(`${BASE}/api/customer/profile`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...(authHeaders() as object) },
-    body: JSON.stringify(payload),
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error || 'Update failed');
-  return data;
-}
-
 // ─── COUPONS ───────────────────────────────────────────────────────────────────
 
 export async function validateCoupon(code: string, cartTotal: number) {
-  const res = await fetch(`${BASE}/api/coupon/validate`, {
+  const res = await fetch(`/api/coupon/validate`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ code, cartTotal }),
@@ -102,7 +47,7 @@ export async function validateCoupon(code: string, cartTotal: number) {
 
 export async function getHomepageSections() {
   try {
-    const res = await fetch(`${BASE}/api/homepage/sections`);
+    const res = await fetch(`/api/homepage/sections`);
     if (!res.ok) return { most_loved: [], new_arrivals: [] };
     return res.json();
   } catch {
@@ -110,9 +55,9 @@ export async function getHomepageSections() {
   }
 }
 
-// ─── PRODUCTS (direct ERPNext via proxy) ───────────────────────────────────────
+// ─── PRODUCTS (via Frappe REST API) ────────────────────────────────────────────
 
-const ERP_BASE = '/erp';
+const ERP_BASE = '';
 const FIELDS = ['name','item_name','item_group','description','standard_rate','custom_short_description','custom_material','custom_is_featured','image','custom_item_images','disabled'];
 
 export async function fetchItems(filters: unknown[][] = [], limit = 20, orderBy = 'modified desc') {

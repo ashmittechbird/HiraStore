@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
+import { useFrappeGetDoc } from 'frappe-react-sdk';
 import { useCart } from '@/store/cart';
 import { useWishlist } from '@/store/wishlist';
-import { fetchItem, itemImage, itemImages, itemPrice, itemName, itemCategory } from '@/lib/api';
+import { itemImage, itemImages, itemPrice, itemName, itemCategory } from '@/lib/api';
 
 interface Product {
   name?: string; item_name?: string; item_group?: string; category?: string;
@@ -15,8 +16,7 @@ interface Product {
 
 export default function ProductPage() {
   const { id = '' } = useParams<{ id: string }>();
-  const [item, setItem] = useState<Product | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { data: item, isLoading: loading } = useFrappeGetDoc<Product>('Item', decodeURIComponent(id));
   const [activeIdx, setActiveIdx] = useState(0);
   const [zoomed, setZoomed] = useState(false);
   const [qty, setQty] = useState(1);
@@ -26,19 +26,7 @@ export default function ProductPage() {
   const wishHas = useWishlist(s => s.has);
   const addItem = useCart(s => s.addItem);
 
-  useEffect(() => {
-    (async () => {
-      setLoading(true);
-      setActiveIdx(0);
-      try {
-        const product = await fetchItem(decodeURIComponent(id));
-        setItem(product);
-      } catch {
-        setItem(null);
-      }
-      setLoading(false);
-    })();
-  }, [id]);
+  useEffect(() => { setActiveIdx(0); }, [id]);
 
   function showToast(msg: string) {
     setToast(msg);

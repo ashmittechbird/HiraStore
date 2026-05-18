@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { getMe, getCustomerOrders, logout } from '@/lib/api';
+import { useFrappeAuth, useFrappeGetDoc, useFrappeGetDocList } from 'frappe-react-sdk';
 import { useWishlist } from '@/store/wishlist';
 
 interface Order { name: string; transaction_date: string; grand_total: number; status: string; }
-interface Me { fullName: string; email: string; }
+interface FrappeUser { full_name?: string; email?: string; }
 
 const OFFERS = [
   { code: 'HIRA30', title: '30% Off Sitewide', desc: 'Valid on all orders above ₹999', min: 'Min. order ₹999' },
@@ -22,23 +22,23 @@ function statusClass(s: string) {
 
 export default function AccountPage() {
   const navigate = useNavigate();
-  const [me, setMe] = useState<Me | null>(null);
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<'orders' | 'profile' | 'offers'>('orders');
   const [copied, setCopied] = useState('');
 
   const setWishlistUser = useWishlist(s => s.setUser);
+  const { currentUser, logout, isLoading: authLoading } = useFrappeAuth();
+  const { data: userDoc } = useFrappeGetDoc<FrappeUser>('User', currentUser ?? undefined);
+  const { data: orders = [] } = useFrappeGetDocList<Order>('Sales Order', currentUser ? {
+    fields: ['name', 'transaction_date', 'grand_total', 'status'],
+    filters: [['contact_email', '=', currentUser]],
+    orderBy: { field: 'transaction_date', order: 'desc' },
+    limit: 50,
+  } : undefined);
 
   useEffect(() => {
-    getMe().then(user => {
-      if (!user) { navigate('/login'); return; }
-      setMe(user);
-      setWishlistUser(user.email || null);
-      getCustomerOrders().then(d => setOrders(d.orders || [])).catch(() => {});
-      setLoading(false);
-    });
-  }, []);
+    if (!authLoading && !currentUser) navigate('/login');
+    if (currentUser) setWishlistUser(currentUser);
+  }, [currentUser, authLoading]);
 
   async function handleLogout() {
     await logout();
@@ -52,9 +52,10 @@ export default function AccountPage() {
     setTimeout(() => setCopied(''), 2000);
   }
 
-  const initials = me?.fullName?.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() || '?';
+  const fullName = userDoc?.full_name || currentUser || '';
+  const initials = fullName.split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase() || '?';
 
-  if (loading) return <div style={{ textAlign: 'center', padding: '80px', color: '#6b8b91' }}>Loading…</div>;
+  if (authLoading || !currentUser) return <div style={{ textAlign: 'center', padding: '80px', color: '#6b8b91' }}>Loading…</div>;
 
   return (
     <div className="acct-page">
@@ -63,8 +64,8 @@ export default function AccountPage() {
         <div className="account-sidebar">
           <div className="user-block">
             <div className="user-avatar">{initials}</div>
-            <div className="user-name">{me?.fullName}</div>
-            <div className="user-email">{me?.email}</div>
+            <div className="user-name">{fullName}</div>
+            <div className="user-email">{currentUser}</div>
           </div>
           <div className="side-nav">
             {([
@@ -142,11 +143,11 @@ export default function AccountPage() {
               <div className="card-body">
                 <div className="field">
                   <label>Full Name</label>
-                  <input type="text" defaultValue={me?.fullName} readOnly />
+                  <input type="text" defaultValue={fullName} readOnly />
                 </div>
                 <div className="field">
                   <label>Email Address</label>
-                  <input type="email" defaultValue={me?.email} readOnly />
+                  <input type="email" defaultValue={currentUser ?? ''} readOnly />
                 </div>
                 <p style={{ fontSize: '12px', color: '#6b8b91', marginTop: '8px' }}>
                   To update your details, please contact support.

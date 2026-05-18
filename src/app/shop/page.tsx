@@ -2,7 +2,8 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useCart } from '@/store/cart';
 import { useWishlist } from '@/store/wishlist';
-import { fetchItems, itemImage, itemImages, itemPrice, itemName, itemCategory, itemId } from '@/lib/api';
+import { useFrappeGetDocList } from 'frappe-react-sdk';
+import { itemImage, itemImages, itemPrice, itemName, itemCategory, itemId } from '@/lib/api';
 
 interface Product {
   name?: string; item_name?: string; item_group?: string; category?: string;
@@ -43,13 +44,17 @@ function ShopContent() {
   const initialCat = searchParams.get('cat') || 'All';
   const initialSearch = searchParams.get('search') || '';
 
-  const [allProducts, setAllProducts] = useState<Product[]>([]);
+  const { data: allProducts = [], isLoading: loading } = useFrappeGetDocList<Product>('Item', {
+    fields: ['name','item_name','item_group','standard_rate','custom_short_description','custom_material','custom_is_featured','image','custom_item_images','disabled','weight_per_unit'],
+    filters: [['disabled', '=', 0], ['is_sales_item', '=', 1]],
+    orderBy: { field: 'modified', order: 'desc' },
+    limit: 500,
+  });
   const [filtered, setFiltered] = useState<Product[]>([]);
   const [category, setCategory] = useState(initialCat);
   const [search, setSearch] = useState(initialSearch);
   const [sort, setSort] = useState('default');
-  const [loading, setLoading] = useState(true);
-  const [dataSource, setDataSource] = useState<'live' | 'local'>('local');
+  const dataSource = allProducts.length > 0 ? 'live' : 'local';
   const [page, setPage] = useState(0);
   const [displayed, setDisplayed] = useState<Product[]>([]);
   const wishlistItems = useWishlist(s => s.items);
@@ -153,20 +158,6 @@ function ShopContent() {
     return () => { document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseleave', onLeave, true); };
   }, []);
 
-  // Fetch products
-  useEffect(() => {
-    (async () => {
-      setLoading(true);
-      try {
-        const items = await fetchItems([['is_sales_item','=',1]], 500, 'modified desc');
-        setAllProducts(items);
-        setDataSource(items.some((p: Product) => p.standard_rate !== undefined) ? 'live' : 'local');
-      } catch {
-        setAllProducts([]);
-      }
-      setLoading(false);
-    })();
-  }, []);
 
   // Filter + sort
   const applyFilters = useCallback(() => {
